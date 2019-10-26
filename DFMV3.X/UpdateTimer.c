@@ -5,7 +5,7 @@
 #define T1_TICK               (GetPeripheralClock()/PRESCALE/TOGGLES_PER_SEC)
 
 int volatile HBCounter;
-int volatile isInDarkMode;
+unsigned char isInDarkMode;
 
 void ConfigureUpdateTimer(void) {
     OpenTimer1(T1_ON | T1_SOURCE_INT | T1_PS_1_256, T1_TICK);
@@ -31,9 +31,7 @@ void __ISR(_TIMER_1_VECTOR, IPL2SOFT) Timer1Handler(void) {
     //PORTESET = 0x01;
     if (HBCounter % (TOGGLES_PER_SEC >> 1) == 0) {
         if (isInDarkMode == 0)
-            HEARTBEAT_LED_TOGGLE();
-        //ShowOutput=1;
-        //optoIndexer = optoIndexer^0x01;
+            FLIP_HEARTBEAT_LED();       
     }
     HBCounter++;
     mT1ClearIntFlag();

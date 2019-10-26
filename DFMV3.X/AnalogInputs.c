@@ -28,6 +28,23 @@ int volatile counter;
 int volatile values[12][128];
 int volatile CurrentValues[12];
 
+extern struct StatusPacket currentStatus;
+
+
+void FillCurrentStatus(){
+    int i,j;
+    // want to use a trick here to speed things up
+    unsigned char *statusPointer = &currentStatus.W1High;    
+    j=0;
+    for(i=0;i<12;i++) {
+        *(statusPointer+j)=CurrentValues[i]>>8;
+        *(statusPointer+j+1)=CurrentValues[i] & 0xFF;
+        j+=2;
+    }
+}
+
+
+
 void ClearAnalogValues(){
     int i,j;
      for (j = 0; j < 12; j++) {
@@ -42,7 +59,9 @@ void ConfigureScanningAnalogInputs(){
     // COnfigure all analog inputs as such
     AD1PCFG = 0x0000;
     TRISB = 0xFFFF;
-   
+
+    TRISECLR = 0x01;
+    
     AD1CHSbits.CH0NA = 0; // Negative input is Vr-
     Nop();Nop();
     AD1CHSbits.CH0NB = 0; // Negative input is Vr-
@@ -113,6 +132,11 @@ void ConfigureScanningAnalogInputs(){
 }
 
 void StartContinuousSampling(){
+    int i;
+    for(i=0;i<12;i++)
+        CurrentValues[i]=i;
+    return;
+    ClearAnalogValues();
     ConfigureScanningAnalogInputs();
     AD1CON1SET = 0x0004; // Set auto.
     AD1CON1SET = 0x8000; // Turn on the ADC.
@@ -124,7 +148,8 @@ void StartContinuousSampling(){
 void __ISR(_ADC_VECTOR, IPL4SOFT) ADCHandler(void)
 {
     int tmp,j;  
-    //TIMER_PIN_OFF();    //TIMER_PIN_TOGGLE();
+    //PORTECLR = 0x01;
+    //PORTEINV=0x01;
     // I had to remove the 16-bit pointer way to get access to the buffer
     // because for some reason the BUF1 was in memory 16 Bytes after BUF0.
     // I thought this should be 16 bits, and so pointer arithmatic using an
@@ -180,8 +205,8 @@ void __ISR(_ADC_VECTOR, IPL4SOFT) ADCHandler(void)
     counter++;
     if(counter>=128) {
           counter=0;
-          //TIMER_PIN_TOGGLE();
+          //PORTEINV=0x01;
     }
     INTClearFlag(INT_AD1);
-    //TIMER_PIN_ON();
+    //PORTESET = 0x01;
 }

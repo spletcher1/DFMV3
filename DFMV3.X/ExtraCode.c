@@ -1,44 +1,163 @@
-#include "GlobalIncludes.h"
 
+void StopTransfer( void )
+{
+    I2C_STATUS  status;
 
-// Normally I2C devices run at either 100khz or 400 khz, although some can do 2MHz
-// The propellor seems to only manage 100khz
-#define BAUDRATE 400000 // Set at 400000 for normal EEPROM and 100000 for Propeller
+    // Send the Stop signal
+    I2CStop(I2C2);
 
-extern int volatile CurrentValues[13];
-extern int volatile isInDarkMode;
-extern unsigned char volatile OptoState1;
-extern unsigned char volatile OptoState2 ;
-extern unsigned char volatile pulseWidth_ms;
-extern unsigned char volatile hertz;
-int volatile WrittenValues[16];
+    // Wait for the signal to complete
+    do
+    {
+        status = I2CGetStatus(I2C2);
+          if (ErrorCount > 0) {
+            return;
+        }
 
-
-void I2C2_Configure(void) {
-    int brg, baud;
-    baud = BAUDRATE;
-    if ((GetPeripheralClock()) == 40000000) {
-        if (BAUDRATE == 100000)
-            brg = 0x0C6;
-        if (BAUDRATE == 400000)
-            brg = 0x030;
-    }
-    // Note that strict addressing is enabled. THis forbids certain device address from being sent
-    // or responded to. Details in the PIC32 datasheet.
-    OpenI2C2(I2C_ON | I2C_IDLE_CON | I2C_CLK_REL | I2C_STRICT_EN | I2C_7BIT_ADD | I2C_SLW_DIS |
-            I2C_SM_DIS | I2C_GC_EN | I2C_STR_EN | I2C_ACK | I2C_ACK_DIS | I2C_RCV_DIS | I2C_STOP_DIS |
-            I2C_RESTART_DIS | I2C_START_DIS, brg);
-
-    //OpenI2C2(I2C_EN,brg);
-
-    I2C2ADD = BASESLAVEADDRESS + SPECIFIC_SLAVE_ID;
-    I2C2MSK = 0x00; // No mask.  We care about all address bits.
-
-    SetPriorityIntI2C2(4);
-    EnableIntSI2C2;
-    INTClearFlag(INT_I2C2S);
+    } while ( !(status & I2C_STOP) );
 }
 
+unsigned char StartTransfer( unsigned char restart )
+{
+    I2C_STATUS  status;
+
+    // Send the Start (or Restart) signal
+    if(restart)
+    {
+        I2CRepeatStart(I2C2);
+    }
+    else
+    {
+        // Wait for the bus to be idle, then start the transfer
+        while( !I2CBusIsIdle(I2C2) ){
+             if (ErrorCount > 0) {
+                return 0;
+             }
+        }
+
+        if(I2CStart(I2C2) != I2C_SUCCESS)
+        {           
+            return 0;
+        }
+    }
+
+    // Wait for the signal to complete
+    do
+    {
+        status = I2CGetStatus(I2C2);
+         if (ErrorCount > 0) {
+                return 0;
+         }
+    } while ( !(status & I2C_START) );
+
+    return 1;
+}
+
+unsigned char IsBusy(unsigned char slaveaddress){
+	unsigned char result;
+	StartI2C2();
+	IdleI2C2();
+	MasterWriteI2C2(slaveaddress);
+	IdleI2C2();
+	if(I2C2STATbits.ACKSTAT) result = 1;
+	else result = 0;
+	StopI2C2();IdleI2C2();
+	return result;
+}
+
+
+// Return Codes:
+// 0= No error
+// 1 = Failed acknowledgment after write.
+// 2 = Datasize too large.
+char WriteCharI2C2(unsigned char slaveaddress, char data) {
+
+	// Begin the send sequence
+	StartI2C2(); // Send the start bit.
+	IdleI2C2(); // Wait until this is complete.
+
+	MasterWriteI2C2(slaveaddress << 1);
+	IdleI2C2();
+	if(I2C2STATbits.ACKSTAT) return 1; // If this bit is 1, then slave failed to ackknowledge, so break.
+
+	MasterWriteI2C2(data);
+	IdleI2C2();
+	if(I2C2STATbits.ACKSTAT) return 4; // If this bit is 1, then slave failed to ackknowledge, so break.
+
+	I2CStop(I2C2);// Send the stop condition.
+	IdleI2C2(); // Wait until done.
+
+	return 0;
+
+}
+unsigned char ReadCharI2C2(unsigned char slaveaddress, unsigned char dataaddress, char *data) {
+	char result;
+	// Now begin the send sequence
+	IdleI2C1();
+	//while(IsPropBusy(slaveaddress));
+	StartI2C1(); // Send the start bit.
+	IdleI2C1(); // Wait until this is complete.
+
+	// Send the slave address and memory start address	
+	result=MasterWriteI2C1(slaveaddress);
+	if(result<0) return 10-result;
+	// For 24LC256, the top four bytes must be 1010 = 0xA0, then the three address bits.  The LSB is left open to indicate read/write.
+	IdleI2C1();
+	if(I2C1STATbits.ACKSTAT) return 1; // If this bit is 1, then slave failed to ackknowledge, so break.	
+		
+	result=MasterWriteI2C1(dataaddress);
+	if(result<0) return 30-result;
+	IdleI2C1();
+	if(I2C1STATbits.ACKSTAT) return 3; // If this bit is 1, then slave failed to ackknowledge, so break.	
+		
+	StopI2C1(); // Send the stop condition.
+	IdleI2C1(); // Wait until done.
+	
+	RestartI2C1(); // Send restart.
+	IdleI2C1();
+	
+	result=MasterWriteI2C1(slaveaddress | 0x01); // Send slave address but last bit changed to 1 to indicate a read.
+	if(result<0) return 40-result;
+	IdleI2C1();
+	
+	*data = MasterReadI2C1();
+	IdleI2C1();
+	if(I2C1STATbits.ACKSTAT) {return 4;} // If this bit is 1, then slave failed to ackknowledge, so break.
+	
+	StopI2C1();
+	IdleI2C1();
+	return 0;
+}
+
+unsigned char TransmitOneByte( unsigned char data )
+{
+    // Wait for the transmitter to be ready
+    while(!I2CTransmitterIsReady(I2C2)){
+         if (ErrorCount > 0) {
+                return 0;
+         }
+    }
+
+    // Transmit the byte
+    if(I2CSendByte(I2C2, data) == I2C_MASTER_BUS_COLLISION)
+    {
+        ErrorCount++;
+        return 0;
+    }
+
+    // Wait for the transmission to finish
+    while(!I2CTransmissionHasCompleted(I2C2)){
+         if (ErrorCount > 0) {
+                return 0;
+         }
+    }
+
+    return 1;
+}
+
+
+// Below functions are for slave device.
+/*
 void I2C2Respond(void) {
     int dataRead, i;
     unsigned int tmp2;
@@ -76,7 +195,7 @@ void I2C2Respond(void) {
                     else if (argument == 0x01) {
                         isInDarkMode = 1;
                         HEARTBEAT_LAT = 0;
-                        SIGNAL_LED_OFF();
+                        GREENLED_LAT=0;
                     }
                     break;
                 case 0x02: // Need to expand this to be specific for 6 chamber setup.
@@ -128,7 +247,7 @@ void I2C2Respond(void) {
         //SlaveWriteI2C2(0);
         pValue++;
         dIndex = 1;
-        if (isInDarkMode == 0) SIGNAL_LED_TOGGLE();
+        if (isInDarkMode == 0) FLIP_GREEN_LED();
     } else if ((I2C2STATbits.R_W == 1) && (I2C2STATbits.D_A == 1)) {
         // So this means the Master sent a data and read request
 
@@ -163,3 +282,4 @@ void __ISR(_I2C_2_VECTOR, IPL4AUTO) I2C2InterruptServiceRoutine(void) {
 }
 
 
+*/

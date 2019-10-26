@@ -23,25 +23,19 @@
 #define ROW6ON() LATGSET=0x80
 #define ROW6OFF() LATGCLR=0x80
 
-
-
 unsigned char volatile OptoState1;
 unsigned char volatile OptoState2;
 int optoOffThreshold;
 int volatile optoOnCounter;
 int volatile optoOffCounter;
-unsigned char volatile pulseWidth_ms;
-unsigned char volatile hertz;
+unsigned int volatile pulseWidth_ms;
+unsigned int volatile hertz;
 char currentOptoTimerState;
 
 void ConfigureOptoTimer(void);
 
 void ConfigureOpto(){
-    //_TRISF6=0;    
-    //_TRISD6=0;
-    //_TRISD7=0;
-    //_TRISD8=0;
-    
+   
     TRISFCLR = 0x40;
     TRISGCLR = 0x1C0;
     TRISDCLR = 0x1D0;
@@ -54,11 +48,6 @@ void ConfigureOpto(){
     LATGCLR = 0x1C0;
     LATDCLR = 0x1D0;
     
-    //PORTFCLR = 0x40;
-    //PORTGCLR = 0x1C0;
-    //PORTDCLR = 0x1D0;
-    
-    SWITCH_TRIS = 1;        
     OptoState1 = OptoState2 = 0;
     
     ConfigureOptoTimer();   
@@ -105,29 +94,50 @@ void inline Opto_Off(){
     LATDCLR = 0x1D0 ;
 }
 
-void SetOptoParameters(unsigned char hz, unsigned char pw){
-    hertz = hz;
-    if(hertz<1) hertz=1;
-    if(hertz>250) hertz=250;
-    // Because we are multiplexing two rows, the pulse width of one
-    // cycle is twice the pulse width defined for a single blink.
-    // So we have to limit the hertz accordingly.
-    pulseWidth_ms=pw;            
-    optoOffThreshold = (unsigned int)(1000/hertz) - (pulseWidth_ms*2);     
-    // If the parameters don't work, then accept the hertz and
-    // adjust the pulse width to be maximum given that hertz.
-    if(optoOffThreshold<0) {
-        optoOffThreshold = 0;      
-        pulseWidth_ms = 1000/(hertz*2);        
-    }    
-    optoOnCounter=optoOffCounter=0;
+void SetOptoParameters(unsigned int hz, unsigned int pw) {
+    unsigned char usingNewPort = 1;
+    if (usingNewPort) {
+        hertz = hz;
+        if (hertz < 1) hertz = 1;
+        if (hertz > 500) hertz = 500;
+        pulseWidth_ms = pw;
+        optoOffThreshold = (unsigned int) (1000 / hertz) - (pulseWidth_ms);
+        // If the parameters don't work, then accept the hertz and
+        // adjust the pulse width to be maximum given that hertz.
+        if (optoOffThreshold < 0) {
+            pulseWidth_ms = 1000 / (hertz * 2);
+            optoOffThreshold = (unsigned int) (1000 / hertz) - (pulseWidth_ms);
+        }
+        optoOnCounter = optoOffCounter = 0;
+    } else {
+        hertz = hz;
+        if (hertz < 1) hertz = 1;
+        if (hertz > 250) hertz = 250;
+        // Because we are multiplexing two rows, the pulse width of one
+        // cycle is twice the pulse width defined for a single blink.
+        // So we have to limit the hertz accordingly.
+        pulseWidth_ms = pw;
+        optoOffThreshold = (unsigned int) (1000 / hertz) - (pulseWidth_ms * 2);
+        // If the parameters don't work, then accept the hertz and
+        // adjust the pulse width to be maximum given that hertz.
+        if (optoOffThreshold < 0) {
+            optoOffThreshold = 0;
+            pulseWidth_ms = 1000 / (hertz * 2);
+        }
+        optoOnCounter = optoOffCounter = 0;
+    }
 }
 
-void SetPulseWidth_ms(unsigned char pw){
+void SetPulseWidth_ms(unsigned int pw){
     SetOptoParameters(hertz,pw);
 }
 
-void SetHertz(unsigned char hz){
+void SetOptoState(unsigned char os1, unsigned char os2){
+    OptoState1=os1;
+    OptoState2=os2;
+}
+
+void SetHertz(unsigned int hz){
   SetOptoParameters(hz,pulseWidth_ms);
 }
 
@@ -136,13 +146,13 @@ void ConfigureOptoTimer(void) {
     //SetHertz(40);
     //SetHertz(100);
     //Set101();
-    SetOptoParameters(40,8);
+    SetOptoParameters(2,200);
     OpenTimer2(T2_ON | T2_SOURCE_INT | T2_PS_1_256, OPTO_TICK);
-    ConfigIntTimer2(T2_INT_ON | T2_INT_PRIOR_3);          
+    ConfigIntTimer2(T2_INT_ON | T2_INT_PRIOR_4);          
     currentOptoTimerState=0;   
 }
-void __ISR(_TIMER_2_VECTOR) Timer2Handler(void) {
-    //TIMER_PIN_ON();   
+void __ISR(_TIMER_2_VECTOR, IPL4AUTO) Timer2Handler(void) {
+    //PORTESET = 0x01;    
     if(currentOptoTimerState==0) {// All lights off
         optoOffCounter++;
         if(optoOffCounter>=optoOffThreshold) {   

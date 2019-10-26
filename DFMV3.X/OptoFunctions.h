@@ -1,23 +1,12 @@
-/* 
- * File:   OptoFunctions.h
- * Author: scott
- *
- * Created on January 6, 2019, 11:40 PM
- */
-
 #ifndef OPTOFUNCTIONS_H
 #define	OPTOFUNCTIONS_H
 
-#ifdef	__cplusplus
-extern "C" {
-#endif
 
 void ConfigureOpto(void);
+void SetOptoState(unsigned char os1, unsigned char os2);
+void SetPulseWidth_ms(unsigned int pw);
+void SetHertz(unsigned int hz);
 
-
-#ifdef	__cplusplus
-}
-#endif
 
 #endif	/* OPTOFUNCTIONS_H */
 

@@ -8,18 +8,20 @@
         <itemPath>system.h</itemPath>
         <itemPath>timer.h</itemPath>
         <itemPath>uart.h</itemPath>
-        <itemPath>i2c_legacy.h</itemPath>
         <itemPath>adc10.h</itemPath>
       </logicalFolder>
       <itemPath>SystemFunctions.h</itemPath>
       <itemPath>UpdateTimer.h</itemPath>
+      <itemPath>UART1.h</itemPath>
       <itemPath>SP_ConfigP32.h</itemPath>
       <itemPath>GlobalIncludes.h</itemPath>
       <itemPath>HardwareProfile.h</itemPath>
-      <itemPath>I2C1_Slave.h</itemPath>
       <itemPath>AnalogInputs.h</itemPath>
       <itemPath>OptoFunctions.h</itemPath>
-      <itemPath>UART3.h</itemPath>
+      <itemPath>BoardFunctions.h</itemPath>
+      <itemPath>Si7021.h</itemPath>
+      <itemPath>TSL2591.h</itemPath>
+      <itemPath>I2C2_Master.h</itemPath>
     </logicalFolder>
     <logicalFolder name="LinkerScript"
                    displayName="Linker Files"
@@ -33,9 +35,13 @@
       <itemPath>UpdateTimer.c</itemPath>
       <itemPath>main.c</itemPath>
       <itemPath>printf-stdarg.c</itemPath>
-      <itemPath>I2C1_Slave.c</itemPath>
       <itemPath>AnalogInputs.c</itemPath>
       <itemPath>OptoFunctions.c</itemPath>
+      <itemPath>BoardFunctions.c</itemPath>
+      <itemPath>TSL2591.c</itemPath>
+      <itemPath>Si7021.c</itemPath>
+      <itemPath>I2C2_Master.c</itemPath>
+      <itemPath>ExtraCode.c</itemPath>
     </logicalFolder>
     <logicalFolder name="ExternalFiles"
                    displayName="Important Files"
@@ -50,7 +56,7 @@
   </sourceRootList>
   <projectmakefile>Makefile</projectmakefile>
   <confs>
-    <conf name="Board_V3_0" type="2">
+    <conf name="V3Board" type="2">
       <toolsSet>
         <developmentServer>localhost</developmentServer>
         <targetDevice>PIC32MX795F512L</targetDevice>
@@ -62,7 +68,7 @@
         <platform>3</platform>
       </toolsSet>
       <packs>
-        <pack name="PIC32MX_DFP" vendor="Microchip" version="1.0.28"/>
+        <pack name="PIC32MX_DFP" vendor="Microchip" version="1.0.53"/>
       </packs>
       <compileType>
         <linkerTool>
@@ -194,7 +200,7 @@
         <property key="generate-micro-compressed-code" value="false"/>
         <property key="isolate-each-function" value="false"/>
         <property key="make-warnings-into-errors" value="false"/>
-        <property key="optimization-level" value="-O3"/>
+        <property key="optimization-level" value=""/>
         <property key="place-data-into-section" value="false"/>
         <property key="post-instruction-scheduling" value="default"/>
         <property key="pre-instruction-scheduling" value="default"/>
@@ -219,6 +225,20 @@
         <property key="save-temps" value="false"/>
         <property key="wpo-lto" value="false"/>
       </C32Global>
+      <item path="ExtraCode.c" ex="true" overriding="false">
+        <C32>
+        </C32>
+        <C32-AR>
+        </C32-AR>
+        <C32-AS>
+        </C32-AS>
+        <C32-LD>
+        </C32-LD>
+        <C32CPP>
+        </C32CPP>
+        <C32Global>
+        </C32Global>
+      </item>
       <ICD3PlatformTool>
         <property key="ADC 1" value="true"/>
         <property key="AutoSelectMemRanges" value="auto"/>
@@ -344,6 +364,7 @@
         <property key="UART6" value="true"/>
         <property key="USB" value="true"/>
         <property key="debugoptions.useswbreakpoints" value="false"/>
+        <property key="firmware.download.all" value="false"/>
         <property key="hwtoolclock.frcindebug" value="false"/>
         <property key="hwtoolclock.instructionspeed" value="4"/>
         <property key="hwtoolclock.units" value="mips"/>

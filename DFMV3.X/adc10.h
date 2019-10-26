@@ -42,7 +42,7 @@
 #define _ADC10_H_
 
 #include <xc.h>
-#include <peripheral/int.h>
+#include <peripheral\int.h>
 
 /*
 *  WARNING: All the Peripheral Library (PLIB) functions, including those in this file,

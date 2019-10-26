@@ -14,7 +14,7 @@
 #pragma config CP=OFF // Code protect bit
 #pragma config BWP = OFF // Boot flash write protect
 #pragma config PWP = OFF // Program flash write protect
-#pragma config ICESEL = ICS_PGx2 // ICE pins are shared with PGC1, PGD1 on the UNO32 Stick
+#pragma config ICESEL = ICS_PGx1 // ICE pins are shared with PGC1, PGD1 on the UNO32 Stick
 #pragma config DEBUG = OFF // Background debugger
 
 

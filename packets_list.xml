@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<data>
+  <loop>false</loop>
+  <repeat_times>25</repeat_times>
+  <repeat_period>1</repeat_period>
+  <packets_list>
+    <packet name="TestPacket">
+      <payload>FFFFFD01020101FFFF</payload>
+    </packet>
+    <packet name="FF">
+      <payload>FF</payload>
+    </packet>
+    <packet name="FD">
+      <payload>FD</payload>
+    </packet>
+    <packet name="Filler">
+      <payload>01</payload>
+    </packet>
+    <packet name="SetDarkMode">
+      <payload>FFFFFD010201000101</payload>
+    </packet>
+    <packet name="ClearDarkMode">
+      <payload>FFFFFD010200000101</payload>
+    </packet>
+    <packet name="OptoState0">
+      <payload>FFFFFD010300000101</payload>
+    </packet>
+    <packet name="Optostate3F">
+      <payload>FFFFFD01033F3F0101</payload>
+    </packet>
+    <packet name="RequestStatus">
+      <payload>FFFFFD010100000101</payload>
+    </packet>
+  </packets_list>
+</data>

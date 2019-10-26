@@ -11,48 +11,46 @@
  ********************************************************************/
 #ifndef __HARDWARE_PROFILE_H
 #define __HARDWARE_PROFILE_H
-
 #include <p32xxxx.h>
 
-/*********************************************************************
-* Sets Hearbeat values
-* This value will be inverted each click
-********************************************************************/
 
-#define HEARTBEAT_LAT  _LATE3
-#define HEARTBEAT_PORT  _RE3
+#define HEARTBEAT_LAT  _RE3
 #define HEARTBEAT_TRIS  _TRISE3
-#define HEARTBEAT_LED_TOGGLE() PORTEINV = 0x0008
-#define HEARTBEAT_LED_OFF() PORTESET =0x0008
-#define HEARTBEAT_LED_ON() PORTECLR =0x0008
+#define FLIP_HEARTBEAT_LED() PORTEINV = 0x0008
 
-#define SIGNAL_LED_LAT _LATE2
-#define SIGNAL_LED_PORT _RE2
-#define SIGNAL_LED_TRIS _TRISE2
-#define FLIP_SIGNAL_LED() PORTEINV = 0x0004
-#define SIGNAL_LED_OFF() PORTESET =0x0004
-#define SIGNAL_LED_ON() PORTECLR =0x0004
-#define SIGNAL_LED_TOGGLE() PORTEINV =0x0004
 
-#define BLUE_LED_LAT _LATE1
-#define BLUE_LED_PORT _RE1
-#define BLUE_LED_TRIS _TRISE1
-#define BLUE_SIGNAL_LED() PORTEINV = 0x0002
-#define BLUE_LED_OFF() PORTESET =0x0002
-#define BLUE_LED_ON() PORTECLR =0x0002
+#define GREENLED_LAT  _RE2
+#define GREENLED_TRIS  _TRISE2
+#define FLIP_GREEN_LED() PORTEINV = 0x0004
 
-#define YELLOW_LED_LAT _LATE0
-#define YELLOW_LED_PORT _RE0
-#define YELLOW_LED_TRIS _TRISE0
-#define YELLOW_LED() PORTEINV = 0x0001
-#define YELLOW_LED_OFF() PORTESET =0x0001
-#define YELLOW_LED_ON() PORTECLR =0x0001
+#define BLUELED_LAT  _RE1
+#define BLUELED_TRIS  _TRISE1
+#define FLIP_BLUE_LED() PORTEINV = 0x0002
 
-#define TIMER_PIN_LAT _LATE7
-#define TIMER_PIN_TRIS _TRISE7
-#define TIMER_PIN_OFF() PORTECLR =0x0080
-#define TIMER_PIN_ON() PORTESET =0x0080
-#define TIMER_PIN_TOGGLE() PORTEINV =0x0080
+#define YELLOWLED_LAT  _RE0
+#define YELLOWLED_TRIS  _TRISE0
+#define FLIP_YELLOW_LED() PORTEINV = 0x0001
+
+#define SWITCH_TRIS _TRISE4
+#define SWITCH_PORT _RE4
+
+#define USERBUTTON1_TRIS _TRISE6
+#define USERBUTTON1_PORT _RE6
+
+#define USERBUTTON2_TRIS _TRISE5
+#define USERBUTTON2_PORT _RE5
+
+#define IDSELECTOR1_TRIS _TRISD12
+#define IDSELECTOR1_PORT _RD12
+#define IDSELECTOR2_TRIS _TRISD13
+#define IDSELECTOR2_PORT _RD13
+#define IDSELECTOR4_TRIS _TRISD14
+#define IDSELECTOR4_PORT _RD14
+#define IDSELECTOR8_TRIS _TRISD15
+#define IDSELECTOR8_PORT _RD15
+#define SETIDSELECTOR_TRIS() TRISDSET = 0x0000F000
+#define GETIDSELECTOR_VALUE() ((PORTD & 0xF000) >> 12)
+
 
 /*********************************************************************
 * GetSystemClock() returns system clock frequency.
@@ -77,27 +75,6 @@
 /*********************************************************************/
 
 
-
-#define SWITCH_TRIS _TRISE4
-#define SWITCH_PORT _RE4
-
-#define BUTTON1_TRIS _TRISE6
-#define BUTTON1_PORT _RE6
-
-#define BUTTON2_TRIS _TRISE5
-#define BUTTON2_PORT _RE5
-
-#define ID_SWITCH1_TRIS _TRISD12
-#define IDSWITCH1_PORT _RD12
-
-#define ID_SWITCH2_TRIS _TRISD13
-#define IDSWITCH2_PORT _RD13
-
-#define ID_SWITCH4_TRIS _TRISD14
-#define IDSWITCH4_PORT _RD14
-
-#define ID_SWITCH8_TRIS _TRISD15
-#define IDSWITCH8_PORT _RD15
 
 
 

@@ -13,7 +13,8 @@ extern "C" {
 #endif
 
 void Startup();
-
+void DelayMs(WORD ms);
+void Delay10us(DWORD dwCount);
 
 #ifdef	__cplusplus
 }
