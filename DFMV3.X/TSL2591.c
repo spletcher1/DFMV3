@@ -1,6 +1,5 @@
 #include "GlobalIncludes.h"
 
-
 // Address Constant
 #define TSL2591_ADDR  0x29
 // This is the actual address used for I2C communication
@@ -23,6 +22,8 @@
 #define TSL2591_INFRARED          (1)       ///< channel 1
 #define TSL2591_FULLSPECTRUM      (0)       ///< channel 0
 
+
+#define SECONDS_IN_IDLE 58
 
 /// TSL2591 Register map
 
@@ -47,6 +48,29 @@ enum {
     TSL2591_REGISTER_CHAN1_HIGH = 0x17, // Channel 1 data, high byte
 } TSL2591Registers;
 
+enum TSL2591State {
+    Reading,
+    LuxCalculation,
+    LuxReady,
+    Idle,
+} currentState;
+
+enum TSL2591Gain {
+    Low = 0x00,
+    Medium = 0x10,
+    High = 0x20,
+    Max = 0x30
+} currentGain;
+
+enum TSL2591Timing {
+    Int100ms = 0x00,
+    Int200ms = 0x01,
+    Int300ms = 0x02,
+    Int400ms = 0x03,
+    Int500ms = 0x04,
+    Int600ms = 0x05
+} currentTiming;
+
 
 //private const int TSL2591_STATUS_REG = 0x13;
 
@@ -69,39 +93,15 @@ int TSL2591_LUX;
 int tmpLUX;
 unsigned char isTSL2591Configured;
 unsigned char didSensitivityChange;
-
-enum {
-    Reading,
-    LuxCalculation,
-    LuxReady,
-    Idle,
-} currentState;
-
-enum TSL2591Gain {
-    Low = 0x00,
-    Medium = 0x10,
-    High = 0x20,
-    Max = 0x30
-};
-
-enum TSL2591Timing {
-    Int100ms = 0x00,
-    Int200ms = 0x01,
-    Int300ms = 0x02,
-    Int400ms = 0x03,
-    Int500ms = 0x04,
-    Int600ms = 0x05
-};
-
-enum TSL2591Timing currentTiming;
-enum TSL2591Gain currentGain;
 unsigned char isAtMaxSensitivity;
 unsigned char isAtMinSensitivity;
+int idleCounter;
 
 unsigned char IsTSL2591Ready() {
-    unsigned char result, found;
+    unsigned char found;
+    I2C_RESULT result;
     result = Read8FromI2C2(TSL2591_ADDR_ADJ, TSL2591_REGISTER_DEVICE_ID | TSL2591_CMD, &found);
-    if (found == 0x50 && result == 0)
+    if (found == 0x50 && result == I2C_SUCCESS)
         return 1;
     else
         return 0;
@@ -123,19 +123,19 @@ void SetTimingAndGain(enum TSL2591Gain gain, enum TSL2591Timing timing) {
     }
 }
 
-void Enable() {
+void inline Enable() {
     Write8ToI2C2(TSL2591_ADDR_ADJ, TSL2591_REGISTER_ENABLE | TSL2591_CMD, TSL2591_ENABLE_POWERON | TSL2591_ENABLE_AEN); // Power up.    
 }
 
-void Disable() {
+void inline Disable() {
     Write8ToI2C2(TSL2591_ADDR_ADJ, TSL2591_REGISTER_ENABLE | TSL2591_CMD, TSL2591_ENABLE_POWERON); // Power up.
 }
 
-void PowerUp() {
+void inline PowerUp() {
     Write8ToI2C2(TSL2591_ADDR_ADJ, TSL2591_REGISTER_ENABLE | TSL2591_CMD, TSL2591_ENABLE_POWERON); // Power up.
 }
 
-void PowerDown() {
+void inline PowerDown() {
     Write8ToI2C2(TSL2591_ADDR_ADJ, TSL2591_REGISTER_ENABLE | TSL2591_CMD, TSL2591_ENABLE_POWEROFF); // Power up.
 }
 // Need to wait for at least 200ms after calling StartReading to get these data.
@@ -143,8 +143,7 @@ void PowerDown() {
 unsigned char GetTSL2591Status(){  
   unsigned char result, found;
   Enable();
-  result = Read8FromI2C2(TSL2591_ADDR_ADJ, TSL2591_REGISTER_DEVICE_STATUS | TSL2591_CMD, &found);  
-  //result = Read8FromI2C2(TSL2591_ADDR_ADJ, TSL2591_REGISTER_ENABLE | TSL2591_CMD, &found);  
+  result = Read8FromI2C2(TSL2591_ADDR_ADJ, TSL2591_REGISTER_DEVICE_STATUS | TSL2591_CMD, &found);   
   Disable();
   return found;
     
@@ -153,7 +152,6 @@ unsigned char GetTSL2591Status(){
 unsigned char CheckTimingAndGain(){  
   unsigned char result, regData;
   Enable();
-  //result = Read8FromI2C2(TSL2591_ADDR_ADJ, TSL2591_REGISTER_DEVICE_STATUS | TSL2591_CMD, &found);  
   result = Read8FromI2C2(TSL2591_ADDR_ADJ, TSL2591_REGISTER_CONTROL | TSL2591_CMD, &regData); 
   Disable();
   if(currentGain != (regData & 0xF0))
@@ -268,6 +266,7 @@ unsigned char ConfigureTSL2591() {
         isTSL2591Configured = 0;
         return 0;
     }
+    isTSL2591Configured=1;
     DelayMs(10);    
     SetTimingAndGain(Medium, Int300ms);    
     didSensitivityChange=0;
@@ -276,7 +275,8 @@ unsigned char ConfigureTSL2591() {
 }
 
 // This should probably step once every second.
-void StepTSL2591() {    
+void StepTSL2591() { 
+    if(isTSL2591Configured==0) return;
     switch(currentState){
         case Reading:
             GetFullLuminosity();
@@ -284,8 +284,11 @@ void StepTSL2591() {
             currentState=LuxCalculation;
             break;
         case Idle:
-            Enable();
-            currentState = Reading;
+            if(idleCounter++>=SECONDS_IN_IDLE){
+                Enable();
+                currentState = Reading;
+                idleCounter=0;
+            }
             break;
         case LuxCalculation:           
             GetLux();
