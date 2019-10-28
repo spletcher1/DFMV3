@@ -32,20 +32,21 @@
 #define Si70211_Config_Heater_On                0x04
 
 
-#define SECONDS_IN_IDLE 2
+#define SECONDS_IN_IDLE 30
 
 enum Si7021State {
     Measuring,
     Calculation,
-    GettingTemperature,    
+    GettingTemperature,
     Idle,
 } currentState_Si;
 
 unsigned int Si7021_Humidity;
 unsigned int Si7021_Temperature;
-unsigned int tmpHumidity,tmpTemperature;
-unsigned char isSi7021Configured=0;
+unsigned int tmpHumidity, tmpTemperature;
+unsigned char isSi7021Configured = 0;
 int idleCounter_Si;
+extern errorFlags_t currentError;
 
 unsigned char IsSi7021Ready() {
     unsigned char found;
@@ -57,65 +58,78 @@ unsigned char IsSi7021Ready() {
         return 0;
 }
 
-unsigned char ConfigureSi7021(){
-    Si7021_Humidity=Si7021_Temperature=tmpHumidity=tmpTemperature=0;    
-    DelayMs(2);    
+unsigned char ConfigureSi7021() {
+    Si7021_Humidity = Si7021_Temperature = tmpHumidity = tmpTemperature = 0;
+    DelayMs(2);
     if (!IsSi7021Ready()) {
         isSi7021Configured = 0;
         return 0;
     }
-    isSi7021Configured=1;   
+    isSi7021Configured = 1;
     idleCounter_Si = SECONDS_IN_IDLE; // This will force a first measure right away.
     currentState_Si = Idle;
     return 1;
 }
 
-void CallForTempHumidityMeasure(){
-    RequestMeasureSi7021I2C2(Si7021_address_adj, Si7021_Measure_RH_No_Hold_Mode);
+void CallForTempHumidityMeasure() {
+    I2C_RESULT result;
+    result = RequestMeasureSi7021I2C2(Si7021_address_adj, Si7021_Measure_RH_No_Hold_Mode);
+    if (result != I2C_SUCCESS) {
+        currentError.bits.Si7021 = 1;
+    }
 }
 
-void GetHumidityData(){
-    ReadHumidityFromSi7021I2C2(Si7021_address_adj,&tmpHumidity);
+void GetHumidityData() {
+    I2C_RESULT result;
+    result = ReadHumidityFromSi7021I2C2(Si7021_address_adj, &tmpHumidity);
+    if (result != I2C_SUCCESS) {
+        currentError.bits.Si7021 = 1;
+    }
 }
 
-void GetTemperatureData(){
-    Read16FromI2C2(Si7021_address_adj, Si7021_Read_T_from_Last_RH_Value, &tmpTemperature);
+void GetTemperatureData() {
+    I2C_RESULT result;
+    result = Read16FromI2C2(Si7021_address_adj, Si7021_Read_T_from_Last_RH_Value, &tmpTemperature);
+    if (result != I2C_SUCCESS) {
+        currentError.bits.Si7021 = 1;
+    }
 }
 
-void UpdateTempAndHumidity(){
+void UpdateTempAndHumidity() {
     float t, h;
-    t = ((175.72*(float)tmpTemperature)/65536.0) - 46.85;
-    h = (((125.0)*(float)tmpHumidity)/65536.0) - 6;
+    t = ((175.72 * (float) tmpTemperature) / 65536.0) - 46.85;
+    h = (((125.0)*(float) tmpHumidity) / 65536.0) - 6;
     // Temperature and Humidity will be encoded as integers to three decimal places.
-    Si7021_Temperature = (unsigned int)(t * 1000);
-    Si7021_Humidity = (unsigned int)(h * 1000);
+    Si7021_Temperature = (unsigned int) (t * 1000);
+    Si7021_Humidity = (unsigned int) (h * 1000);
 }
 
 // This function is meant to be called once per second.
-void StepSi7021() {   
-    if(isSi7021Configured==0) return;
-    switch(currentState_Si){
+
+void StepSi7021() {
+    if (isSi7021Configured == 0) return;
+    switch (currentState_Si) {
         case Measuring:
-            GetHumidityData();            
-            currentState_Si=GettingTemperature;
+            GetHumidityData();
+            currentState_Si = GettingTemperature;
             break;
         case GettingTemperature:
             GetTemperatureData();
-            currentState_Si=Calculation;
+            currentState_Si = Calculation;
             break;
         case Idle:
-            if(idleCounter_Si++>=SECONDS_IN_IDLE){
+            if (idleCounter_Si++ >= SECONDS_IN_IDLE) {
                 CallForTempHumidityMeasure();
                 currentState_Si = Measuring;
-                idleCounter_Si=0;
+                idleCounter_Si = 0;
             }
             break;
-        case Calculation:           
-            UpdateTempAndHumidity();            
-            currentState_Si=Idle;
-            break;       
+        case Calculation:
+            UpdateTempAndHumidity();
+            currentState_Si = Idle;
+            break;
         default:
             break;
     }
-    
+
 }

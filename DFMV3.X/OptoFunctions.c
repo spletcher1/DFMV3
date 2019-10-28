@@ -30,6 +30,7 @@ int volatile optoOnCounter;
 int volatile optoOffCounter;
 unsigned int volatile pulseWidth_ms;
 unsigned int volatile hertz;
+unsigned char volatile timerFlag_1ms;
 char currentOptoTimerState;
 
 void ConfigureOptoTimer(void);
@@ -150,6 +151,7 @@ void ConfigureOptoTimer(void) {
     OpenTimer2(T2_ON | T2_SOURCE_INT | T2_PS_1_256, OPTO_TICK);
     ConfigIntTimer2(T2_INT_ON | T2_INT_PRIOR_6);          
     currentOptoTimerState=0;   
+    timerFlag_1ms =0;
 }
 void __ISR(_TIMER_2_VECTOR, IPL6AUTO) Timer2Handler(void) {
     //PORTESET = 0x01;    
@@ -174,6 +176,7 @@ void __ISR(_TIMER_2_VECTOR, IPL6AUTO) Timer2Handler(void) {
             Opto_Off();        
             optoOnCounter=0;                  
         }
-    }       
+    } 
+    timerFlag_1ms=1;
     mT2ClearIntFlag();
 }

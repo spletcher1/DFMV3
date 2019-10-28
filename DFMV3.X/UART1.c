@@ -9,12 +9,12 @@ unsigned char volatile isPacketReceived;
 unsigned char packetBuffer[250];
 unsigned char volatile packetIndex;
 
-unsigned char currentError;
-
 unsigned char volatile isInPacket;
 unsigned char volatile byteCountDown;
 unsigned int volatile headerSum;
 struct StatusPacket currentStatus; 
+
+extern errorFlags_t currentError;
 
 extern unsigned char dfmID;
 extern unsigned char isInDarkMode;
@@ -67,9 +67,7 @@ void ConfigureUART1(void) {
     currentStatus.Header1=0xFF;
     currentStatus.Header2=0xFF;
     currentStatus.Header3=0xFD;   
-    currentStatus.ID=dfmID;
-    currentError=0;
-      
+    currentStatus.ID=dfmID;          
 }
 
 
@@ -83,22 +81,19 @@ void __ISR(_UART1_VECTOR, IPL4AUTO) UART1Interrupt(void){
 			U1STAbits.OERR = 0;
 			mU1EClearIntFlag();
 			ClearPacketBuffer();
-            INTClearFlag(INT_U1RX);	
-            //StringToUART1("Error");
-            currentError=1;
+            INTClearFlag(INT_U1RX);	           
+            currentError.bits.UART=1;
             return;
 		}
 		else if(error & 0x02) {
 			U1STAbits.FERR=0;
-			ClearPacketBuffer();
-			//StringToUART1("Error");
+			ClearPacketBuffer();			
 			mU1EClearIntFlag();
-            currentError=1;
+            currentError.bits.UART=1;
             INTClearFlag(INT_U1RX);	
             return;
 		}	
-	}
-	currentError=0;
+	}	
     while(DataRdyUART1()) {
 		data=UARTGetDataByte(UART1);      
         if(isInPacket){
@@ -138,7 +133,7 @@ void ProcessPacket() {
     if(packetBuffer[0]!=dfmID && packetBuffer[0]!=255) return; // Packet not for me
     switch(packetBuffer[1]){
         case 0x01: // Status Request
-            currentStatus.ErrorFlag = currentError;
+            currentStatus.ErrorFlag = currentError.byte;
             FillCurrentStatus();
             currentStatus.Optostate1 = OptoState1;
             currentStatus.Optostate2 = OptoState2;
@@ -156,6 +151,7 @@ void ProcessPacket() {
             currentStatus.CRCHigh=0x01;
             currentStatus.CRCLow=0x01;
             CurrentStatusToUART1();
+            currentError.byte=0x00;
             break;
         case 0x02: // Set Darkmode               
             SetDarkMode(packetBuffer[2]);

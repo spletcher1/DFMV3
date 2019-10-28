@@ -12,6 +12,7 @@
 #define I2C_CLOCK_FREQ 400000 // Set at 400000 for normal EEPROM and 100000 for Propeller
 int ErrorCount;
 I2C_RESULT theCurrentI2CResult;
+extern errorFlags_t currentError;
 
 void ConfigureI2C2(void) {
     int actualClock;      
@@ -34,13 +35,14 @@ void __ISR(_I2C_2_VECTOR, IPL5AUTO) I2C2InterruptServiceRoutine(void) {
         //if(IsInDarkMode==0)
         //    IO_LED6_ON();
         INTClearFlag(INT_I2C2M);
-
+        currentError.bits.I2C=1;
         return;
     }
     if (IFS1bits.I2C2BIF == 1) {
         //if(IsInDarkMode==0)
         //    IO_LED5_ON();
         INTClearFlag(INT_I2C2B);
+        currentError.bits.I2C=1;
         return;
     }
     INTClearFlag(INT_I2C2M);      
