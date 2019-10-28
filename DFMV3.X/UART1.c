@@ -4,6 +4,7 @@
 #define HEADER3 0xFD
 
 #define INSTRUCTIONPACKETSIZE 6
+#define STATUSPACKETSIZE 50
 
 unsigned char volatile isPacketReceived;
 unsigned char packetBuffer[250];
@@ -126,13 +127,16 @@ void __ISR(_UART1_VECTOR, IPL4AUTO) UART1Interrupt(void){
 void CurrentStatusToUART1(){
     unsigned char *statusPointer = (char *)&currentStatus.Header1;
     int i;
-    for(i=0;i<48;i++)
+    for(i=0;i<STATUSPACKETSIZE;i++)
         CharToUART1(*(statusPointer+i));
         
 }
 
-void ProcessPacket() {        
+void ProcessPacket() {  
+    unsigned int checksum=0,i;
+    unsigned char *statusPointer = (char *)&currentStatus.Header1;
     if(packetBuffer[0]!=dfmID && packetBuffer[0]!=255) return; // Packet not for me
+    if (isInDarkMode == 0) FLIP_GREEN_LED();
     switch(packetBuffer[1]){
         case 0x01: // Status Request
             currentStatus.ErrorFlag = currentError.byte;
@@ -154,8 +158,12 @@ void ProcessPacket() {
             currentStatus.Humidity4 = (Si7021_Humidity & 0xFF);
             currentStatus.LightHigh = TSL2591_LUX>>8;
             currentStatus.LightLow = TSL2591_LUX & 0xFF;
-            currentStatus.CRCHigh=0x01;
-            currentStatus.CRCLow=0x01;
+            for(i=0;i<46;i++) checksum+= *(statusPointer+i);
+            checksum = (checksum ^ 0xFFFFFFFF) + 0x01;
+            currentStatus.Checksum1=checksum>>24;
+            currentStatus.Checksum2=(checksum>>16) & 0xFF;            
+            currentStatus.Checksum3=(checksum>>8) & 0xFF;
+            currentStatus.Checksum4=checksum & 0xFF;
             CurrentStatusToUART1();
             currentError.byte=0x00;
             break;

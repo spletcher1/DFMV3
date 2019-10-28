@@ -42,7 +42,6 @@
       <itemPath>Si7021.c</itemPath>
       <itemPath>I2C2_Master.c</itemPath>
       <itemPath>ExtraCode.c</itemPath>
-      <itemPath>OptoFunctionsNewPort.c</itemPath>
     </logicalFolder>
     <logicalFolder name="ExternalFiles"
                    displayName="Important Files"
@@ -313,8 +312,6 @@
         <property key="programoptions.uselvpprogramming" value="false"/>
         <property key="voltagevalue" value="3.25"/>
       </ICD3PlatformTool>
-      <item path="OptoFunctionsNewPort.c" ex="true" overriding="false">
-      </item>
       <RealICEPlatformTool>
         <property key="ADC 1" value="true"/>
         <property key="AutoSelectMemRanges" value="auto"/>

@@ -26,7 +26,7 @@ extern unsigned char usingNewPortOnly;
 
 void ConfigureOptoTimer(void);
 
-void ConfigureOpto(unsigned char newport) {
+void ConfigureOpto() {
 
     // Definitions for legacy port
     TRISFCLR = 0x40;
@@ -48,8 +48,7 @@ void ConfigureOpto(unsigned char newport) {
     ODCDSET = 0xFFF;
     LATDCLR = 0xFFF;
 
-    OptoState1 = OptoState2 = 0;
-    usingNewPortOnly = newport;
+    OptoState1 = OptoState2 = 0;    
     ConfigureOptoTimer();
 }
 

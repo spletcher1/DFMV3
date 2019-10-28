@@ -55,8 +55,10 @@ struct StatusPacket {
   unsigned char Humidity4;
   unsigned char LightHigh;
   unsigned char LightLow;
-  unsigned char CRCHigh;
-  unsigned char CRCLow;  
+  unsigned char Checksum1;
+  unsigned char Checksum2;  
+  unsigned char Checksum3;
+  unsigned char Checksum4;  
 };
 
 #endif
