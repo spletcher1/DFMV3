@@ -41,8 +41,14 @@ struct StatusPacket {
   unsigned char Optostate1;
   unsigned char Optostate2;
   unsigned char DarkMode;
-  unsigned char Temperature;
-  unsigned char Humidity;
+  unsigned char Temperature1;
+  unsigned char Temperature2;
+  unsigned char Temperature3;
+  unsigned char Temperature4;
+  unsigned char Humidity1;
+  unsigned char Humidity2;
+  unsigned char Humidity3;
+  unsigned char Humidity4;
   unsigned char LightHigh;
   unsigned char LightLow;
   unsigned char CRCHigh;

@@ -142,10 +142,10 @@ void StartContinuousSampling(){
     AD1CON1SET = 0x8000; // Turn on the ADC.
     counter=0;  
     // Set Interrupt
-    ConfigIntADC10(ADC_INT_ON | ADC_INT_PRI_4);
+    ConfigIntADC10(ADC_INT_ON | ADC_INT_PRI_5);
 }
 
-void __ISR(_ADC_VECTOR, IPL4SOFT) ADCHandler(void)
+void __ISR(_ADC_VECTOR, IPL5SOFT) ADCHandler(void)
 {
     int tmp,j;  
     //PORTECLR = 0x01;

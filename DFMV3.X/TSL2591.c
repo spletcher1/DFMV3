@@ -23,7 +23,7 @@
 #define TSL2591_FULLSPECTRUM      (0)       ///< channel 0
 
 
-#define SECONDS_IN_IDLE 58
+#define SECONDS_IN_IDLE 2
 
 /// TSL2591 Register map
 
@@ -53,7 +53,7 @@ enum TSL2591State {
     LuxCalculation,
     LuxReady,
     Idle,
-} currentState;
+} currentState_TSL;
 
 enum TSL2591Gain {
     Low = 0x00,
@@ -95,7 +95,7 @@ unsigned char isTSL2591Configured;
 unsigned char didSensitivityChange;
 unsigned char isAtMaxSensitivity;
 unsigned char isAtMinSensitivity;
-int idleCounter;
+int idleCounter_tsl;
 
 unsigned char IsTSL2591Ready() {
     unsigned char found;
@@ -270,38 +270,39 @@ unsigned char ConfigureTSL2591() {
     DelayMs(10);    
     SetTimingAndGain(Medium, Int300ms);    
     didSensitivityChange=0;
-    currentState=Idle;
+    idleCounter_tsl = SECONDS_IN_IDLE; // This will force a first measure right away.
+    currentState_TSL=Idle;
     return 1;
 }
 
 // This should probably step once every second.
 void StepTSL2591() { 
     if(isTSL2591Configured==0) return;
-    switch(currentState){
+    switch(currentState_TSL){
         case Reading:
             GetFullLuminosity();
             Disable();
-            currentState=LuxCalculation;
+            currentState_TSL=LuxCalculation;
             break;
         case Idle:
-            if(idleCounter++>=SECONDS_IN_IDLE){
+            if(idleCounter_tsl++>=SECONDS_IN_IDLE){
                 Enable();
-                currentState = Reading;
-                idleCounter=0;
+                currentState_TSL = Reading;
+                idleCounter_tsl=0;
             }
             break;
         case LuxCalculation:           
             GetLux();
             if(didSensitivityChange) {
-                currentState=Idle;
+                currentState_TSL=Idle;
                 didSensitivityChange=0;
             }
             else
-                currentState=LuxReady;
+                currentState_TSL=LuxReady;
             break;
         case LuxReady:
             TSL2591_LUX=tmpLUX;
-            currentState=Idle;
+            currentState_TSL=Idle;
             break;
         default:
             break;

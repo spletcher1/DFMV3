@@ -1,7 +1,7 @@
 #include "GlobalIncludes.h"
 
 #define PRESCALE               256
-#define TOGGLES_PER_SEC        4
+#define TOGGLES_PER_SEC        10
 #define T1_TICK               (GetPeripheralClock()/PRESCALE/TOGGLES_PER_SEC)
 
 int volatile HBCounter;
@@ -26,6 +26,7 @@ void ConfigureUpdateTimer(void) {
 // Now this interrupt takes 1.35ms to complete. The interrupt goes off every
 // 2.5ms so we should be okay.
 
+// priority levels range from 1 (the lowest priority) to 7 (the highest)
 
 void __ISR(_TIMER_1_VECTOR, IPL2SOFT) Timer1Handler(void) {
     //PORTESET = 0x01;

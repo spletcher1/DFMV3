@@ -148,10 +148,10 @@ void ConfigureOptoTimer(void) {
     //Set101();
     SetOptoParameters(2,200);
     OpenTimer2(T2_ON | T2_SOURCE_INT | T2_PS_1_256, OPTO_TICK);
-    ConfigIntTimer2(T2_INT_ON | T2_INT_PRIOR_4);          
+    ConfigIntTimer2(T2_INT_ON | T2_INT_PRIOR_6);          
     currentOptoTimerState=0;   
 }
-void __ISR(_TIMER_2_VECTOR, IPL4AUTO) Timer2Handler(void) {
+void __ISR(_TIMER_2_VECTOR, IPL6AUTO) Timer2Handler(void) {
     //PORTESET = 0x01;    
     if(currentOptoTimerState==0) {// All lights off
         optoOffCounter++;

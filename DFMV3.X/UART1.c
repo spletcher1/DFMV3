@@ -21,11 +21,9 @@ extern unsigned char isInDarkMode;
 extern unsigned char volatile OptoState1;
 extern unsigned char volatile OptoState2;
 
-
-unsigned char currentTemperature;
-unsigned char currentHumidity;
-unsigned int currentLUX;
-
+extern unsigned int TSL2591_LUX;
+extern unsigned int Si7021_Humidity;
+extern unsigned int Si7021_Temperature;
 
 /////////////////////////////////////////////////////////////////
 // Select one to specify configuration.
@@ -42,7 +40,7 @@ void CharToUART1(char c){
 
 void ConfigureUART1Interrupts(){
 	// For now we interrupt on RX
-	INTSetVectorPriority(INT_UART_1_VECTOR,INT_PRIORITY_LEVEL_3);
+	INTSetVectorPriority(INT_UART_1_VECTOR,INT_PRIORITY_LEVEL_4);
 	INTClearFlag(INT_U1RX);
 	INTEnable(INT_U1RX,INT_ENABLED);
 	INTEnable(INT_U1E,INT_ENABLED);
@@ -71,16 +69,12 @@ void ConfigureUART1(void) {
     currentStatus.Header3=0xFD;   
     currentStatus.ID=dfmID;
     currentError=0;
-    
-    currentTemperature=25;
-    currentHumidity = 40;
-    currentLUX=1234;
-    
+      
 }
 
 
 
-void __ISR(_UART1_VECTOR, IPL3AUTO) UART1Interrupt(void){
+void __ISR(_UART1_VECTOR, IPL4AUTO) UART1Interrupt(void){
 	int error;
 	unsigned char data;
 	error = UART1GetErrors();	
@@ -90,14 +84,14 @@ void __ISR(_UART1_VECTOR, IPL3AUTO) UART1Interrupt(void){
 			mU1EClearIntFlag();
 			ClearPacketBuffer();
             INTClearFlag(INT_U1RX);	
-            StringToUART1("Error");
+            //StringToUART1("Error");
             currentError=1;
             return;
 		}
 		else if(error & 0x02) {
 			U1STAbits.FERR=0;
 			ClearPacketBuffer();
-			StringToUART1("Error");
+			//StringToUART1("Error");
 			mU1EClearIntFlag();
             currentError=1;
             INTClearFlag(INT_U1RX);	
@@ -135,7 +129,7 @@ void __ISR(_UART1_VECTOR, IPL3AUTO) UART1Interrupt(void){
 void CurrentStatusToUART1(){
     unsigned char *statusPointer = (char *)&currentStatus.Header1;
     int i;
-    for(i=0;i<38;i++)
+    for(i=0;i<44;i++)
         CharToUART1(*(statusPointer+i));
         
 }
@@ -149,10 +143,16 @@ void ProcessPacket() {
             currentStatus.Optostate1 = OptoState1;
             currentStatus.Optostate2 = OptoState2;
             currentStatus.DarkMode = isInDarkMode;
-            currentStatus.Humidity = currentHumidity;
-            currentStatus.Temperature = currentTemperature;
-            currentStatus.LightHigh = currentLUX>>8;
-            currentStatus.LightLow = currentLUX & 0xFF;
+            currentStatus.Temperature1 = (Si7021_Temperature >> 24);
+            currentStatus.Temperature2 = ((Si7021_Temperature >> 16) & 0xFF);
+            currentStatus.Temperature3 = ((Si7021_Temperature >> 8) & 0xFF);
+            currentStatus.Temperature4 = (Si7021_Temperature & 0xFF);            
+            currentStatus.Humidity1 = (Si7021_Humidity >> 24);
+            currentStatus.Humidity2 = ((Si7021_Humidity >> 16) & 0xFF);
+            currentStatus.Humidity3 = ((Si7021_Humidity >> 8) & 0xFF);
+            currentStatus.Humidity4 = (Si7021_Humidity & 0xFF);
+            currentStatus.LightHigh = TSL2591_LUX>>8;
+            currentStatus.LightLow = TSL2591_LUX & 0xFF;
             currentStatus.CRCHigh=0x01;
             currentStatus.CRCLow=0x01;
             CurrentStatusToUART1();
