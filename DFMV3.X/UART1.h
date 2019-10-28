@@ -40,6 +40,10 @@ struct StatusPacket {
   unsigned char W12Low;
   unsigned char Optostate1;
   unsigned char Optostate2;
+  unsigned char OptoFreq1;
+  unsigned char OptoFreq2;
+  unsigned char OptoPW1;
+  unsigned char OptoPW2;
   unsigned char DarkMode;
   unsigned char Temperature1;
   unsigned char Temperature2;

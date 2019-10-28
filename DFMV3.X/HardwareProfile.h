@@ -52,6 +52,8 @@
 #define GETIDSELECTOR_VALUE() ((PORTD & 0xF000) >> 12)
 
 
+
+
 /*********************************************************************
 * GetSystemClock() returns system clock frequency.
 *

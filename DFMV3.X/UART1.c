@@ -20,6 +20,8 @@ extern unsigned char dfmID;
 extern unsigned char isInDarkMode;
 extern unsigned char volatile OptoState1;
 extern unsigned char volatile OptoState2;
+extern unsigned int volatile pulseWidth_ms;
+extern unsigned int volatile hertz;
 
 extern unsigned int TSL2591_LUX;
 extern unsigned int Si7021_Humidity;
@@ -124,7 +126,7 @@ void __ISR(_UART1_VECTOR, IPL4AUTO) UART1Interrupt(void){
 void CurrentStatusToUART1(){
     unsigned char *statusPointer = (char *)&currentStatus.Header1;
     int i;
-    for(i=0;i<44;i++)
+    for(i=0;i<48;i++)
         CharToUART1(*(statusPointer+i));
         
 }
@@ -137,6 +139,10 @@ void ProcessPacket() {
             FillCurrentStatus();
             currentStatus.Optostate1 = OptoState1;
             currentStatus.Optostate2 = OptoState2;
+            currentStatus.OptoFreq1 = hertz>>8;
+            currentStatus.OptoFreq2 = hertz & 0xFF;
+            currentStatus.OptoPW1 = pulseWidth_ms >> 8;
+            currentStatus.OptoPW2 = pulseWidth_ms & 0xFF;
             currentStatus.DarkMode = isInDarkMode;
             currentStatus.Temperature1 = (Si7021_Temperature >> 24);
             currentStatus.Temperature2 = ((Si7021_Temperature >> 16) & 0xFF);
