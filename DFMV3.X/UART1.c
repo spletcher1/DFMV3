@@ -179,6 +179,9 @@ void ProcessPacket() {
         case 0x05: // Set Pulsewidth
             SetPulseWidth_ms((packetBuffer[2]<<8) + packetBuffer[1]);
             break;
+        case 0x06: // Return ID
+            CharToUART1(dfmID);
+            break;
         default:
             break;        
     }

@@ -11,7 +11,12 @@ extern unsigned char volatile timerFlag_1ms;
 extern unsigned char volatile timerFlag_100ms;
 extern unsigned char volatile timerFlag_1sec;
 
+extern int volatile CurrentValues[12];
+
+
+
 int32_t main(void) {
+    int i;
     Startup();
     InitializeBoard();
     currentError.byte=0x00;   
@@ -27,7 +32,9 @@ int32_t main(void) {
     if(ConfigureSi7021()==0){
         currentError.bits.CONFIGURATION=1;
     }
-    //StartContinuousSampling();       
+    //StartContinuousSampling();    
+    for(i=0;i<12;i++)
+        CurrentValues[i]=(i*5*128);
     DelayMs(100);
     
     while (1) {
