@@ -24,6 +24,7 @@ int32_t main(void) {
     ConfigureUART1();
     ConfigureOpto();
     ConfigureI2C2();
+    ConfigureButtons();
     DelayMs(50);
     if(ConfigureTSL2591()==0){
         currentError.bits.CONFIGURATION=1;
@@ -49,6 +50,7 @@ int32_t main(void) {
         }
 
         if (timerFlag_1ms) {
+            ProcessButtonStep();
             timerFlag_1ms = 0;            
         }
 
