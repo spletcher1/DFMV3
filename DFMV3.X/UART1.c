@@ -174,10 +174,10 @@ void ProcessPacket() {
             SetOptoState(packetBuffer[2],packetBuffer[3]);
             break;
         case 0x04: // Set Hertz
-            SetHertz((packetBuffer[2]<<8) + packetBuffer[1]);
+            SetHertz((packetBuffer[2]<<8) + packetBuffer[3]);
             break;
         case 0x05: // Set Pulsewidth
-            SetPulseWidth_ms((packetBuffer[2]<<8) + packetBuffer[1]);
+            SetPulseWidth_ms((packetBuffer[2]<<8) + packetBuffer[3]);
             break;
         case 0x06: // Return ID
             CharToUART1(dfmID);
