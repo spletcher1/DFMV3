@@ -38,6 +38,8 @@ struct StatusPacket {
   unsigned char W11Low;
   unsigned char W12High;
   unsigned char W12Low;
+  unsigned char VoltsInHigh;
+  unsigned char VoltsInLow;
   unsigned char Optostate1;
   unsigned char Optostate2;
   unsigned char OptoFreq1;

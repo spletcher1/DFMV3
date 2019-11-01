@@ -4,7 +4,7 @@
 #define HEADER3 0xFD
 
 #define INSTRUCTIONPACKETSIZE 6
-#define STATUSPACKETSIZE 50
+#define STATUSPACKETSIZE 52
 
 unsigned char volatile isPacketReceived;
 unsigned char packetBuffer[250];
@@ -158,7 +158,7 @@ void ProcessPacket() {
             currentStatus.Humidity4 = (Si7021_Humidity & 0xFF);
             currentStatus.LightHigh = TSL2591_LUX>>8;
             currentStatus.LightLow = TSL2591_LUX & 0xFF;
-            for(i=0;i<46;i++) checksum+= *(statusPointer+i);
+            for(i=0;i<(STATUSPACKETSIZE-4);i++) checksum+= *(statusPointer+i);
             checksum = (checksum ^ 0xFFFFFFFF) + 0x01;
             currentStatus.Checksum1=checksum>>24;
             currentStatus.Checksum2=(checksum>>16) & 0xFF;            
