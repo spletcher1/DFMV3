@@ -327,7 +327,8 @@ void StepTSL2591() {
         case LuxCalculation:
             GetLux();
             if (didSensitivityChange) {
-                currentState_TSL = Idle;
+                Enable();
+                currentState_TSL = Reading;
                 didSensitivityChange = 0;
             } else
                 currentState_TSL = LuxReady;

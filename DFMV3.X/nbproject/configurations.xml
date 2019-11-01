@@ -66,11 +66,11 @@
         <targetPluginBoard></targetPluginBoard>
         <platformTool>RealICEPlatformTool</platformTool>
         <languageToolchain>XC32</languageToolchain>
-        <languageToolchainVersion>2.30</languageToolchainVersion>
+        <languageToolchainVersion>2.15</languageToolchainVersion>
         <platform>3</platform>
       </toolsSet>
       <packs>
-        <pack name="PIC32MX_DFP" vendor="Microchip" version="1.0.53"/>
+        <pack name="PIC32MX_DFP" vendor="Microchip" version="1.0.28"/>
       </packs>
       <compileType>
         <linkerTool>
@@ -146,9 +146,6 @@
         <property key="preprocessor-macros" value=""/>
         <property key="warning-level" value=""/>
       </C32-AS>
-      <C32-CO>
-        <property key="coverage-enable" value=""/>
-      </C32-CO>
       <C32-LD>
         <property key="additional-options-use-response-files" value="false"/>
         <property key="additional-options-write-sla" value="false"/>
@@ -237,8 +234,6 @@
         </C32-AR>
         <C32-AS>
         </C32-AS>
-        <C32-CO>
-        </C32-CO>
         <C32-LD>
         </C32-LD>
         <C32CPP>
@@ -419,8 +414,6 @@
         </C32-AR>
         <C32-AS>
         </C32-AS>
-        <C32-CO>
-        </C32-CO>
         <C32-LD>
         </C32-LD>
         <C32CPP>

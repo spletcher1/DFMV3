@@ -17,21 +17,6 @@ void ConfigureUpdateTimer(void) {
     secondCounter=0;
 }
 
-// As of 6/17/2013 when reading 12 anolog inputs
-// the interrupt takes about 200us to complete
-// with ADCS = 0x06 and 2Tad aquisition time.
-// with ADCS = 0x06 and 30Tad aquisition time it takes 300us.
-// Maybe for now lets use 30Tad to insure sufficient aquisition.
-
-// 7/1/2013
-// I changed AD1CON3bits.SAMC = 0x1F and AD1CON3bits.ADCS = 0x2e
-// to attempt to maximize aquisition time. This is 31Tad aquisition
-// and a Tad = 92 TPb.
-// Now this interrupt takes 1.35ms to complete. The interrupt goes off every
-// 2.5ms so we should be okay.
-
-// priority levels range from 1 (the lowest priority) to 7 (the highest)
-
 void __ISR(_TIMER_1_VECTOR, IPL2SOFT) Timer1Handler(void) {
     //PORTESET = 0x01;
     if (HBCounter % (TOGGLES_PER_SEC >> 1) == 0) {

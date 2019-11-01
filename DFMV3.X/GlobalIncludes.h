@@ -18,6 +18,7 @@
 #include "OptoFunctions.h"
 #include "BoardFunctions.h"
 #include "Buttons.h"
+#include <stdio.h>
 
 typedef union {
     unsigned char byte;
