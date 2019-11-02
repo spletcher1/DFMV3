@@ -142,8 +142,10 @@ void ConfigureOptoTimer(void) {
     timerFlag_1ms = 0;
 }
 
-void __ISR(_TIMER_2_VECTOR, IPL6AUTO) Timer2Handler(void) {
-    //PORTESET = 0x01;    
+// When scoped, this Timer goes off properly at 1ms.
+// The time it takes to complete the interrupt is 500ns.
+
+void __ISR(_TIMER_2_VECTOR, IPL6AUTO) Timer2Handler(void) {    
     if (currentOptoTimerState == OFF) {// All lights off
         optoOffCounter++;
         if (optoOffCounter >= opto_msOFF) {
@@ -174,5 +176,5 @@ void __ISR(_TIMER_2_VECTOR, IPL6AUTO) Timer2Handler(void) {
             Opto_Off();       
     }
     timerFlag_1ms = 1;
-    mT2ClearIntFlag();
+    mT2ClearIntFlag();    
 }

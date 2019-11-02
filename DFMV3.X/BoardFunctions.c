@@ -21,7 +21,7 @@ void InitializeBoard(){
     USERBUTTON1_TRIS=1;
     USERBUTTON2_TRIS=1;    
     DelayMs(1000);
-    dfmID = GETIDSELECTOR_VALUE();
+    dfmID = GETIDSELECTOR_VALUE();    
     usingNewPortOnly = SWITCH_PORT; 
     if(usingNewPortOnly)
         YELLOWLED_LAT=1;

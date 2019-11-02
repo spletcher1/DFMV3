@@ -18,7 +18,6 @@ void ConfigureUpdateTimer(void) {
 }
 
 void __ISR(_TIMER_1_VECTOR, IPL2SOFT) Timer1Handler(void) {
-    //PORTESET = 0x01;
     if (HBCounter % (TOGGLES_PER_SEC >> 1) == 0) {
         if (isInDarkMode == 0)
             FLIP_HEARTBEAT_LED();       
@@ -26,9 +25,8 @@ void __ISR(_TIMER_1_VECTOR, IPL2SOFT) Timer1Handler(void) {
     HBCounter++;
     if(secondCounter++>=10) {
         secondCounter=0;
-        timerFlag_1sec=1;
+        timerFlag_1sec=1;         
     }
     timerFlag_100ms=1;
     mT1ClearIntFlag();
-    //PORTECLR = 0x01;
 }

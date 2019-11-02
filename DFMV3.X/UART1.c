@@ -4,7 +4,7 @@
 #define HEADER3 0xFD
 
 #define INSTRUCTIONPACKETSIZE 6
-#define STATUSPACKETSIZE 52
+#define STATUSPACKETSIZE 65
 
 unsigned char volatile isPacketReceived;
 unsigned char packetBuffer[250];
@@ -73,8 +73,13 @@ void ConfigureUART1(void) {
     currentStatus.ID=dfmID;          
 }
 
+// Interestingly, this interrupt seems to be called 9 times to process
+// a 9 Byte status packet!  The duration of each interrupt call is about 1us, with
+// O3 optimization.
 
-
+// Additional timings revealed that it takes about 570us to receive the status request
+// and then complete sending the response package. This seems well within the needed
+// interval. This timing could easily handle even 100 DFM.
 void __ISR(_UART1_VECTOR, IPL4AUTO) UART1Interrupt(void){
 	int error;
 	unsigned char data;
@@ -121,6 +126,7 @@ void __ISR(_UART1_VECTOR, IPL4AUTO) UART1Interrupt(void){
             headerSum=0;
         }      		
 	}
+    
     INTClearFlag(INT_U1RX);		
 }
 
@@ -185,6 +191,7 @@ void ProcessPacket() {
         default:
             break;        
     }
+    
 }
 
 

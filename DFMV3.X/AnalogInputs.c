@@ -32,16 +32,15 @@ unsigned char volatile analogUpdateFlag;
 void FillCurrentStatus(){
     int i,j;
     // want to use a trick here to speed things up
-    unsigned char *statusPointer = &currentStatus.W1High;    
+    unsigned char *statusPointer = &currentStatus.W1VHigh;    
     j=0;
     for(i=0;i<13;i++) {
-        *(statusPointer+j)=CurrentValues[i]>>8;
-        *(statusPointer+j+1)=CurrentValues[i] & 0xFF;
-        j+=2;
+        *(statusPointer+j)=CurrentValues[i]>>16;
+        *(statusPointer+j+1)=CurrentValues[i]>>8;
+        *(statusPointer+j+2)=CurrentValues[i] & 0xFF;
+        j+=3;
     }
 }
-
-
 
 void ClearAnalogValues(){
     int i,j;
@@ -57,8 +56,6 @@ void ConfigureScanningAnalogInputs(){
     AD1PCFG = 0x0000;
     TRISB = 0xFFFF;
 
-    TRISECLR = 0x01;
-    
     AD1CHSbits.CH0NA = 0; // Negative input is Vr-
     Nop();Nop();
     AD1CHSbits.CH0NB = 0; // Negative input is Vr-
@@ -73,7 +70,7 @@ void ConfigureScanningAnalogInputs(){
     Nop();Nop();
     // AD1CHSbits.CH0SA = 0x03; // No need to link to MUX A because we will autosample.
     Nop();Nop();
-    AD1CON2bits.CSCNA = 1; // Do not scan inputs.,
+    AD1CON2bits.CSCNA = 1; // Enable input scan,
      Nop();Nop();
    
     // Need to make the buffer be composed of one 16 bit buffer.  This will
@@ -81,7 +78,11 @@ void ConfigureScanningAnalogInputs(){
     AD1CON2bits.BUFM = 0;
 
     Nop();Nop();
-    AD1CON2bits.SMPI = 0x0D; // Make the buffer thirteen entries (12 wells plus the volts in input).
+    // Note that SMPI should be one less than the actual number of conversions required (see data sheet).
+    // SMPI=0x00 means interrupt after each conversion.
+    // This is especially important for PIC5600/600/700 which won't clear the interrupt
+    // unles all buffers are read.
+    AD1CON2bits.SMPI = 0x0C; // Make the buffer thirteen entries (12 wells plus the volts in input).
     Nop();Nop();
     AD1CON2bits.ALTS = 0; // Always sample from MUX A (do not alternate between A and B).
     Nop();Nop();
@@ -93,34 +94,41 @@ void ConfigureScanningAnalogInputs(){
 
     AD1CON3bits.ADRC=0; // Use peripheral bus as ADC clock (won't work in sleep mode).
     Nop();Nop();
+    // THIS INFO WAS UPDATED FOR DFM V3.
     // If we sample 13 analog inputs 400 times per second, then we will be reading
-    // 6000 times per second. Then we want 0.16ms max
+    // 5200 times per second. Then we want 0.192ms max
     // per reading.  With continuous sampling we can get pretty close to this
     // because all of the heavy lifting is done by the peripheral in the
     // background.  We are not using main clocks to do it.
 
     // I will maximize the aquisition time because (I think) it will reduce
     // cross talk between readings.
+    
+    // Tad = 2 * (Tpb(ADCS+1)) where Tpb is the speed of the peripheral bus, i.e., 1/40000000.
+    // The ADC requires 12 Tad for conversion.
 
-    // With 31Tad sample time (SAMC=0x1F) and 12 Tad for conversion, the total Tad required
-    // is 43.  We want this to be happening in 0.2ms, so 1 Tad is 4us. 4us is about 186 Tpb.
-    // To be safe, we will take this down to set Tad = 150 Tpb.
-    // Thus, ADCS=74 decimal (0x4a) would give 1Tad = 3.75us.
-    // One conversion = 161.25us.  Thirteen conversions = 2.09ms.
-    // 500 sets of 12 conversions = 1048ms.
-    // For some reason, when timing the rate of the interrupt, it is called
-    // about every 2.1ms, which is a bit less often then predicted.
-    // I am not exactly sure why at this moment.
+    // With 31Tad sample time (SAMC=0x1F, which is maximum) and 12 Tad for conversion, the total Tad required
+    // is 43.  We want this to be happening in about 0.2ms, so 1 Tad would need to be 4.5us. 
+    // 1 Tpb = .025us, so the goal is 1 Tad = 180 Tpb. ADCS = 89 would give us this.
+    // Thus, ADCS=89 decimal (0x59) would give 1Tad = 4.5us.
+    
+    // One conversion = 193.5us.  Thirteen conversions = 2.52ms.
+    // 400 sets of 13 conversions = 1006ms.    
 
-    // Nevertheless, if each report is called 200ms, it will encompass roughly the past 100 measures.
-    // Indeed, timing the duration between every 100 reads results in something just
-    // over 200ms.
-
+    // With O3 optimization, the duration of the interrupt is roughly 4.05us and
+    // the time between interrupts is 2.14ms. 
+    
+    // The scope suggests that with these numbers we get a frequency of about
+    // 466 hertz.  SAMPLE FREQUENCY IS THEREFORE 466HZ.
+    
+    // With a report executed 5 times per second, that implies that each report
+    // will capture the previous 93 measures.
+    
     // Because I am using a single buffer it is important to make sure
     // that I am able to unload the buffer before a full aquisition cycle
     // occurs. Otherwise, I may overwrite some values.
-    // Timing the current interrupt, it takse roughly 3.5us.  One
-    // conversion takes 161.25 us, so we are okay.
+    // Timing the current interrupt, it takes roughly 4us.  One
+    // conversion takes 193.5us, so we are okay.
 
     AD1CON3bits.SAMC = 0x1F;
     Nop();Nop();  
@@ -129,10 +137,6 @@ void ConfigureScanningAnalogInputs(){
 }
 
 void StartContinuousSampling(){
-    int i;
-    for(i=0;i<12;i++)
-        CurrentValues[i]=i;
-    return;
     ClearAnalogValues();
     ConfigureScanningAnalogInputs();
     AD1CON1SET = 0x0004; // Set auto.
@@ -142,11 +146,20 @@ void StartContinuousSampling(){
     ConfigIntADC10(ADC_INT_ON | ADC_INT_PRI_5);
 }
 
+// If there are problems will this interrupt maybe it is because it is sticky?
+// Yes, the ADC interrupt is only sticky (the word used in the datasheets is actually 
+// persistent) in PIC32MX5XX/6XX/7XX. See table A-1 in APPENDIX A in the 
+// PIC32MX5XX/6XX/7XX Family Data Sheet. (https://www.microchip.com/forums/m745323.aspx)
+
+// Again, summarizing above, this interrupt is called about every 2.1ms.
+// It takes about 4us to execute the interrupt.
+
 void __ISR(_ADC_VECTOR, IPL5SOFT) ADCHandler(void)
 {
-    int tmp,j;  
-    //PORTECLR = 0x01;
+    int tmp;  
+    //PORTESET = 0x01; 
     //PORTEINV=0x01;
+    
     // I had to remove the 16-bit pointer way to get access to the buffer
     // because for some reason the BUF1 was in memory 16 Bytes after BUF0.
     // I thought this should be 16 bits, and so pointer arithmatic using an
@@ -155,7 +168,13 @@ void __ISR(_ADC_VECTOR, IPL5SOFT) ADCHandler(void)
     // For DFM V3, here I will attempt to load the proper values into CurrentValues such
     // that they go A1, A2, B1, B2, etc., with the last one being the
     // voltage value.
-    tmp=ADC1BUF0; // Voltage
+    
+    // If I run this interrupt placing individual values in their
+    // desired CurrentValues location for subsequent UART writing,
+    // the interrupt takes 6.1us to complete.  When optomized at 03,
+    // it takes 3.7us.
+    
+     tmp=ADC1BUF0; // Voltage
     CurrentValues[12]+=(tmp-values[12][counter]);
     values[12][counter]=tmp;
 
@@ -215,5 +234,5 @@ void __ISR(_ADC_VECTOR, IPL5SOFT) ADCHandler(void)
            
     analogUpdateFlag=1;
     INTClearFlag(INT_AD1);
-    //PORTESET = 0x01;
+    //PORTECLR = 0x01;
 }

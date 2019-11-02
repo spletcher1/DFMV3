@@ -1,35 +1,47 @@
 #ifndef __SP_CONFIG_H
 #define __SP_CONFIG_H
 
-// General Configuration
-// This file has been optimized for the PIC32 LV32MX Board from Mikroelectronika.
+// PIC32MX795F512L Configuration Bit Settings
 
-#pragma config FWDTEN = OFF // No watchdog timer
-#pragma config WDTPS = PS1 // Watchdog postscaler if enabled
-#pragma config FCKSM = CSDCMD // Clock switching and monitoring disabled
-#pragma config OSCIOFNC = OFF // Clock output on OSC0?
-#pragma config IESO = OFF // Internal external switch over bit
-#pragma config FSOSCEN = OFF // Secondary oscillator enable bit
+// 'C' source line config statements
 
-#pragma config CP=OFF // Code protect bit
-#pragma config BWP = OFF // Boot flash write protect
-#pragma config PWP = OFF // Program flash write protect
-#pragma config ICESEL = ICS_PGx1 // ICE pins are shared with PGC1, PGD1 on the UNO32 Stick
-#pragma config DEBUG = OFF // Background debugger
+// DEVCFG3
+#pragma config USERID = 0xFFFF          // Enter Hexadecimal value (Enter Hexadecimal value)
+#pragma config FSRSSEL = PRIORITY_7     // SRS Select (SRS Priority 7)
+#pragma config FMIIEN = OFF             // Ethernet RMII/MII Enable (RMII Enabled)
+#pragma config FETHIO = OFF             // Ethernet I/O Pin Select (Alternate Ethernet I/O)
+#pragma config FCANIO = OFF             // CAN I/O Pin Select (Alternate CAN I/O)
+#pragma config FUSBIDIO = OFF           // USB USID Selection (Controlled by Port Function)
+#pragma config FVBUSONIO = OFF          // USB VBUS ON Selection (Controlled by Port Function)
 
+// DEVCFG2
+#pragma config FPLLIDIV = DIV_2         // PLL Input Divider (2x Divider)
+#pragma config FPLLMUL = MUL_20         // PLL Multiplier (20x Multiplier)
+#pragma config UPLLIDIV = DIV_12        // USB PLL Input Divider (12x Divider)
+#pragma config UPLLEN = OFF             // USB PLL Enable (Disabled and Bypassed)
+#pragma config FPLLODIV = DIV_1         // System PLL Output Clock Divider (PLL Divide by 1)
 
-// ************ OSCILLATOR SETUP *******************
-// This assumes an 8MHz crystal attached to the primary oscillator
-// pins OSC1 and OSC0. 
-#pragma config POSCMOD=XT  // Low speed external oscillator (assume 8MHz)
-#pragma config FNOSC=PRIPLL // Oscillator selector (PRIPLL = primary oscillator w/PLL)
-#pragma config FPLLODIV=DIV_1 //PLL output divider
-#pragma config FPLLIDIV=DIV_2  //PLL input divider (Assume 8MHz)
-#pragma config FPLLMUL=MUL_20 // PLL Multiplier
-#pragma config FPBDIV = DIV_2 // Bootup PBCLK divider (peripheral divider)
+// DEVCFG1
+#pragma config FNOSC = PRIPLL           // Oscillator Selection Bits (Primary Osc w/PLL (XT+,HS+,EC+PLL))
+#pragma config FSOSCEN = OFF            // Secondary Oscillator Enable (Disabled)
+#pragma config IESO = OFF               // Internal/External Switch Over (Disabled)
+#pragma config POSCMOD = XT             // Primary Oscillator Configuration (XT osc mode)
+#pragma config OSCIOFNC = OFF           // CLKO Output Signal Active on the OSCO Pin (Disabled)
+#pragma config FPBDIV = DIV_2           // Peripheral Clock Divisor (Pb_Clk is Sys_Clk/2)
+#pragma config FCKSM = CSDCMD           // Clock Switching and Monitor Selection (Clock Switch Disable, FSCM Disabled)
+#pragma config WDTPS = PS1              // Watchdog Timer Postscaler (1:1)
+#pragma config FWDTEN = OFF             // Watchdog Timer Enable (WDT Disabled (SWDTEN Bit Controls))
 
-// Standard setup for 80MHz function from 8MHz crystal:
-// 8MHz -> PLL Divider (2) -> PLL Multiplier (20) -> Output Divider (1) -> 80MHz
-// Will use a standard peripheral bus of 40MHz
+// DEVCFG0
+#pragma config DEBUG = OFF              // Background Debugger Enable (Debugger is disabled)
+#pragma config ICESEL = ICS_PGx1        // ICE/ICD Comm Channel Select (ICE EMUC1/EMUD1 pins shared with PGC1/PGD1)
+#pragma config PWP = OFF                // Program Flash Write Protect (Disable)
+#pragma config BWP = OFF                // Boot Flash Write Protect bit (Protection Disabled)
+#pragma config CP = OFF                 // Code Protect (Protection Disabled)
+
+// #pragma config statements should precede project file includes.
+// Use project enums instead of #define for ON and OFF.
+
+#include <xc.h>
 
 #endif

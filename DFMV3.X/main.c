@@ -29,7 +29,7 @@ void InitializeRun(){
     ConfigureButtons();
    
     DelayMs(50);
-     if(ConfigureTSL2591()==0){
+    if(ConfigureTSL2591()==0){
         currentError.bits.CONFIGURATION=1;
     }
     DelayMs(50);
@@ -37,7 +37,7 @@ void InitializeRun(){
         currentError.bits.CONFIGURATION=1;
     }
     
-     //StartContinuousSampling();    
+    StartContinuousSampling();    
     
     isInstantOptoEnabled=0;
 }
@@ -84,8 +84,8 @@ int32_t main(void) {
     while (1) {
         if (timerFlag_1sec) {
             StepTSL2591();
-            StepSi7021();
-            timerFlag_1sec = 0;            
+            StepSi7021();            
+            timerFlag_1sec = 0;                               
         }
 
         if (timerFlag_100ms) {
@@ -96,8 +96,7 @@ int32_t main(void) {
             ProcessButtonStep();
             timerFlag_1ms = 0;            
         }
-
-        //myprintf("H = %d   T = %d   L = %d\r\n",Si7021_Humidity,Si7021_Temperature,TSL2591_LUX);    
+       
         if (isPacketReceived) {
             ProcessPacket();
             isPacketReceived = 0;
