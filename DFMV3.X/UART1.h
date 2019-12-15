@@ -3,10 +3,10 @@
 #define __SP_UART1_H
 
 
-void ConfigureUART1(void);
+void ConfigureUART2(void);
 void ProcessPacket();
-void StringToUART1(const char* buffer);
-void CharToUART1(char c);
+void StringToUART2(const char* buffer);
+void CharToUART2(char c);
  
 struct StatusPacket {
   unsigned char Header1;

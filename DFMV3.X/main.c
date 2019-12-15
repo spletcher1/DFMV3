@@ -18,12 +18,16 @@ int ThresholdValues[12];
 
 unsigned char isInstantOptoEnabled;
 
+extern unsigned int TSL2591_LUX;
+extern unsigned int Si7021_Humidity;
+extern unsigned int Si7021_Temperature;
+
 void InitializeRun(){
     Startup();
     InitializeBoard();
     currentError.byte=0x00;      
     ConfigureUpdateTimer();
-    ConfigureUART1();
+    ConfigureUART2();    
     ConfigureOpto();
     ConfigureI2C2();
     ConfigureButtons();
@@ -35,7 +39,7 @@ void InitializeRun(){
     DelayMs(50);
     if(ConfigureSi7021()==0){
         currentError.bits.CONFIGURATION=1;
-    }
+       }
     
     StartContinuousSampling();    
     
@@ -77,12 +81,19 @@ int32_t main(void) {
     int i;
     InitializeRun();
     
-    for(i=0;i<12;i++)
-        CurrentValues[i]=(i*5*128);
+    //for(i=0;i<12;i++)
+        //CurrentValues[i]=(i*5*128);
+    //    CurrentValues[i]=(3*128);
+    
+    //CurrentValues[2] = 625*128;
+    //CurrentValues[8] = 300*128;
     DelayMs(100);
     
     while (1) {
-        if (timerFlag_1sec) {
+        if (timerFlag_1sec) {    
+            //StringToUART2("One Second!\n\r");
+            //myprintf("1 = %d   2 = %d\n", CurrentValues[0],CurrentValues[1]);            
+            //myprintf("T = %d   H = %d   L = %d\n", Si7021_Temperature,Si7021_Humidity,TSL2591_LUX);            
             StepTSL2591();
             StepSi7021();            
             timerFlag_1sec = 0;                               
@@ -92,7 +103,7 @@ int32_t main(void) {
             timerFlag_100ms = 0;
         }
 
-        if (timerFlag_1ms) {
+        if (timerFlag_1ms) {            
             ProcessButtonStep();
             timerFlag_1ms = 0;            
         }

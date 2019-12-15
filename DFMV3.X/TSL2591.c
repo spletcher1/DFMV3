@@ -23,7 +23,7 @@
 #define TSL2591_FULLSPECTRUM      (0)       ///< channel 0
 
 
-#define SECONDS_IN_IDLE 30
+#define SECONDS_IN_IDLE 2
 
 /// TSL2591 Register map
 

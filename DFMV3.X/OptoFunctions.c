@@ -135,10 +135,11 @@ void ConfigureOptoTimer(void) {
     //SetHertz(40);
     //SetHertz(100);
     //Set101();
-    SetOptoParameters(2, 200);
+    SetOptoParameters(40, 8);
     OpenTimer2(T2_ON | T2_SOURCE_INT | T2_PS_1_256, OPTO_TICK);
     ConfigIntTimer2(T2_INT_ON | T2_INT_PRIOR_6);
     currentOptoTimerState = OFF;
+    OptoState1=OptoState2=0x00;
     timerFlag_1ms = 0;
 }
 
@@ -172,8 +173,10 @@ void __ISR(_TIMER_2_VECTOR, IPL6AUTO) Timer2Handler(void) {
     } else if (currentOptoTimerState == COL2_OLDPORT) { //Column 2 lights being attended to
         optoOnCounter++;
         optoOffCounter++; // This is here because column 2 is not being flashed during the off time for the new port and column 1.
-        if (optoOnCounter >= pulseWidth_ms)
+        if (optoOnCounter >= pulseWidth_ms) {
             Opto_Off();       
+            currentOptoTimerState = OFF;
+        }
     }
     timerFlag_1ms = 1;
     mT2ClearIntFlag();    

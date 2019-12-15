@@ -66,7 +66,7 @@ void ConfigureScanningAnalogInputs(){
     Nop();Nop();
     AD1CON1bits.ASAM = 0 ; // This enables manual start of sampling by setting SAMP.  For now, disable it.
     Nop();Nop();
-    AD1CON2bits.VCFG = 0x00;  // Use AVdd and AVss as positive and negative voltage, respecively.
+    AD1CON2bits.VCFG = 0x03;  // Use external VRef+ and minus pins
     Nop();Nop();
     // AD1CHSbits.CH0SA = 0x03; // No need to link to MUX A because we will autosample.
     Nop();Nop();

@@ -23,7 +23,7 @@
 	If not, uncomment the define below and
 	replace outbyte(c) by your own function call.
 */
-#define putchar(c) CharToUART1(c)
+#define putchar(c) CharToUART2(c)
 
 #include <stdarg.h>
     static void printchar(char **str, int c)

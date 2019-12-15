@@ -52,9 +52,12 @@
 #define IDSELECTOR8_TRIS _TRISD15
 #define IDSELECTOR8_PORT _RD15
 #define SETIDSELECTOR_TRIS() TRISDSET = 0x0000F000
-#define GETIDSELECTOR_VALUE() ((PORTD & 0xF000) >> 12)
+#define GETIDSELECTOR_VALUE() ((~PORTD & 0xF000) >> 12)
 
+#define RX485_ENABLE_SEND() _LATF13=1
+#define RX485_DISABLE_SEND() _LATF13=0
 
+#define RX485_SEND_TRIS _TRISF13
 
 
 /*********************************************************************

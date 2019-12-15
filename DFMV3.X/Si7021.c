@@ -32,7 +32,7 @@
 #define Si70211_Config_Heater_On                0x04
 
 
-#define SECONDS_IN_IDLE 30
+#define SECONDS_IN_IDLE 2
 
 enum Si7021State {
     Measuring,
