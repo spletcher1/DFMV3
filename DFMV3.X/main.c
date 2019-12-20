@@ -78,7 +78,7 @@ void SetInstantOptoState(){
 }
 
 int32_t main(void) {
-    int i;
+    int i,sensorStepCounter,sensorFlag;
     InitializeRun();
     
     //for(i=0;i<12;i++)
@@ -88,17 +88,17 @@ int32_t main(void) {
     //CurrentValues[2] = 625*128;
     //CurrentValues[8] = 300*128;
     DelayMs(100);
-    
+    //counter=0;
     while (1) {
         if (timerFlag_1sec) {    
             //StringToUART2("One Second!\n\r");
             //myprintf("1 = %d   2 = %d\n", CurrentValues[0],CurrentValues[1]);            
-            //myprintf("T = %d   H = %d   L = %d\n", Si7021_Temperature,Si7021_Humidity,TSL2591_LUX);            
-            StepTSL2591();
-            StepSi7021();            
+            //myprintf("(%d) T = %d   H = %d   L = %d\r", counter++, Si7021_Temperature,Si7021_Humidity,TSL2591_LUX);            
+            //myprintf("(%d) L = %d\n\r", counter++,TSL2591_LUX);            
+         
             timerFlag_1sec = 0;                               
         }
-
+             
         if (timerFlag_100ms) {
             timerFlag_100ms = 0;
         }
@@ -111,6 +111,20 @@ int32_t main(void) {
         if (isPacketReceived) {
             ProcessPacket();
             isPacketReceived = 0;
+            sensorStepCounter++;
+            // Assumes roughly 5 packets received per second
+            if(sensorStepCounter>=5)
+                sensorFlag=1;
+        }
+        // I broke this out to its own check to try and get it to run
+        // as soon after a packet is processed as possible to minimize
+        // the collision with UART receive, which will result in packet
+        // loss because I am disabling the UART interrupts when the I2C is
+        // reading or writing.
+        if(sensorFlag==1){
+            StepTSL2591();
+            StepSi7021();               
+            sensorFlag=0;
         }
         
         if(analogUpdateFlag){

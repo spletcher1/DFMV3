@@ -49,6 +49,8 @@ void __ISR(_I2C_2_VECTOR, IPL5AUTO) I2C2InterruptServiceRoutine(void) {
 }
 
 I2C_RESULT Read8FromI2C2(unsigned char slaveaddress, unsigned char dataaddress, unsigned char *data) {
+    INTEnable(INT_U2RX,INT_DISABLED);
+	INTEnable(INT_U2E,INT_DISABLED);
     IdleI2C2();
 	// Now begin the send sequence
 	StartI2C2(); // Send the start bit.
@@ -78,12 +80,16 @@ I2C_RESULT Read8FromI2C2(unsigned char slaveaddress, unsigned char dataaddress, 
 	
     IdleI2C2();
 	StopI2C2();	
+    INTEnable(INT_U2RX,INT_ENABLED);
+	INTEnable(INT_U2E,INT_ENABLED);
 	return I2C_SUCCESS;
 }
 
 
 I2C_RESULT Read16FromI2C2(unsigned char slaveaddress, unsigned char dataaddress, unsigned int *data) {
 // Now begin the send sequence
+    INTEnable(INT_U2RX,INT_DISABLED);
+	INTEnable(INT_U2E,INT_DISABLED);
     IdleI2C2();
 	StartI2C2(); // Send the start bit.
 	IdleI2C2(); // Wait until this is complete.
@@ -116,10 +122,14 @@ I2C_RESULT Read16FromI2C2(unsigned char slaveaddress, unsigned char dataaddress,
     	
     
 	StopI2C2();	
+    INTEnable(INT_U2RX,INT_ENABLED);
+	INTEnable(INT_U2E,INT_ENABLED);
 	return I2C_SUCCESS;  
 }
 
 I2C_RESULT Read32FromI2C2(unsigned char slaveaddress, unsigned char dataaddress, unsigned int *data) {
+    INTEnable(INT_U2RX,INT_DISABLED);
+	INTEnable(INT_U2E,INT_DISABLED);
     IdleI2C2();
 	// Now begin the send sequence
 	StartI2C2(); // Send the start bit.
@@ -157,12 +167,15 @@ I2C_RESULT Read32FromI2C2(unsigned char slaveaddress, unsigned char dataaddress,
 	IdleI2C2();
     
 	StopI2C2();
-	
+	INTEnable(INT_U2RX,INT_ENABLED);
+	INTEnable(INT_U2E,INT_ENABLED);
 	return I2C_SUCCESS;
 }
 
 I2C_RESULT Read32FromI2C2Backward(unsigned char slaveaddress, unsigned char dataaddress, unsigned int *data) {
     unsigned char a,b,c,d;
+    INTEnable(INT_U2RX,INT_DISABLED);
+	INTEnable(INT_U2E,INT_DISABLED);
     IdleI2C2();
 	// Now begin the send sequence
 	StartI2C2(); // Send the start bit.
@@ -206,7 +219,8 @@ I2C_RESULT Read32FromI2C2Backward(unsigned char slaveaddress, unsigned char data
 	IdleI2C2();
     
 	StopI2C2();	
-    
+    INTEnable(INT_U2RX,INT_ENABLED);
+	INTEnable(INT_U2E,INT_ENABLED);
      *(data)=(d<<24) + (c<<16) + (b<<8) + a;
 	return I2C_SUCCESS;
 }
@@ -214,6 +228,8 @@ I2C_RESULT Read32FromI2C2Backward(unsigned char slaveaddress, unsigned char data
 
 // This function is simplified for single byte addresses
 I2C_RESULT Write8ToI2C2(unsigned char slaveaddress, unsigned char dataaddress, unsigned char data) {
+    INTEnable(INT_U2RX,INT_DISABLED);
+	INTEnable(INT_U2E,INT_DISABLED);
     IdleI2C2();
 	// Begin the send sequence
 	StartI2C2(); // Send the start bit.
@@ -232,13 +248,16 @@ I2C_RESULT Write8ToI2C2(unsigned char slaveaddress, unsigned char dataaddress, u
 	if(I2C2STATbits.ACKSTAT) return I2C_ERROR; // If this bit is 1, then slave failed to ackknowledge, so break.	
 	
 	I2CStop(I2C2);// Send the stop condition.	
-		
+    INTEnable(INT_U2RX,INT_ENABLED);
+	INTEnable(INT_U2E,INT_ENABLED);		
 	return I2C_SUCCESS;
 
 }
 
 
 I2C_RESULT RequestMeasureSi7021I2C2(unsigned char slaveaddress, unsigned char dataaddress) {
+    INTEnable(INT_U2RX,INT_DISABLED);
+	INTEnable(INT_U2E,INT_DISABLED);
     IdleI2C2();
 	// Begin the send sequence
 	StartI2C2(); // Send the start bit.
@@ -260,12 +279,15 @@ I2C_RESULT RequestMeasureSi7021I2C2(unsigned char slaveaddress, unsigned char da
 	if(!I2C2STATbits.ACKSTAT) return I2C_ERROR; // If this bit is 1, then slave failed to ackknowledge, so break.	
 	
 	I2CStop(I2C2);// Send the stop condition.	
-		
+	INTEnable(INT_U2RX,INT_ENABLED);
+	INTEnable(INT_U2E,INT_ENABLED);		
 	return I2C_SUCCESS;
 
 }
 
 I2C_RESULT ReadHumidityFromSi7021I2C2(unsigned char slaveaddress, unsigned int *data) {
+    INTEnable(INT_U2RX,INT_DISABLED);
+	INTEnable(INT_U2E,INT_DISABLED);
 // Now begin the send sequence
     IdleI2C2();
 	StartI2C2(); // Send the start bit.
@@ -285,5 +307,7 @@ I2C_RESULT ReadHumidityFromSi7021I2C2(unsigned char slaveaddress, unsigned int *
    		
     IdleI2C2();
 	StopI2C2();	
+    INTEnable(INT_U2RX,INT_ENABLED);
+	INTEnable(INT_U2E,INT_ENABLED);		
 	return I2C_SUCCESS;  
 }

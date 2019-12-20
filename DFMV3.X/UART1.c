@@ -190,7 +190,7 @@ void ProcessPacket() {
             currentStatus.Checksum2=(checksum>>16) & 0xFF;            
             currentStatus.Checksum3=(checksum>>8) & 0xFF;
             currentStatus.Checksum4=checksum & 0xFF;
-            DelayMs(10);
+            DelayMs(5);
             CurrentStatusToUART2();
             currentError.byte=0x00;
             break;
@@ -207,7 +207,7 @@ void ProcessPacket() {
             SetPulseWidth_ms((packetBuffer[2]<<8) + packetBuffer[3]);
             break;
         case 0x06: // Return ID
-            DelayMs(10);
+            DelayMs(5);
             CharToUART2(dfmID);
             break;
         default:
