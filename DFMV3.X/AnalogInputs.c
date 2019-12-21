@@ -22,10 +22,10 @@
  * 
  *
  */
-int volatile counter;
-int volatile values[13][128];
-int volatile CurrentValues[13];
-
+int counter;
+int values[13][128];
+int CurrentValues[13];
+int volatile tmpValues[13];
 
 extern struct StatusPacket currentStatus;
 unsigned char volatile analogUpdateFlag;
@@ -157,81 +157,19 @@ void StartContinuousSampling(){
 
 void __ISR(_ADC_VECTOR, IPL5SOFT) ADCHandler(void)
 {
-    int tmp;  
-    //PORTESET = 0x01; 
-    //PORTEINV=0x01;
-    
-    // I had to remove the 16-bit pointer way to get access to the buffer
-    // because for some reason the BUF1 was in memory 16 Bytes after BUF0.
-    // I thought this should be 16 bits, and so pointer arithmatic using an
-    // unsigned short int won't work.  I will have to look into this later.
-    
-    // For DFM V3, here I will attempt to load the proper values into CurrentValues such
-    // that they go A1, A2, B1, B2, etc., with the last one being the
-    // voltage value.
-    
-    // If I run this interrupt placing individual values in their
-    // desired CurrentValues location for subsequent UART writing,
-    // the interrupt takes 6.1us to complete.  When optomized at 03,
-    // it takes 3.7us.
-    
-     tmp=ADC1BUF0; // Voltage
-    CurrentValues[12]+=(tmp-values[12][counter]);
-    values[12][counter]=tmp;
-
-    tmp=ADC1BUF1; //A1    
-    CurrentValues[0]+=(tmp-values[0][counter]);
-    values[0][counter]=tmp;
-
-    tmp=ADC1BUF2; //B1    
-    CurrentValues[2]+=(tmp-values[2][counter]);
-    values[2][counter]=tmp;
-
-    tmp=ADC1BUF3; // A2    
-    CurrentValues[1]+=(tmp-values[1][counter]);
-    values[1][counter]=tmp;
-
-    tmp=ADC1BUF4; // B2    
-    CurrentValues[3]+=(tmp-values[3][counter]);
-    values[3][counter]=tmp;
-
-    tmp=ADC1BUF5; // F1    
-    CurrentValues[10]+=(tmp-values[10][counter]);
-    values[10][counter]=tmp;
-
-    tmp=ADC1BUF6; // D2   
-    CurrentValues[7]+=(tmp-values[7][counter]);
-    values[7][counter]=tmp;
-
-    tmp=ADC1BUF7; // F2   
-    CurrentValues[11]+=(tmp-values[11][counter]);
-    values[11][counter]=tmp;
-
-    tmp=ADC1BUF8; // C1   
-    CurrentValues[4]+=(tmp-values[4][counter]);
-    values[4][counter]=tmp;
-
-    tmp=ADC1BUF9; // E1    
-    CurrentValues[8]+=(tmp-values[8][counter]);
-    values[8][counter]=tmp;
-
-    tmp=ADC1BUFA;  // C2  
-    CurrentValues[5]+=(tmp-values[5][counter]);
-    values[5][counter]=tmp;
-
-    tmp=ADC1BUFB; // E2   
-    CurrentValues[9]+=(tmp-values[9][counter]);
-    values[9][counter]=tmp;
-
-    tmp=ADC1BUFC; // D1   
-    CurrentValues[6]+=(tmp-values[6][counter]);
-    values[6][counter]=tmp;
-
-    counter++; 
-    if(counter>=128) {
-          counter=0;
-          //PORTEINV=0x01;
-    }
+    tmpValues[12]=ADC1BUF0; // Voltage
+    tmpValues[0]=ADC1BUF1; //A1        
+    tmpValues[2]=ADC1BUF2; //B1    
+    tmpValues[1]=ADC1BUF3; // A2    
+    tmpValues[3]=ADC1BUF4; // B2    
+    tmpValues[10]=ADC1BUF5; // F1    
+    tmpValues[7]=ADC1BUF6; // D2   
+    tmpValues[11]=ADC1BUF7; // F2   
+    tmpValues[4]=ADC1BUF8; // C1   
+    tmpValues[8]=ADC1BUF9; // E1    
+    tmpValues[5]=ADC1BUFA;  // C2  
+    tmpValues[9]=ADC1BUFB; // E2   
+    tmpValues[6]=ADC1BUFC; // D1   
            
     analogUpdateFlag=1;
     INTClearFlag(INT_AD1);
@@ -239,7 +177,17 @@ void __ISR(_ADC_VECTOR, IPL5SOFT) ADCHandler(void)
 }
 
 void StepADC(){
+    int i,j;  
     
+    for(i=0;i<13;i++){
+        CurrentValues[i]+=(tmpValues[i]-values[i][counter]);
+        values[i][counter]=tmpValues[i];                
+    }
     
+    counter++; 
+    if(counter>=128) {
+          counter=0;
+          //PORTEINV=0x01;
+    }
     
 }

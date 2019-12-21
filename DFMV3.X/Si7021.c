@@ -32,7 +32,7 @@
 #define Si70211_Config_Heater_On                0x04
 
 
-#define SECONDS_IN_IDLE 2
+#define SECONDS_IN_IDLE 57
 
 enum Si7021State {
     Measuring,
@@ -46,12 +46,14 @@ unsigned int Si7021_Temperature;
 unsigned int tmpHumidity, tmpTemperature;
 unsigned char isSi7021Configured = 0;
 int idleCounter_Si;
-extern errorFlags_t currentError;
+extern errorFlags_t volatile currentError;
 
 unsigned char IsSi7021Ready() {
     unsigned char found;
     I2C_RESULT result;
+    DisableUARTInterrupts();
     result = Read8FromI2C2(Si7021_address_adj, Si7021_Read_Config_Register, &found);
+    EnableUARTInterrupts();
     if (found != 0x00 && result == I2C_SUCCESS)
         return 1;
     else
@@ -73,7 +75,9 @@ unsigned char ConfigureSi7021() {
 
 void CallForTempHumidityMeasure() {
     I2C_RESULT result;
+    DisableUARTInterrupts();
     result = RequestMeasureSi7021I2C2(Si7021_address_adj, Si7021_Measure_RH_No_Hold_Mode);
+    EnableUARTInterrupts();
     if (result != I2C_SUCCESS) {
         currentError.bits.Si7021 = 1;
     }
@@ -81,7 +85,9 @@ void CallForTempHumidityMeasure() {
 
 void GetHumidityData() {
     I2C_RESULT result;
+    DisableUARTInterrupts();
     result = ReadHumidityFromSi7021I2C2(Si7021_address_adj, &tmpHumidity);
+    EnableUARTInterrupts();
     if (result != I2C_SUCCESS) {
         currentError.bits.Si7021 = 1;
     }
@@ -89,7 +95,9 @@ void GetHumidityData() {
 
 void GetTemperatureData() {
     I2C_RESULT result;
+    DisableUARTInterrupts();
     result = Read16FromI2C2(Si7021_address_adj, Si7021_Read_T_from_Last_RH_Value, &tmpTemperature);
+    EnableUARTInterrupts();
     if (result != I2C_SUCCESS) {
         currentError.bits.Si7021 = 1;
     }
@@ -125,7 +133,12 @@ void StepSi7021() {
             }
             break;
         case Calculation:
-            UpdateTempAndHumidity();
+            if(currentError.bits.I2C==1 || currentError.bits.Si7021==1){
+                Si7021_Temperature = 0;
+                Si7021_Humidity =0;
+            }
+            else
+                UpdateTempAndHumidity();
             currentState_Si = Idle;
             break;
         default:

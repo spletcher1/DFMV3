@@ -5,15 +5,14 @@
 #include "GlobalIncludes.h"         /* System funct/params, like osc/periph config    */
 #include "SP_ConfigP32.h"           /* User funct/params, such as InitApp             */
 
-errorFlags_t currentError;
+errorFlags_t volatile currentError;
 extern unsigned char volatile isPacketReceived;
 extern unsigned char volatile timerFlag_1ms;
 extern unsigned char volatile timerFlag_100ms;
 extern unsigned char volatile timerFlag_1sec;
-
 extern unsigned char volatile analogUpdateFlag;
 
-extern int volatile CurrentValues[13]; // This has one extra place for the input voltage reading from the DFM.
+extern int CurrentValues[13]; // This has one extra place for the input voltage reading from the DFM.
 int ThresholdValues[12];
 
 unsigned char isInstantOptoEnabled;
@@ -97,6 +96,13 @@ int32_t main(void) {
             ProcessPacket();
             isPacketReceived = 0;        
         }
+        if(analogUpdateFlag){
+            StepADC();         
+            if(isInstantOptoEnabled){
+                SetInstantOptoState();
+            }
+            analogUpdateFlag=0;            
+        }
         if (timerFlag_1sec) {    
             //StringToUART2("One Second!\n\r");
             //myprintf("1 = %d   2 = %d\n", CurrentValues[0],CurrentValues[1]);            
@@ -107,24 +113,16 @@ int32_t main(void) {
                 StepSi7021();               
             }
             timerFlag_1sec = 0;                               
-        }
-             
+        }             
         if (timerFlag_100ms) {
             timerFlag_100ms = 0;
         }
-
         if (timerFlag_1ms) {            
             ProcessButtonStep();
             timerFlag_1ms = 0;            
         }
             
-        if(analogUpdateFlag){
-            analogUpdateFlag=0;
-            if(isInstantOptoEnabled){
-                SetInstantOptoState();
-            }
-            
-        }
+       
     }
 }
 

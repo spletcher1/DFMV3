@@ -12,7 +12,7 @@
 #define I2C_CLOCK_FREQ 400000 // Set at 400000 for normal EEPROM and 100000 for Propeller
 int ErrorCount;
 I2C_RESULT theCurrentI2CResult;
-extern errorFlags_t currentError;
+extern errorFlags_t volatile currentError;
 
 // the IdleFunction 
 // while(I2C2CONbits.SEN || I2C2CONbits.PEN || I2C2CONbits.RSEN || I2C2CONbits.RCEN || I2C2CONbits.ACKEN || I2C2STATbits.TRSTAT);

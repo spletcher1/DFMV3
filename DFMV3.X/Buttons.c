@@ -7,8 +7,6 @@ unsigned char signalButton2Pressed;
 
 extern unsigned long volatile halfSecondCounter;
 
-extern int volatile CurrentValues[12];
-
 void ConfigureButtons() {
     USERBUTTON1_TRIS = 0x01;
     USERBUTTON2_TRIS = 0x01;
@@ -48,12 +46,12 @@ void ProcessButtonStep() {
 
 void ProcessButton1Press() {
     int i;
-    for (i = 0; i < 12; i++)
-        CurrentValues[i] += (15 * 128);
+    for (i = 0; i < 12; i++);
+        
 }
 
 void ProcessButton2Press() {
     int i;
-    for (i = 0; i < 12; i++)
-        CurrentValues[i] -= (15 * 128);
+    for (i = 0; i < 12; i++);
+        
 }

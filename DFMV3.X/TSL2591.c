@@ -23,7 +23,7 @@
 #define TSL2591_FULLSPECTRUM      (0)       ///< channel 0
 
 
-#define SECONDS_IN_IDLE 1
+#define SECONDS_IN_IDLE 58
 
 /// TSL2591 Register map
 
@@ -96,12 +96,14 @@ unsigned char didSensitivityChange;
 unsigned char isAtMaxSensitivity;
 unsigned char isAtMinSensitivity;
 int idleCounter_tsl;
-extern errorFlags_t currentError;
+extern errorFlags_t volatile currentError;
 
 unsigned char IsTSL2591Ready() {
     unsigned char found;
     I2C_RESULT result;
+    DisableUARTInterrupts();
     result = Read8FromI2C2(TSL2591_ADDR_ADJ, TSL2591_REGISTER_DEVICE_ID | TSL2591_CMD, &found);
+    EnableUARTInterrupts();
     if (found == 0x50 && result == I2C_SUCCESS)
         return 1;
     else
@@ -110,7 +112,9 @@ unsigned char IsTSL2591Ready() {
 
 void SetTimingAndGain(enum TSL2591Gain gain, enum TSL2591Timing timing) {
     I2C_RESULT result;
+    DisableUARTInterrupts();
     result = Write8ToI2C2(TSL2591_ADDR_ADJ, TSL2591_REGISTER_CONTROL | TSL2591_CMD, (unsigned char) gain | (unsigned char) timing);
+    EnableUARTInterrupts();
     if (result != I2C_SUCCESS) {
         currentError.bits.TSL2591 = 1;
         return;
@@ -131,7 +135,9 @@ void SetTimingAndGain(enum TSL2591Gain gain, enum TSL2591Timing timing) {
 
 void inline Enable() {
     I2C_RESULT result;
+    DisableUARTInterrupts();
     result = Write8ToI2C2(TSL2591_ADDR_ADJ, TSL2591_REGISTER_ENABLE | TSL2591_CMD, TSL2591_ENABLE_POWERON | TSL2591_ENABLE_AEN);
+    EnableUARTInterrupts();
     if (result != I2C_SUCCESS) {
         currentError.bits.TSL2591 = 1;
     }
@@ -139,7 +145,9 @@ void inline Enable() {
 
 void inline Disable() {
     I2C_RESULT result;
+    DisableUARTInterrupts();
     result = Write8ToI2C2(TSL2591_ADDR_ADJ, TSL2591_REGISTER_ENABLE | TSL2591_CMD, TSL2591_ENABLE_POWERON);
+    EnableUARTInterrupts();
     if (result != I2C_SUCCESS) {
         currentError.bits.TSL2591 = 1;
     }
@@ -147,7 +155,9 @@ void inline Disable() {
 
 void inline PowerUp() {
     I2C_RESULT result;
+    DisableUARTInterrupts();
     result = Write8ToI2C2(TSL2591_ADDR_ADJ, TSL2591_REGISTER_ENABLE | TSL2591_CMD, TSL2591_ENABLE_POWERON);
+    EnableUARTInterrupts();
     if (result != I2C_SUCCESS) {
         currentError.bits.TSL2591 = 1;
     }
@@ -155,7 +165,9 @@ void inline PowerUp() {
 
 void inline PowerDown() {
     I2C_RESULT result;
+    DisableUARTInterrupts();
     result = Write8ToI2C2(TSL2591_ADDR_ADJ, TSL2591_REGISTER_ENABLE | TSL2591_CMD, TSL2591_ENABLE_POWEROFF);
+    EnableUARTInterrupts();
     if (result != I2C_SUCCESS) {
         currentError.bits.TSL2591 = 1;
     }
@@ -165,7 +177,9 @@ void inline PowerDown() {
 unsigned char GetTSL2591Status() {
     unsigned char result, found;
     Enable();
+    DisableUARTInterrupts();
     result = Read8FromI2C2(TSL2591_ADDR_ADJ, TSL2591_REGISTER_DEVICE_STATUS | TSL2591_CMD, &found);
+    EnableUARTInterrupts();
     if (result != I2C_SUCCESS) {
         currentError.bits.TSL2591 = 1;
     }
@@ -177,7 +191,9 @@ unsigned char GetTSL2591Status() {
 unsigned char CheckTimingAndGain() {
     unsigned char result, regData;
     Enable();
+    DisableUARTInterrupts();
     result = Read8FromI2C2(TSL2591_ADDR_ADJ, TSL2591_REGISTER_CONTROL | TSL2591_CMD, &regData);
+    EnableUARTInterrupts();
     if (result != I2C_SUCCESS) {
         currentError.bits.TSL2591 = 1;
     }
@@ -193,7 +209,9 @@ void GetFullLuminosity() {
     unsigned char status;
     I2C_RESULT result;
     status = GetTSL2591Status();
+    DisableUARTInterrupts();
     result=Read32FromI2C2Backward(TSL2591_ADDR_ADJ, TSL2591_CMD | TSL2591_REGISTER_CHAN0_LOW, &fullLuminosity);
+    EnableUARTInterrupts();
     if (result != I2C_SUCCESS) {
         currentError.bits.TSL2591 = 1;
     }
@@ -334,7 +352,10 @@ void StepTSL2591() {
                 currentState_TSL = LuxReady;
             break;
         case LuxReady:
-            TSL2591_LUX = tmpLUX;
+            if(currentError.bits.I2C==1 || currentError.bits.TSL2591==1)
+                TSL2591_LUX = 0;
+            else
+                TSL2591_LUX = tmpLUX;
             currentState_TSL = Idle;
             break;
         default:

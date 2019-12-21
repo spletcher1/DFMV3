@@ -19,15 +19,15 @@
 #define STATUSPACKETSIZE 65
 
 unsigned char volatile isPacketReceived;
-unsigned char packetBuffer[250];
+unsigned char volatile packetBuffer[250];
 unsigned char volatile packetIndex;
 
 unsigned char volatile isInPacket;
-unsigned char volatile byteCountDown;
 unsigned int volatile headerSum;
+
 struct StatusPacket currentStatus; 
 
-extern errorFlags_t currentError;
+extern errorFlags_t volatile currentError;
 
 extern unsigned char dfmID;
 extern unsigned char isInDarkMode;
@@ -49,6 +49,19 @@ extern unsigned int Si7021_Temperature;
 #define TARGET_BAUD_RATE  115200
 
 /////////////////////////////////////////////////////////////////
+void inline DisableUARTInterrupts(){
+    INTEnable(INT_U2RX,INT_DISABLED);
+	INTEnable(INT_U2E,INT_DISABLED);    
+}
+
+void inline EnableUARTInterrupts(){
+    INTEnable(INT_U2RX,INT_ENABLED);
+	INTEnable(INT_U2E,INT_ENABLED);  
+    INTClearFlag(INT_U2RX);
+    INTClearFlag(INT_U2TX); 
+}
+
+
 void CharToUART2(char c){
     RX485_ENABLE_SEND();
     while (!UARTTransmitterIsReady(UART2));
@@ -216,8 +229,6 @@ void ProcessPacket() {
     }
     
 }
-
-
 
 void ShortIntToUART2(int a){
   unsigned char c;

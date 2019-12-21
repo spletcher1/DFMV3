@@ -4,5 +4,6 @@
 void ConfigureAnalogInputs(void);
 void StartContinuousSampling(void);
 void FillCurrentStatus(void);
+void StepADC();
 #endif	/* ANALOGINPUTS_H */
 
