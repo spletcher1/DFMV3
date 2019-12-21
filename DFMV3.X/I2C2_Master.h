@@ -9,7 +9,7 @@ I2C_RESULT Write8ToI2C2(unsigned char slaveaddress, unsigned char dataaddress, u
 
 I2C_RESULT RequestMeasureSi7021I2C2(unsigned char slaveaddress, unsigned char dataaddress);
 I2C_RESULT ReadHumidityFromSi7021I2C2(unsigned char slaveaddress, unsigned int *data);
-
+void FreeI2C(void);
 
 #endif
 

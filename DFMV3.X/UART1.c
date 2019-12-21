@@ -61,6 +61,7 @@ void ConfigureUART2Interrupts(){
 	// For now we interrupt on RX
 	INTSetVectorPriority(INT_UART_2_VECTOR,INT_PRIORITY_LEVEL_4);
 	INTClearFlag(INT_U2RX);
+    INTClearFlag(INT_U2TX);    
 	INTEnable(INT_U2RX,INT_ENABLED);
 	INTEnable(INT_U2E,INT_ENABLED);
 }

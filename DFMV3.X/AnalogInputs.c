@@ -26,6 +26,7 @@ int volatile counter;
 int volatile values[13][128];
 int volatile CurrentValues[13];
 
+
 extern struct StatusPacket currentStatus;
 unsigned char volatile analogUpdateFlag;
 
@@ -235,4 +236,10 @@ void __ISR(_ADC_VECTOR, IPL5SOFT) ADCHandler(void)
     analogUpdateFlag=1;
     INTClearFlag(INT_AD1);
     //PORTECLR = 0x01;
+}
+
+void StepADC(){
+    
+    
+    
 }
