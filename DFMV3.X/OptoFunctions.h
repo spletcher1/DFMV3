@@ -13,8 +13,8 @@ void SetHertz(unsigned int hz);
 #define COL2ON() LATDSET=0x10
 #define COL2OFF() LATDCLR=0x10
 
-#define ROW1ON() LATFSET=0x40
-#define ROW1OFF() LATFCLR=0x40
+#define ROW1ON() LATDSET=0x200
+#define ROW1OFF() LATDCLR=0x200
 #define ROW2ON() LATDSET=0x80
 #define ROW2OFF() LATDCLR=0x80
 #define ROW3ON() LATDSET=0x40

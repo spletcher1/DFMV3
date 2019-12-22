@@ -155,8 +155,7 @@ void __ISR(_TIMER_2_VECTOR, IPL6AUTO) Timer2Handler(void) {
             if (usingNewPortOnly) {
                 NewPort_Opto_On();
             } else {
-                Col1_Opto_On();
-                NewPort_Opto_On();
+                Col1_Opto_On();                
             }
         }
     } else if (currentOptoTimerState == COL1_OLDPORT_AND_ALL_NEWPORT) { //Column 1 lights attended to
