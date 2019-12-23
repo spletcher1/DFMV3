@@ -23,6 +23,7 @@
       <itemPath>TSL2591.h</itemPath>
       <itemPath>I2C2_Master.h</itemPath>
       <itemPath>Buttons.h</itemPath>
+      <itemPath>LEDControl.h</itemPath>
     </logicalFolder>
     <logicalFolder name="LinkerScript"
                    displayName="Linker Files"
@@ -44,6 +45,7 @@
       <itemPath>I2C2_Master.c</itemPath>
       <itemPath>ExtraCode.c</itemPath>
       <itemPath>Buttons.c</itemPath>
+      <itemPath>LEDControl.c</itemPath>
     </logicalFolder>
     <logicalFolder name="ExternalFiles"
                    displayName="Important Files"
@@ -109,7 +111,7 @@
         <property key="generate-micro-compressed-code" value="false"/>
         <property key="isolate-each-function" value="false"/>
         <property key="make-warnings-into-errors" value="false"/>
-        <property key="optimization-level" value="-O3"/>
+        <property key="optimization-level" value=""/>
         <property key="place-data-into-section" value="false"/>
         <property key="post-instruction-scheduling" value="default"/>
         <property key="pre-instruction-scheduling" value="default"/>

@@ -12,10 +12,6 @@ extern unsigned char volatile timerFlag_100ms;
 extern unsigned char volatile timerFlag_1sec;
 extern unsigned char volatile analogUpdateFlag;
 
-extern int CurrentValues[13]; // This has one extra place for the input voltage reading from the DFM.
-int ThresholdValues[12];
-
-unsigned char isInstantOptoEnabled;
 
 extern unsigned int TSL2591_LUX;
 extern unsigned int Si7021_Humidity;
@@ -42,42 +38,11 @@ void InitializeRun(){
     if(ConfigureSi7021()==0){
         currentError.bits.CONFIGURATION=1;
        }
-    
+    InitializeLEDControl();
     StartContinuousSampling();    
-    
-    isInstantOptoEnabled=0;
 }
 
-void SetInstantOptoState(){    
-    int OptoState1,OptoState2;
-    OptoState1=OptoState2=0;    
-    if(CurrentValues[0]>ThresholdValues[0])
-        OptoState1=0x01;
-    if(CurrentValues[1]>ThresholdValues[1])
-        OptoState2=0x01;
-    if(CurrentValues[2]>ThresholdValues[2])
-        OptoState1|=0x02;
-    if(CurrentValues[3]>ThresholdValues[3])
-        OptoState2|=0x02;
-    if(CurrentValues[4]>ThresholdValues[4])
-        OptoState1|=0x04;
-    if(CurrentValues[5]>ThresholdValues[5])
-        OptoState2|=0x04;
-    if(CurrentValues[6]>ThresholdValues[6])
-        OptoState1|=0x05;
-    if(CurrentValues[7]>ThresholdValues[7])
-        OptoState2|=0x05;
-    if(CurrentValues[8]>ThresholdValues[8])
-        OptoState1|=0x10;
-    if(CurrentValues[9]>ThresholdValues[9])
-        OptoState2|=0x10;
-    if(CurrentValues[10]>ThresholdValues[10])
-        OptoState1|=0x30;
-    if(CurrentValues[11]>ThresholdValues[11])
-        OptoState2|=0x30;
-    
-    SetOptoState(OptoState1,OptoState2);
-}
+
 
 int32_t main(void) {
     int i;
@@ -97,10 +62,7 @@ int32_t main(void) {
             isPacketReceived = 0;        
         }
         if(analogUpdateFlag){
-            StepADC();         
-            if(isInstantOptoEnabled){
-                SetInstantOptoState();
-            }
+            StepADC();                   
             analogUpdateFlag=0;            
         }
         if (timerFlag_1sec) {    
@@ -119,6 +81,7 @@ int32_t main(void) {
         }
         if (timerFlag_1ms) {            
             ProcessButtonStep();
+            StepLEDControl();
             timerFlag_1ms = 0;            
         }
             
