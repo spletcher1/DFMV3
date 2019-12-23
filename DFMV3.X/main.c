@@ -38,9 +38,9 @@ void InitializeRun(){
     if(ConfigureSi7021()==0){
         currentError.bits.CONFIGURATION=1;
        }
-    InitializeLEDControl(1000,0,2000);
+    InitializeLEDControl(0,0,0);
     ClearLEDThresholds();
-    TestLEDThresholds();
+    //TestLEDThresholds();
     StartContinuousSampling();    
 }
 
@@ -79,6 +79,7 @@ int32_t main(void) {
             timerFlag_1sec = 0;                               
         }             
         if (timerFlag_100ms) {
+            StepPacketManager();
             timerFlag_100ms = 0;
         }
         if (timerFlag_1ms) {            

@@ -16,7 +16,7 @@
 #define HEADER3 0xFD
 
 #define INSTRUCTIONPACKETSIZE 9 
-#define STATUSPACKETSIZE 65
+
 
 unsigned char volatile isPacketReceived;
 unsigned char volatile packetBuffer[250];
@@ -25,20 +25,9 @@ unsigned char volatile packetIndex;
 unsigned char volatile isInPacket;
 unsigned int volatile headerSum;
 
-struct StatusPacket currentStatus; 
-
-extern errorFlags_t volatile currentError;
-
 extern unsigned char dfmID;
 extern unsigned char isInDarkMode;
-extern unsigned char volatile OptoState1;
-extern unsigned char volatile OptoState2;
-extern unsigned int volatile pulseWidth_ms;
-extern unsigned int volatile hertz;
-
-extern unsigned int TSL2591_LUX;
-extern unsigned int Si7021_Humidity;
-extern unsigned int Si7021_Temperature;
+extern errorFlags_t volatile currentError;
 
 /////////////////////////////////////////////////////////////////
 // Select one to specify configuration.
@@ -97,10 +86,7 @@ void ConfigureUART2(void) {
 
     ConfigureUART2Interrupts();
     ClearPacketBuffer(); 
-    currentStatus.Header1=0xFF;
-    currentStatus.Header2=0xFF;
-    currentStatus.Header3=0xFD;   
-    currentStatus.ID=dfmID;          
+       
 }
 
 // Interestingly, this interrupt seems to be called 9 times to process
@@ -160,8 +146,8 @@ void __ISR(_UART2_VECTOR, IPL4AUTO) UART2Interrupt(void){
     INTClearFlag(INT_U2RX);		
 }
 
-void CurrentStatusToUART2(){
-    unsigned char *statusPointer = (char *)&currentStatus.Header1;
+void CurrentStatusToUART2(struct StatusPacket *cs){
+    unsigned char *statusPointer = (char *)&cs->Header1;
     int i;
     RX485_ENABLE_SEND();
     for(i=0;i<STATUSPACKETSIZE;i++){
@@ -173,40 +159,13 @@ void CurrentStatusToUART2(){
 }
 
 void ProcessPacket() {  
-    unsigned int checksum=0,i;
-    unsigned char *statusPointer = (char *)&currentStatus.Header1;    
+         
     if(packetBuffer[0]!=dfmID && packetBuffer[0]!=255) return; // Packet not for me    
     if (isInDarkMode == 0) FLIP_GREEN_LED();
     switch(packetBuffer[1]){
         case 0x01: // Status Request
-            currentStatus.ErrorFlag = currentError.byte;
-            FillCurrentStatus();
-            currentStatus.Optostate1 = OptoState1;
-            currentStatus.Optostate2 = OptoState2;
-            currentStatus.OptoFreq1 = hertz>>8;
-            currentStatus.OptoFreq2 = hertz & 0xFF;
-            currentStatus.OptoPW1 = pulseWidth_ms >> 8;
-            currentStatus.OptoPW2 = pulseWidth_ms & 0xFF;
-            currentStatus.DarkMode = isInDarkMode;
-            currentStatus.Temperature1 = (Si7021_Temperature >> 24);
-            currentStatus.Temperature2 = ((Si7021_Temperature >> 16) & 0xFF);
-            currentStatus.Temperature3 = ((Si7021_Temperature >> 8) & 0xFF);
-            currentStatus.Temperature4 = (Si7021_Temperature & 0xFF);            
-            currentStatus.Humidity1 = (Si7021_Humidity >> 24);
-            currentStatus.Humidity2 = ((Si7021_Humidity >> 16) & 0xFF);
-            currentStatus.Humidity3 = ((Si7021_Humidity >> 8) & 0xFF);
-            currentStatus.Humidity4 = (Si7021_Humidity & 0xFF);
-            currentStatus.LightHigh = TSL2591_LUX>>8;
-            currentStatus.LightLow = TSL2591_LUX & 0xFF;
-            for(i=3;i<(STATUSPACKETSIZE-4);i++) checksum+= *(statusPointer+i);
-            checksum = (checksum ^ 0xFFFFFFFF) + 0x01;
-            currentStatus.Checksum1=checksum>>24;
-            currentStatus.Checksum2=(checksum>>16) & 0xFF;            
-            currentStatus.Checksum3=(checksum>>8) & 0xFF;
-            currentStatus.Checksum4=checksum & 0xFF;
             DelayMs(5);
-            CurrentStatusToUART2();
-            currentError.byte=0x00;
+            CurrentStatusToUART2(GetStatusAtFront());            
             break;
         case 0x02: // Set Darkmode               
             SetDarkMode(packetBuffer[2]);

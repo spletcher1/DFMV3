@@ -24,6 +24,7 @@
       <itemPath>I2C2_Master.h</itemPath>
       <itemPath>Buttons.h</itemPath>
       <itemPath>LEDControl.h</itemPath>
+      <itemPath>PacketManager.h</itemPath>
     </logicalFolder>
     <logicalFolder name="LinkerScript"
                    displayName="Linker Files"
@@ -46,6 +47,7 @@
       <itemPath>ExtraCode.c</itemPath>
       <itemPath>Buttons.c</itemPath>
       <itemPath>LEDControl.c</itemPath>
+      <itemPath>PacketManager.c</itemPath>
     </logicalFolder>
     <logicalFolder name="ExternalFiles"
                    displayName="Important Files"
@@ -373,6 +375,7 @@
         <property key="UART6" value="true"/>
         <property key="USB" value="true"/>
         <property key="debugoptions.useswbreakpoints" value="false"/>
+        <property key="firmware.download.all" value="false"/>
         <property key="hwtoolclock.frcindebug" value="false"/>
         <property key="hwtoolclock.instructionspeed" value="4"/>
         <property key="hwtoolclock.units" value="mips"/>

@@ -27,13 +27,12 @@ int values[13][128];
 int CurrentValues[13];
 int volatile tmpValues[13];
 
-extern struct StatusPacket currentStatus;
 unsigned char volatile analogUpdateFlag;
 
-void FillCurrentStatus(){
+void FillCurrentStatus(struct StatusPacket *cS){
     int i,j;
     // want to use a trick here to speed things up
-    unsigned char *statusPointer = &currentStatus.W1VHigh;    
+    unsigned char *statusPointer = &cS->W1VHigh;    
     j=0;
     for(i=0;i<13;i++) {
         *(statusPointer+j)=CurrentValues[i]>>16;
