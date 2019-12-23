@@ -35,10 +35,16 @@ void ClearLEDThresholds(){
         LEDThresholdValues[i]=-1;
 }
 
+void TestLEDThresholds(){
+    int i;
+    for(i=0;i<12;i++)
+        LEDThresholdValues[i]=100*128;
+}
+
 void SetLEDThresholds(int *thresh){
     int i;
     for(i=0;i<12;i++)
-        LEDThresholdValues[i]=thresh[i];
+        LEDThresholdValues[i]=thresh[i]*128;
 }
 
 void UpdateLEDSimplest(unsigned char led) {
@@ -57,7 +63,7 @@ void UpdateLEDSimplest(unsigned char led) {
     }
 }
 
-void UpdateLEDSecondSimplest(unsigned char led) {
+void UpdateLEDWithDecay(unsigned char led) {
     if (LEDThresholdValues[led] == 0) {
         IsLEDOn[led] = 1;
         return;
@@ -77,7 +83,7 @@ void UpdateLEDSecondSimplest(unsigned char led) {
     }
 }
 
-void UpdateLEDThirdSimplest(unsigned char led) {
+void UpdateLEDWithDecayAndMaxTime(unsigned char led) {
     if (LEDThresholdValues[led] == 0) {
         IsLEDOn[led] = 1;
         return;
@@ -123,7 +129,45 @@ void UpdateLEDThirdSimplest(unsigned char led) {
     }
 }
 
-void UpdateLEDFull(unsigned char led) {
+// This function is ONLY used when delay > 0.
+// We ignore maxtime on for this because the lights on time
+// is determined uniquely by the decay time.
+// We also require a decay > 0.
+
+void UpdateLEDWithDelay(unsigned char led) {
+    if (LEDThresholdValues[led] == 0) {
+        IsLEDOn[led] = 1;
+        return;
+    }
+    if (LEDThresholdValues[led] == -1) {
+        IsLEDOn[led] = 0;
+        return;
+    }
+    if (CurrentValues[led] > LEDThresholdValues[led]) {
+        IsLEDOn[led] = 0;
+        LEDDelayCounter[led] = LEDDelayValues[led];
+        LEDDecayCounter[led] = LEDDecayValues[led];
+    } else {
+        if (LEDDelayCounter[led]-- > 0) {
+            IsLEDOn[led] = 0;
+            LEDDecayCounter[led] = LEDDecayValues[led];
+        } else {
+            if (LEDDecayCounter[led]-- >= 0) {
+                IsLEDOn[led] = 1;
+            } else {
+                IsLEDOn[led] = 0;
+                LEDMaxTimeOnCounter[led] = LEDMaxTimeOnValues[led];
+            }
+        }
+    }
+}
+
+
+// This function was deprecated because it is too complicated
+// and not required.
+// This is because when there is a delay, the lights on time
+// should be determined specifically by the decay
+void UpdateLEDFullOLD(unsigned char led) {
     if (LEDThresholdValues[led] == 0) {
         IsLEDOn[led] = 1;
         return;
@@ -199,9 +243,15 @@ void UpdateLEDFull(unsigned char led) {
     }
 }
 
-
+// Note that one has to be careful to set the parameters in the right manner
+// or constraints may result in some unintended changes.
 void SetLEDParams(unsigned int decayval, unsigned int delayval, unsigned int maxtimeonval) {
     int i;
+    if(delayval>0){
+        maxtimeonval=0;
+        if(decayval<=0)
+            decayval=1000;
+    }        
     for (i = 0; i < 12; i++) {
         LEDDecayValues[i] = decayval;
         LEDDelayValues[i] = delayval;
@@ -209,17 +259,17 @@ void SetLEDParams(unsigned int decayval, unsigned int delayval, unsigned int max
 
         LEDDecayCounter[i] = 0;
         LEDDelayCounter[i] = LEDDelayValues[i];
-        LEDMaxTimeOnCounter[i] = LEDMaxTimeOnCounter[i];
+        LEDMaxTimeOnCounter[i] = LEDMaxTimeOnValues[i];
         IsLEDOn[i] = 0;
     }
     if (delayval == 0 && maxtimeonval == 0 && decayval == 0) {
         LEDUpdateFunction = &UpdateLEDSimplest;
     } else if (delayval == 0 && maxtimeonval == 0) {
-        LEDUpdateFunction = &UpdateLEDSecondSimplest;
+        LEDUpdateFunction = &UpdateLEDWithDecay;
     } else if (delayval == 0) {
-        LEDUpdateFunction = &UpdateLEDThirdSimplest;
+        LEDUpdateFunction = &UpdateLEDWithDecayAndMaxTime;
     } else {
-        LEDUpdateFunction = &UpdateLEDFull;
+        LEDUpdateFunction = &UpdateLEDWithDelay;
     }
     currentDelay = delayval;
     currentDecay = decayval;
