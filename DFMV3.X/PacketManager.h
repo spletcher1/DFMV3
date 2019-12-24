@@ -1,7 +1,7 @@
 #ifndef PACKETMANAGER_H
 #define	PACKETMANAGER_H
 
-struct StatusPacket *GetStatusAtFront();
+struct StatusPacket *GetNextStatusInLine();
 void StepPacketManager();
 
 struct StatusPacket {
@@ -74,6 +74,8 @@ struct StatusPacket {
 };
 
 #define STATUSPACKETSIZE 65
+#define NOHEADERSPSIZE 61
+#define COMBINEDPACKETSIZE 309
 
 #endif	/* PACKETMANAGER_H */
 

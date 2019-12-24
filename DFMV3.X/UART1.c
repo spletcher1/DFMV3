@@ -9,7 +9,7 @@
 //UART2B = UART6
 //UART3B = UART5
 
-#define RX485_DELAY() DelayMs(1)
+
 
 
 #define HEADER1_2 0xFF
@@ -54,8 +54,7 @@ void inline EnableUARTInterrupts(){
 void CharToUART2(char c){
     RX485_ENABLE_SEND();
     while (!UARTTransmitterIsReady(UART2));
-        UARTSendDataByte(UART2, c);
-    RX485_DELAY();    
+        UARTSendDataByte(UART2, c);    
     RX485_DISABLE_SEND();
 }
 
@@ -146,6 +145,53 @@ void __ISR(_UART2_VECTOR, IPL4AUTO) UART2Interrupt(void){
     INTClearFlag(INT_U2RX);		
 }
 
+void CurrentStatusPacketSetToUART2(){
+    struct StatusPacket *cs1;
+    unsigned char *statusPointer;
+    cs1 = GetNextStatusInLine();
+    statusPointer= (char *)&cs1->Header1;
+    int i,counter=0;
+    
+    RX485_ENABLE_SEND();
+    for(i=0;i<STATUSPACKETSIZE;i++){
+        while (!UARTTransmitterIsReady(UART2));
+        UARTSendDataByte(UART2, *(statusPointer+i));
+        counter++;        
+    }
+    cs1 = GetNextStatusInLine();
+    statusPointer = (char *)&cs1->ErrorFlag;
+    for(i=0;i<NOHEADERSPSIZE;i++){
+        while (!UARTTransmitterIsReady(UART2));
+        UARTSendDataByte(UART2, *(statusPointer+i));
+        counter++;       
+    }
+    cs1 = GetNextStatusInLine();
+    statusPointer = (char *)&cs1->ErrorFlag;
+    for(i=0;i<NOHEADERSPSIZE;i++){
+        while (!UARTTransmitterIsReady(UART2));
+        UARTSendDataByte(UART2, *(statusPointer+i));
+        counter++;
+    }
+    cs1 = GetNextStatusInLine();
+    statusPointer = (char *)&cs1->ErrorFlag;
+    for(i=0;i<NOHEADERSPSIZE;i++){
+        while (!UARTTransmitterIsReady(UART2));
+        UARTSendDataByte(UART2, *(statusPointer+i));
+        counter++;
+    }
+    cs1 = GetNextStatusInLine();
+    statusPointer = (char *)&cs1->ErrorFlag;
+    for(i=0;i<NOHEADERSPSIZE;i++){
+        while (!UARTTransmitterIsReady(UART2));
+        UARTSendDataByte(UART2, *(statusPointer+i));
+        counter++;
+    }
+    if(counter!=309)
+        YELLOWLED_LAT=1;
+    RX485_DISABLE_SEND();
+}
+
+
 void CurrentStatusToUART2(struct StatusPacket *cs){
     unsigned char *statusPointer = (char *)&cs->Header1;
     int i;
@@ -153,19 +199,17 @@ void CurrentStatusToUART2(struct StatusPacket *cs){
     for(i=0;i<STATUSPACKETSIZE;i++){
         while (!UARTTransmitterIsReady(UART2));
             UARTSendDataByte(UART2, *(statusPointer+i));
-    }
-    RX485_DELAY();
+    }    
     RX485_DISABLE_SEND();
 }
 
-void ProcessPacket() {  
-         
+void ProcessPacket() {           
     if(packetBuffer[0]!=dfmID && packetBuffer[0]!=255) return; // Packet not for me    
     if (isInDarkMode == 0) FLIP_GREEN_LED();
     switch(packetBuffer[1]){
         case 0x01: // Status Request
-            DelayMs(5);
-            CurrentStatusToUART2(GetStatusAtFront());            
+            DelayMs(15);
+            CurrentStatusPacketSetToUART2();            
             break;
         case 0x02: // Set Darkmode               
             SetDarkMode(packetBuffer[2]);
@@ -180,7 +224,7 @@ void ProcessPacket() {
             SetPulseWidth_ms((packetBuffer[2]<<8) + packetBuffer[3]);
             break;
         case 0x06: // Return ID
-            DelayMs(5);
+            DelayMs(15);
             CharToUART2(dfmID);
             break;
         default:
@@ -198,7 +242,6 @@ void ShortIntToUART2(int a){
   c = a;
   while (!UARTTransmitterIsReady(UART2));
        UARTSendDataByte(UART2, c); 
-  RX485_DELAY();
   RX485_DISABLE_SEND();
 }
 
@@ -217,7 +260,6 @@ void IntToUART2(int a){
   c = a;
   while (!UARTTransmitterIsReady(UART2));
        UARTSendDataByte(UART2, c);
-  RX485_DELAY();     
   RX485_DISABLE_SEND();
 }
 
@@ -227,6 +269,5 @@ void StringToUART2(const char* buffer) {
         while (!UARTTransmitterIsReady(UART2));
         UARTSendDataByte(UART2, *buffer++);
     }
-    RX485_DELAY();
     RX485_DISABLE_SEND();
 }
