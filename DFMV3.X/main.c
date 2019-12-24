@@ -38,9 +38,7 @@ void InitializeRun(){
     if(ConfigureSi7021()==0){
         currentError.bits.CONFIGURATION=1;
        }
-    InitializeLEDControl(0,0,0);
-    ClearLEDThresholds();
-    //TestLEDThresholds();
+    InitializeLEDControl(0,0,0);    
     StartContinuousSampling();    
 }
 

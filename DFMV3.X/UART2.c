@@ -13,9 +13,11 @@
 
 
 #define HEADER1_2 0xFF
-#define HEADER3 0xFD
+#define HEADER3 0xFD // This indicates a instruction packet
+#define HEADER3_2 0xFC // This indicates a status request packet
 
-#define INSTRUCTIONPACKETSIZE 9 
+#define INSTRUCTIONPACKETSIZE 37 // Not including headers 
+#define STATUSREQUESTPACKETSIZE 2 // Not including headers 
 
 
 unsigned char volatile isPacketReceived;
@@ -121,19 +123,35 @@ void __ISR(_UART2_VECTOR, IPL4AUTO) UART2Interrupt(void){
 		data=UARTGetDataByte(UART2);      
         if(isInPacket){
             packetBuffer[packetIndex++]=data;
-            if(packetIndex+3>=INSTRUCTIONPACKETSIZE) {
-                isPacketReceived = 1;              
-                headerSum=0; // to avoid linking a header sequence across packets
-                isInPacket=0;
-            }                            
+            if(packetBuffer[0]==HEADER3_2){ // Status Request
+                if(packetIndex>STATUSREQUESTPACKETSIZE){
+                    isPacketReceived=1;
+                    headerSum=0;
+                    isInPacket=0;
+                }                    
+            }
+            else if(packetBuffer[0]==HEADER3){
+                if(packetIndex>=INSTRUCTIONPACKETSIZE) {
+                    isPacketReceived = 1;              
+                    headerSum=0; // to avoid linking a header sequence across packets
+                    isInPacket=0;
+                }
+            }                                        
+            else {
+                currentError.bits.TBD3=1;
+            }
+            
         }
         if(data==HEADER1_2){            
             headerSum+=data;
         }
-        else if(data==HEADER3){            
+        else if(data==HEADER3 || data==HEADER3_2){            
             if(headerSum>=510){
                 isInPacket=1;
-                packetIndex=0;
+                // Need to keep the header3 byte because
+                // it now says what kind of packet it is.
+                packetBuffer[0]=data;
+                packetIndex=1;
             }
             headerSum=0;
         }
@@ -203,34 +221,67 @@ void CurrentStatusToUART2(struct StatusPacket *cs){
     RX485_DISABLE_SEND();
 }
 
-void ProcessPacket() {           
-    if(packetBuffer[0]!=dfmID && packetBuffer[0]!=255) return; // Packet not for me    
-    if (isInDarkMode == 0) FLIP_GREEN_LED();
-    switch(packetBuffer[1]){
-        case 0x01: // Status Request
-            DelayMs(15);
-            CurrentStatusPacketSetToUART2();            
-            break;
-        case 0x02: // Set Darkmode               
-            SetDarkMode(packetBuffer[2]);
-            break;
-        case 0x03: // Set Optostate    
-            SetOptoState(packetBuffer[2],packetBuffer[3]);
-            break;
-        case 0x04: // Set Hertz
-            SetHertz((packetBuffer[2]<<8) + packetBuffer[3]);
-            break;
-        case 0x05: // Set Pulsewidth
-            SetPulseWidth_ms((packetBuffer[2]<<8) + packetBuffer[3]);
-            break;
-        case 0x06: // Return ID
-            DelayMs(15);
-            CharToUART2(dfmID);
-            break;
-        default:
-            break;        
-    }
+void SendAck(){
+    CharToUART2(dfmID);
+}
+
+void SendNAck(){
+    CharToUART2(0xFE);
+}
+
+unsigned char ValidateChecksum(){
+    unsigned char isValid=0;
+    // Checksum is calculated excluding the header characters.
+    return isValid;
+}
+
+void ExecuteInstructionPacket(){
+    unsigned char index=4,i;
+    unsigned int freq,pw,decay,delay,maxTime;
+    int thresh[12];
+    if(packetBuffer[index++]==0)
+        SetDarkMode(0);
+    else
+        SetDarkMode(1);
     
+    freq = (unsigned int)(packetBuffer[index]<<8)+(unsigned int)(packetBuffer[index+1]);
+    index+=2;
+    pw = (unsigned int)(packetBuffer[index]<<8)+(unsigned int)(packetBuffer[index+1]);
+    index+=2;
+    decay = (unsigned int)(packetBuffer[index]<<8)+(unsigned int)(packetBuffer[index+1]);
+    index+=2;
+    delay = (unsigned int)(packetBuffer[index]<<8)+(unsigned int)(packetBuffer[index+1]);
+    index+=2;
+    maxTime = (unsigned int)(packetBuffer[index]<<8)+(unsigned int)(packetBuffer[index+1]);
+    index+=2;   
+    for(i=0;i<12;i++){
+        thresh[i]=(unsigned int)(packetBuffer[index]<<8)+(unsigned int)(packetBuffer[index+1]);
+        index+=2;
+    }
+    SetOptoParameters(freq,pw);
+    SetLEDParams(decay,delay,maxTime);
+    SetLEDThresholds(thresh);                   
+}
+
+void ProcessPacket() {           
+    if(packetBuffer[1]!=dfmID && packetBuffer[1]!=255) return; // Packet not for me    
+    if (isInDarkMode == 0) FLIP_GREEN_LED();
+    if(packetBuffer[0]=HEADER3_2){
+        if(packetBuffer[1]==dfmID && packetBuffer[2]==dfmID){
+            DelayMs(8);
+            CurrentStatusPacketSetToUART2();                        
+        }
+    }
+    else if(packetBuffer[0]==HEADER3){
+        if(!ValidateChecksum()) {
+            DelayMs(8);
+            SendNAck();
+            return;
+        }
+        DelayMs(8);
+        SendAck();
+        ExecuteInstructionPacket();
+    }   
 }
 
 void ShortIntToUART2(int a){
