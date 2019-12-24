@@ -12,7 +12,6 @@
       </logicalFolder>
       <itemPath>SystemFunctions.h</itemPath>
       <itemPath>UpdateTimer.h</itemPath>
-      <itemPath>UART1.h</itemPath>
       <itemPath>SP_ConfigP32.h</itemPath>
       <itemPath>GlobalIncludes.h</itemPath>
       <itemPath>HardwareProfile.h</itemPath>
@@ -25,6 +24,7 @@
       <itemPath>Buttons.h</itemPath>
       <itemPath>LEDControl.h</itemPath>
       <itemPath>PacketManager.h</itemPath>
+      <itemPath>UART2.h</itemPath>
     </logicalFolder>
     <logicalFolder name="LinkerScript"
                    displayName="Linker Files"
@@ -34,7 +34,6 @@
                    displayName="Source Files"
                    projectFiles="true">
       <itemPath>SystemFunctions.c</itemPath>
-      <itemPath>UART1.c</itemPath>
       <itemPath>UpdateTimer.c</itemPath>
       <itemPath>main.c</itemPath>
       <itemPath>printf-stdarg.c</itemPath>
@@ -48,6 +47,7 @@
       <itemPath>Buttons.c</itemPath>
       <itemPath>LEDControl.c</itemPath>
       <itemPath>PacketManager.c</itemPath>
+      <itemPath>UART2.c</itemPath>
     </logicalFolder>
     <logicalFolder name="ExternalFiles"
                    displayName="Important Files"

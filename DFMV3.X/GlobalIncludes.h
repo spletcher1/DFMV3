@@ -11,7 +11,7 @@
 #include "adc10.h"
 #include "HardwareProfile.h"
 #include "SystemFunctions.h"
-#include "UART1.h"
+#include "UART2.h"
 #include "UpdateTimer.h"
 #include "I2C2_Master.h"
 #include "AnalogInputs.h"
