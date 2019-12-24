@@ -16,7 +16,7 @@
 #define HEADER3 0xFD // This indicates a instruction packet
 #define HEADER3_2 0xFC // This indicates a status request packet
 
-#define INSTRUCTIONPACKETSIZE 37 // Not including headers 
+#define INSTRUCTIONPACKETSIZE 40 // Not including headers 
 #define STATUSREQUESTPACKETSIZE 2 // Not including headers 
 
 
@@ -131,7 +131,7 @@ void __ISR(_UART2_VECTOR, IPL4AUTO) UART2Interrupt(void){
                 }                    
             }
             else if(packetBuffer[0]==HEADER3){
-                if(packetIndex>=INSTRUCTIONPACKETSIZE) {
+                if(packetIndex>INSTRUCTIONPACKETSIZE) {
                     isPacketReceived = 1;              
                     headerSum=0; // to avoid linking a header sequence across packets
                     isInPacket=0;
@@ -230,13 +230,23 @@ void SendNAck(){
 }
 
 unsigned char ValidateChecksum(){
-    unsigned char isValid=0;
-    // Checksum is calculated excluding the header characters.
-    return isValid;
+    unsigned char isValid=1;
+    int i;
+    unsigned int checksum=0,actual;
+    for(i=1;i<37;i++)
+        checksum+=packetBuffer[i];
+    checksum = (checksum ^ 0xFFFFFFFF)+1;
+    
+    actual=(unsigned int)(packetBuffer[37]<<24);
+    actual+=(unsigned int)(packetBuffer[38]<<16);
+    actual+=(unsigned int)(packetBuffer[39]<<8);
+    actual+=(unsigned int)(packetBuffer[40]);
+    // Checksum is calculated excluding the header characters.    
+    return (checksum==actual);
 }
 
 void ExecuteInstructionPacket(){
-    unsigned char index=4,i;
+    unsigned char index=2,i;
     unsigned int freq,pw,decay,delay,maxTime;
     int thresh[12];
     if(packetBuffer[index++]==0)
@@ -266,7 +276,7 @@ void ExecuteInstructionPacket(){
 void ProcessPacket() {           
     if(packetBuffer[1]!=dfmID && packetBuffer[1]!=255) return; // Packet not for me    
     if (isInDarkMode == 0) FLIP_GREEN_LED();
-    if(packetBuffer[0]=HEADER3_2){
+    if(packetBuffer[0]==HEADER3_2){
         if(packetBuffer[1]==dfmID && packetBuffer[2]==dfmID){
             DelayMs(8);
             CurrentStatusPacketSetToUART2();                        
