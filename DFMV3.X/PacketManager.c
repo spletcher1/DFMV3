@@ -69,9 +69,7 @@ void AddCurrentStatus() {
     statusBuffer[inputpointer].Humidity3 = ((Si7021_Humidity >> 8) & 0xFF);
     statusBuffer[inputpointer].Humidity4 = (Si7021_Humidity & 0xFF);
     statusBuffer[inputpointer].LightHigh = TSL2591_LUX >> 8;
-    statusBuffer[inputpointer].LightLow = TSL2591_LUX & 0xFF;
-    if(statusBuffer[inputpointer].HasBeenPulled==0)          
-        statusBuffer[inputpointer].ErrorFlag = statusBuffer[inputpointer].ErrorFlag | 0x40;      
+    statusBuffer[inputpointer].LightLow = TSL2591_LUX & 0xFF;   
     
     for (i = 4; i < (STATUSPACKETSIZE - 4); i++) checksum += *(statusPointer + i);
     checksum = (checksum ^ 0xFFFFFFFF) + 0x01;
