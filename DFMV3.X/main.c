@@ -39,6 +39,7 @@ void InitializeRun(){
         currentError.bits.CONFIGURATION=1;
        }
     InitializeLEDControl(0,0,0);    
+    InitializeStatusPacketBuffer();   
     StartContinuousSampling();    
 }
 
@@ -70,9 +71,9 @@ int32_t main(void) {
             //myprintf("1 = %d   2 = %d\n", CurrentValues[0],CurrentValues[1]);            
             //myprintf("(%d) T = %d   H = %d   L = %d\r", counter++, Si7021_Temperature,Si7021_Humidity,TSL2591_LUX);            
             //myprintf("(%d) L = %d\n\r", counter++,TSL2591_LUX);        
-            if(currentError.bits.I2C==0){
+            if(currentError.bits.I2C==0){                               
                 StepTSL2591();
-                StepSi7021();               
+                StepSi7021();                   
             }
             timerFlag_1sec = 0;                               
         }             

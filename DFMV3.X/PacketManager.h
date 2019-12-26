@@ -66,16 +66,19 @@ struct StatusPacket {
   unsigned char Humidity4;
   unsigned char LightHigh;
   unsigned char LightLow;
+  unsigned char Index1;
+  unsigned char Index2;
+  unsigned char Index3;
+  unsigned char Index4;
   unsigned char Checksum1;
   unsigned char Checksum2;  
   unsigned char Checksum3;
-  unsigned char Checksum4;  
-  unsigned char HasBeenPulled;
+  unsigned char Checksum4;    
 };
 
-#define STATUSPACKETSIZE 65
-#define NOHEADERSPSIZE 61
-#define COMBINEDPACKETSIZE 309
+#define STATUSPACKETSIZE 69
+#define NOHEADERSPSIZE 65
+#define COMBINEDPACKETSIZE 329
 
 #endif	/* PACKETMANAGER_H */
 

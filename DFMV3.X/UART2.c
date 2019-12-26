@@ -36,7 +36,7 @@ extern errorFlags_t volatile currentError;
 // Baud Rate 19200
 // Baud rate 38400
 // Baud rate 115200
-//#define TARGET_BAUD_RATE  921600
+// #define TARGET_BAUD_RATE  921600
 #define TARGET_BAUD_RATE  115200
 
 /////////////////////////////////////////////////////////////////
@@ -204,8 +204,6 @@ void CurrentStatusPacketSetToUART2(){
         UARTSendDataByte(UART2, *(statusPointer+i));
         counter++;
     }
-    if(counter!=309)
-        YELLOWLED_LAT=1;
     RX485_DISABLE_SEND();
 }
 
@@ -229,8 +227,7 @@ void SendNAck(){
     CharToUART2(0xFE);
 }
 
-unsigned char ValidateChecksum(){
-    unsigned char isValid=1;
+unsigned char ValidateChecksum(){    
     int i;
     unsigned int checksum=0,actual;
     for(i=1;i<37;i++)

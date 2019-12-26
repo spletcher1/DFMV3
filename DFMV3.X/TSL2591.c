@@ -331,13 +331,17 @@ void StepTSL2591() {
     if (isTSL2591Configured == 0) return;
     switch (currentState_TSL) {
         case Reading:
+            YELLOWLED_ON();
             GetFullLuminosity();
+            YELLOWLED_OFF();
             Disable();
             currentState_TSL = LuxCalculation;
             break;
         case Idle:
             if (idleCounter_tsl++ >= SECONDS_IN_IDLE) {
+                YELLOWLED_ON();
                 Enable();
+                YELLOWLED_OFF();
                 currentState_TSL = Reading;
                 idleCounter_tsl = 0;
             }
@@ -345,7 +349,9 @@ void StepTSL2591() {
         case LuxCalculation:
             GetLux();
             if (didSensitivityChange) {
+                YELLOWLED_ON();
                 Enable();
+                YELLOWLED_OFF();
                 currentState_TSL = Reading;
                 didSensitivityChange = 0;
             } else
