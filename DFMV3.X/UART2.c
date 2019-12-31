@@ -275,17 +275,17 @@ void ProcessPacket() {
     if (isInDarkMode == 0) FLIP_GREEN_LED();
     if(packetBuffer[0]==HEADER3_2){
         if(packetBuffer[1]==dfmID && packetBuffer[2]==dfmID){
-            DelayMs(8);
+            DelayMs(15);
             CurrentStatusPacketSetToUART2();                        
         }
     }
     else if(packetBuffer[0]==HEADER3){
         if(!ValidateChecksum()) {
-            DelayMs(8);
+            DelayMs(15);
             SendNAck();
             return;
         }
-        DelayMs(8);
+        DelayMs(15);
         SendAck();
         ExecuteInstructionPacket();
     }   
