@@ -3,6 +3,7 @@
 
 struct StatusPacket *GetNextStatusInLine();
 void StepPacketManager();
+void InitializeStatusPacketBuffer();
 
 struct StatusPacket {
   unsigned char Header1;

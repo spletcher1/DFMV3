@@ -9,6 +9,7 @@ void StringToUART2(const char* buffer);
 void CharToUART2(char c);
 void inline DisableUARTInterrupts();
 void inline EnableUARTInterrupts();
- 
+unsigned int encodeCOBS(unsigned char* buffer,unsigned int bytesToEncode, unsigned char* encodedBuffer); 
+unsigned int decodeCOBS(unsigned char* encodedBuffer,unsigned int bytesToEncode, unsigned char* decodedBuffer);
 
 #endif

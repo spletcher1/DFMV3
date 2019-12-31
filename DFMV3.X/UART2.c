@@ -9,16 +9,21 @@
 //UART2B = UART6
 //UART3B = UART5
 
-
-
-
+#define MAXPACKETS 15
 #define HEADER1_2 0xFF
 #define HEADER3 0xFD // This indicates a instruction packet
 #define HEADER3_2 0xFC // This indicates a status request packet
+#define HEADER3_3 0xFE // This indicates a status request packet
 
 #define INSTRUCTIONPACKETSIZE 40 // Not including headers 
 #define STATUSREQUESTPACKETSIZE 2 // Not including headers 
 
+#define COBSBUFFERSIZE STATUSPACKETSIZE*MAXPACKETS
+
+unsigned char cobsBuffer[COBSBUFFERSIZE];
+unsigned char preCodedBuffer[COBSBUFFERSIZE];
+unsigned int cobsBufferLength;
+extern int bufferSize;
 
 unsigned char volatile isPacketReceived;
 unsigned char volatile packetBuffer[250];
@@ -123,7 +128,7 @@ void __ISR(_UART2_VECTOR, IPL4AUTO) UART2Interrupt(void){
 		data=UARTGetDataByte(UART2);      
         if(isInPacket){
             packetBuffer[packetIndex++]=data;
-            if(packetBuffer[0]==HEADER3_2){ // Status Request
+            if(packetBuffer[0]==HEADER3_2 || packetBuffer[0]==HEADER3_3){ // Status Request
                 if(packetIndex>STATUSREQUESTPACKETSIZE){
                     isPacketReceived=1;
                     headerSum=0;
@@ -145,7 +150,7 @@ void __ISR(_UART2_VECTOR, IPL4AUTO) UART2Interrupt(void){
         if(data==HEADER1_2){            
             headerSum+=data;
         }
-        else if(data==HEADER3 || data==HEADER3_2){            
+        else if(data==HEADER3 || data==HEADER3_2 || data==HEADER3_3){            
             if(headerSum>=510){
                 isInPacket=1;
                 // Need to keep the header3 byte because
@@ -163,47 +168,34 @@ void __ISR(_UART2_VECTOR, IPL4AUTO) UART2Interrupt(void){
     INTClearFlag(INT_U2RX);		
 }
 
-void CurrentStatusPacketSetToUART2(){
+void CurrentStatusPacketSetToUART2(int numPacketsToSend){
     struct StatusPacket *cs1;
     unsigned char *statusPointer;
     cs1 = GetNextStatusInLine();
     statusPointer= (char *)&cs1->Header1;
-    int i,counter=0;
+    int i,j,counter=0;
     
-    RX485_ENABLE_SEND();
     for(i=0;i<STATUSPACKETSIZE;i++){
-        while (!UARTTransmitterIsReady(UART2));
-        UARTSendDataByte(UART2, *(statusPointer+i));
+        preCodedBuffer[counter]=*(statusPointer+i);        
         counter++;        
+    }    
+    
+    for(j=1;j<numPacketsToSend;j++){
+        cs1 = GetNextStatusInLine();
+        statusPointer = (char *)&cs1->ErrorFlag;
+        for(i=0;i<NOHEADERSPSIZE;i++){
+            preCodedBuffer[counter]=*(statusPointer+i);        
+            counter++;    
+        }    
     }
-    cs1 = GetNextStatusInLine();
-    statusPointer = (char *)&cs1->ErrorFlag;
-    for(i=0;i<NOHEADERSPSIZE;i++){
+   
+    cobsBufferLength=encodeCOBS(preCodedBuffer,counter,cobsBuffer);
+    cobsBuffer[cobsBufferLength++]=0x00;
+    RX485_ENABLE_SEND();
+    for(i=0;i<cobsBufferLength;i++){
         while (!UARTTransmitterIsReady(UART2));
-        UARTSendDataByte(UART2, *(statusPointer+i));
-        counter++;       
-    }
-    cs1 = GetNextStatusInLine();
-    statusPointer = (char *)&cs1->ErrorFlag;
-    for(i=0;i<NOHEADERSPSIZE;i++){
-        while (!UARTTransmitterIsReady(UART2));
-        UARTSendDataByte(UART2, *(statusPointer+i));
-        counter++;
-    }
-    cs1 = GetNextStatusInLine();
-    statusPointer = (char *)&cs1->ErrorFlag;
-    for(i=0;i<NOHEADERSPSIZE;i++){
-        while (!UARTTransmitterIsReady(UART2));
-        UARTSendDataByte(UART2, *(statusPointer+i));
-        counter++;
-    }
-    cs1 = GetNextStatusInLine();
-    statusPointer = (char *)&cs1->ErrorFlag;
-    for(i=0;i<NOHEADERSPSIZE;i++){
-        while (!UARTTransmitterIsReady(UART2));
-        UARTSendDataByte(UART2, *(statusPointer+i));
-        counter++;
-    }
+            UARTSendDataByte(UART2, *(cobsBuffer+i));
+    }    
     RX485_DISABLE_SEND();
 }
 
@@ -271,12 +263,25 @@ void ExecuteInstructionPacket(){
 }
 
 void ProcessPacket() {           
+    int num;
     if(packetBuffer[1]!=dfmID && packetBuffer[1]!=255) return; // Packet not for me    
     if (isInDarkMode == 0) FLIP_GREEN_LED();
     if(packetBuffer[0]==HEADER3_2){
         if(packetBuffer[1]==dfmID && packetBuffer[2]==dfmID){
             DelayMs(15);
-            CurrentStatusPacketSetToUART2();                        
+            if(bufferSize>MAXPACKETS)
+                num=MAXPACKETS;
+            else
+                num = bufferSize;
+            if(num>0)
+                CurrentStatusPacketSetToUART2(num);                        
+        }
+    }
+    else if(packetBuffer[0]==HEADER3_3){
+        if(packetBuffer[1]==dfmID && packetBuffer[2]==dfmID){
+            InitializeStatusPacketBuffer();
+            DelayMs(15);
+            SendAck();
         }
     }
     else if(packetBuffer[0]==HEADER3){
@@ -329,3 +334,67 @@ void StringToUART2(const char* buffer) {
     }
     RX485_DISABLE_SEND();
 }
+
+
+unsigned int encodeCOBS(unsigned char* buffer,unsigned int bytesToEncode, unsigned char* encodedBuffer)
+    {
+        unsigned int read_index  = 0;
+        unsigned write_index = 1;
+        unsigned int code_index  = 0;
+        unsigned char coded = 1;
+
+        while (read_index < bytesToEncode)
+        {
+
+            if (buffer[read_index] == 0)
+            {
+                encodedBuffer[code_index] = coded;
+                coded = 1;
+                code_index = write_index++;
+                read_index++;
+            }
+            else
+            {
+                encodedBuffer[write_index++] = buffer[read_index++];
+                coded++;
+                if (coded == 0xFF)
+                {
+                    encodedBuffer[code_index] = coded;
+                    coded = 1;
+                    code_index = write_index++;
+                }
+            }
+        }
+        encodedBuffer[code_index] = coded;
+        return write_index;
+    }
+
+unsigned int decodeCOBS(unsigned char* encodedBuffer,unsigned int bytesToEncode, unsigned char* decodedBuffer)
+    {
+        unsigned int read_index  = 0;
+        unsigned int write_index = 0;
+        unsigned char coded = 0;
+        unsigned char i =  0;
+
+        if (bytesToEncode == 0)
+            return 0;
+
+        while (read_index < bytesToEncode)
+        {
+            coded = encodedBuffer[read_index];
+            if (read_index + coded > bytesToEncode && coded != 1)
+            {
+                return 0;
+            }
+            read_index++;
+            for (i = 1; i < coded; i++)
+            {
+                decodedBuffer[write_index++] = encodedBuffer[read_index++];
+            }
+            if (coded != 0xFF && read_index != bytesToEncode)
+            {
+                decodedBuffer[write_index++] = '\0';
+            }
+        }
+        return write_index;
+    }

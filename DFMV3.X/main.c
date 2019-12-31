@@ -58,7 +58,7 @@ int32_t main(void) {
     DelayMs(100);
     //counter=0;
     while (1) {         
-        if (isPacketReceived) {
+         if (isPacketReceived) {
             ProcessPacket();
             isPacketReceived = 0;        
         }

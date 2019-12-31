@@ -93,7 +93,9 @@ void FillEmptyPacket(){
 
 void InitializeStatusPacketBuffer(){   
     counter100ms=0;
-    recordCounter=0;
+    recordCounter=1;
+    bufferSize=0;
+    head=tail=0;
     FillEmptyPacket();
     // We set this to avoid error on first use.           
 }
