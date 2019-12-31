@@ -9,6 +9,6 @@
 #define	TSL2591_H
 
 unsigned char ConfigureTSL2591();
-
+void StepTSL2591();
 #endif	/* TSL2591_H */
 

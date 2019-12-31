@@ -12,7 +12,6 @@
       </logicalFolder>
       <itemPath>SystemFunctions.h</itemPath>
       <itemPath>UpdateTimer.h</itemPath>
-      <itemPath>UART1.h</itemPath>
       <itemPath>SP_ConfigP32.h</itemPath>
       <itemPath>GlobalIncludes.h</itemPath>
       <itemPath>HardwareProfile.h</itemPath>
@@ -22,6 +21,10 @@
       <itemPath>Si7021.h</itemPath>
       <itemPath>TSL2591.h</itemPath>
       <itemPath>I2C2_Master.h</itemPath>
+      <itemPath>Buttons.h</itemPath>
+      <itemPath>LEDControl.h</itemPath>
+      <itemPath>PacketManager.h</itemPath>
+      <itemPath>UART2.h</itemPath>
     </logicalFolder>
     <logicalFolder name="LinkerScript"
                    displayName="Linker Files"
@@ -31,7 +34,6 @@
                    displayName="Source Files"
                    projectFiles="true">
       <itemPath>SystemFunctions.c</itemPath>
-      <itemPath>UART1.c</itemPath>
       <itemPath>UpdateTimer.c</itemPath>
       <itemPath>main.c</itemPath>
       <itemPath>printf-stdarg.c</itemPath>
@@ -42,6 +44,10 @@
       <itemPath>Si7021.c</itemPath>
       <itemPath>I2C2_Master.c</itemPath>
       <itemPath>ExtraCode.c</itemPath>
+      <itemPath>Buttons.c</itemPath>
+      <itemPath>LEDControl.c</itemPath>
+      <itemPath>PacketManager.c</itemPath>
+      <itemPath>UART2.c</itemPath>
     </logicalFolder>
     <logicalFolder name="ExternalFiles"
                    displayName="Important Files"
@@ -107,7 +113,7 @@
         <property key="generate-micro-compressed-code" value="false"/>
         <property key="isolate-each-function" value="false"/>
         <property key="make-warnings-into-errors" value="false"/>
-        <property key="optimization-level" value=""/>
+        <property key="optimization-level" value="-O3"/>
         <property key="place-data-into-section" value="false"/>
         <property key="post-instruction-scheduling" value="default"/>
         <property key="pre-instruction-scheduling" value="default"/>
@@ -144,6 +150,9 @@
         <property key="preprocessor-macros" value=""/>
         <property key="warning-level" value=""/>
       </C32-AS>
+      <C32-CO>
+        <property key="coverage-enable" value=""/>
+      </C32-CO>
       <C32-LD>
         <property key="additional-options-use-response-files" value="false"/>
         <property key="additional-options-write-sla" value="false"/>
@@ -232,6 +241,8 @@
         </C32-AR>
         <C32-AS>
         </C32-AS>
+        <C32-CO>
+        </C32-CO>
         <C32-LD>
         </C32-LD>
         <C32CPP>
@@ -364,7 +375,6 @@
         <property key="UART6" value="true"/>
         <property key="USB" value="true"/>
         <property key="debugoptions.useswbreakpoints" value="false"/>
-        <property key="firmware.download.all" value="false"/>
         <property key="hwtoolclock.frcindebug" value="false"/>
         <property key="hwtoolclock.instructionspeed" value="4"/>
         <property key="hwtoolclock.units" value="mips"/>
@@ -405,6 +415,22 @@
         <property key="tracecontrol.tracefilemax" value="10000000"/>
         <property key="voltagevalue" value="3.25"/>
       </RealICEPlatformTool>
+      <item path="printf-stdarg.c" ex="false" overriding="false">
+        <C32>
+        </C32>
+        <C32-AR>
+        </C32-AR>
+        <C32-AS>
+        </C32-AS>
+        <C32-CO>
+        </C32-CO>
+        <C32-LD>
+        </C32-LD>
+        <C32CPP>
+        </C32CPP>
+        <C32Global>
+        </C32Global>
+      </item>
     </conf>
   </confs>
 </configurationDescriptor>
