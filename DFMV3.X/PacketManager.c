@@ -148,8 +148,7 @@ void AddCurrentStatus() {
     statusBuffer[head].Index4 = (recordCounter & 0xFF);    
        
     bufferSize++;
-    if(bufferSize>RINGBUFFERSIZE) {
-        statusBuffer[head].ErrorFlag = statusBuffer[head].ErrorFlag | 0x40; 
+    if(bufferSize>RINGBUFFERSIZE) {        
         bufferSize=RINGBUFFERSIZE;        
         tail++;
         if(tail>=RINGBUFFERSIZE)
@@ -162,7 +161,7 @@ void AddCurrentStatus() {
     if(head>=RINGBUFFERSIZE)
         head=0;       
     recordCounter++;
-    currentError.byte = 0x00;    
+    currentError.byte = 0x00;       
 }
 
 // This function is meant to be called every 100ms
