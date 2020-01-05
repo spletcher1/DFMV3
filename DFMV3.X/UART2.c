@@ -10,15 +10,14 @@
 //UART3B = UART5
 
 #define MAXPACKETS 15
-#define HEADER1_2 0xFF
-#define HEADER3 0xFD // This indicates a instruction packet
-#define HEADER3_2 0xFC // This indicates a status request packet
-#define HEADER3_3 0xFE // This indicates a status request packet
+#define STATUSREQUESTBYTE 0xFC
+#define BUFFERRESETREQUESTBYTE 0xFE
+#define SENDINSTRUCTIONBYTE 0xFD
 
-#define INSTRUCTIONPACKETSIZE 40 // Not including headers 
-#define STATUSREQUESTPACKETSIZE 2 // Not including headers 
+#define COBSBUFFERSIZE (STATUSPACKETSIZE*MAXPACKETS)+10
 
-#define COBSBUFFERSIZE STATUSPACKETSIZE*MAXPACKETS
+unsigned char cobsInstructionBuffer[100];
+unsigned int cobsInstructionBufferLength;
 
 unsigned char cobsBuffer[COBSBUFFERSIZE];
 unsigned char preCodedBuffer[COBSBUFFERSIZE];
@@ -28,9 +27,9 @@ extern int bufferSize;
 unsigned char volatile isPacketReceived;
 unsigned char volatile packetBuffer[250];
 unsigned char volatile packetIndex;
+unsigned char volatile lastPacketSize;
 
 unsigned char volatile isInPacket;
-unsigned int volatile headerSum;
 
 extern unsigned char dfmID;
 extern unsigned char isInDarkMode;
@@ -76,8 +75,7 @@ void ConfigureUART2Interrupts(){
 
 void inline ClearPacketBuffer(){
     packetIndex=0;
-    isInPacket=0;
-    headerSum=0;   
+    isInPacket=0;     
 }
 
 void ConfigureUART2(void) {
@@ -134,46 +132,18 @@ void __ISR(_UART2_VECTOR, IPL4AUTO) UART2Interrupt(void){
         }
 	}	
     while(DataRdyUART2()) {
-		data=UARTGetDataByte(UART2);      
-        if(isInPacket){
-            packetBuffer[packetIndex++]=data;
-            tmp=packetBuffer[0];
-            if(packetBuffer[0]==HEADER3_2 || packetBuffer[0]==HEADER3_3){ // Status Request
-                if(packetIndex>STATUSREQUESTPACKETSIZE){
-                    isPacketReceived=1;
-                    headerSum=0;
-                    isInPacket=0;
-                }                    
-            }
-            else if(packetBuffer[0]==HEADER3){
-                if(packetIndex>INSTRUCTIONPACKETSIZE) {
-                    isPacketReceived = 1;              
-                    headerSum=0; // to avoid linking a header sequence across packets
-                    isInPacket=0;
-                }
-            }                                        
-            else {
-                currentError.bits.TBD3=1;
-            }
-            
-        }
-        if(data==HEADER1_2){            
-            headerSum+=data;
-        }
-        else if(data==HEADER3 || data==HEADER3_2 || data==HEADER3_3){            
-            if(headerSum>=510){
-                isInPacket=1;
-                // Need to keep the header3 byte because
-                // it now says what kind of packet it is.
-                packetBuffer[0]=data;
-                packetIndex=1;
-            }
-            headerSum=0;
-        }
+		data=UARTGetDataByte(UART2);  
+        if(data==0x00){
+            isPacketReceived=1;                    
+            isInPacket=0;
+            lastPacketSize=packetIndex;
+            packetIndex=0;
+        }        
         else {
-            headerSum=0;
-        }      		
-	}
+            packetBuffer[packetIndex++]=data; 
+            isInPacket=1;             		
+        }
+    }
     
     INTClearFlag(INT_U2RX);		
 }
@@ -182,7 +152,7 @@ void CurrentStatusPacketSetToUART2(int numPacketsToSend){
     struct StatusPacket *cs1;
     unsigned char *statusPointer;
     cs1 = GetNextStatusInLine();
-    statusPointer= (char *)&cs1->Header1;
+    statusPointer= (char *)&cs1->ID;
     int i,j,counter=0;
     
     for(i=0;i<STATUSPACKETSIZE;i++){
@@ -192,8 +162,8 @@ void CurrentStatusPacketSetToUART2(int numPacketsToSend){
     
     for(j=1;j<numPacketsToSend;j++){
         cs1 = GetNextStatusInLine();
-        statusPointer = (char *)&cs1->ErrorFlag;
-        for(i=0;i<NOHEADERSPSIZE;i++){
+        statusPointer = (char *)&cs1->ID;
+        for(i=0;i<STATUSPACKETSIZE;i++){
             preCodedBuffer[counter]=*(statusPointer+i);        
             counter++;    
         }    
@@ -211,7 +181,7 @@ void CurrentStatusPacketSetToUART2(int numPacketsToSend){
 
 
 void CurrentStatusToUART2(struct StatusPacket *cs){
-    unsigned char *statusPointer = (char *)&cs->Header1;
+    unsigned char *statusPointer = (char *)&cs->ID;
     int i;
     RX485_ENABLE_SEND();
     for(i=0;i<STATUSPACKETSIZE;i++){
@@ -222,49 +192,53 @@ void CurrentStatusToUART2(struct StatusPacket *cs){
 }
 
 void SendAck(){
+    // Need tos end 0x00 char to terminate packets on all listening
+    // DFM.
     CharToUART2(dfmID);
+    CharToUART2(0x00);
 }
 
 void SendNAck(){
     CharToUART2(0xFE);
+    CharToUART2(0x00);
 }
 
 unsigned char ValidateChecksum(){    
     int i;
     unsigned int checksum=0,actual;
-    for(i=1;i<37;i++)
-        checksum+=packetBuffer[i];
+    for(i=0;i<37;i++)
+        checksum+=cobsInstructionBuffer[i];
     checksum = (checksum ^ 0xFFFFFFFF)+1;
     
-    actual=(unsigned int)(packetBuffer[37]<<24);
-    actual+=(unsigned int)(packetBuffer[38]<<16);
-    actual+=(unsigned int)(packetBuffer[39]<<8);
-    actual+=(unsigned int)(packetBuffer[40]);
+    actual=(unsigned int)(cobsInstructionBuffer[37]<<24);
+    actual+=(unsigned int)(cobsInstructionBuffer[38]<<16);
+    actual+=(unsigned int)(cobsInstructionBuffer[39]<<8);
+    actual+=(unsigned int)(cobsInstructionBuffer[40]);
     // Checksum is calculated excluding the header characters.    
     return (checksum==actual);
 }
 
-void ExecuteInstructionPacket(){
+void ExecuteInstructionPacket(){    
     unsigned char index=2,i;
     unsigned int freq,pw,decay,delay,maxTime;
     int thresh[12];
-    if(packetBuffer[index++]==0)
+    if(cobsInstructionBuffer[index++]==0)
         SetDarkMode(0);
     else
         SetDarkMode(1);
     
-    freq = (unsigned int)(packetBuffer[index]<<8)+(unsigned int)(packetBuffer[index+1]);
+    freq = (unsigned int)(cobsInstructionBuffer[index]<<8)+(unsigned int)(cobsInstructionBuffer[index+1]);
     index+=2;
-    pw = (unsigned int)(packetBuffer[index]<<8)+(unsigned int)(packetBuffer[index+1]);
+    pw = (unsigned int)(cobsInstructionBuffer[index]<<8)+(unsigned int)(cobsInstructionBuffer[index+1]);
     index+=2;
-    decay = (unsigned int)(packetBuffer[index]<<8)+(unsigned int)(packetBuffer[index+1]);
+    decay = (unsigned int)(cobsInstructionBuffer[index]<<8)+(unsigned int)(cobsInstructionBuffer[index+1]);
     index+=2;
-    delay = (unsigned int)(packetBuffer[index]<<8)+(unsigned int)(packetBuffer[index+1]);
+    delay = (unsigned int)(cobsInstructionBuffer[index]<<8)+(unsigned int)(cobsInstructionBuffer[index+1]);
     index+=2;
-    maxTime = (unsigned int)(packetBuffer[index]<<8)+(unsigned int)(packetBuffer[index+1]);
+    maxTime = (unsigned int)(cobsInstructionBuffer[index]<<8)+(unsigned int)(cobsInstructionBuffer[index+1]);
     index+=2;   
     for(i=0;i<12;i++){
-        thresh[i]=(unsigned int)(packetBuffer[index]<<8)+(unsigned int)(packetBuffer[index+1]);
+        thresh[i]=(unsigned int)(cobsInstructionBuffer[index]<<8)+(unsigned int)(cobsInstructionBuffer[index+1]);
         index+=2;
     }
     SetOptoParameters(freq,pw);
@@ -274,10 +248,17 @@ void ExecuteInstructionPacket(){
 
 void ProcessPacket() {           
     int num;
+    // With COBS encoding, packetBuffer[0] is the COBS encoder.]
+    // because the first two byte of the actual packet will never be zero
+    // we can query these before decoding to determine whether we have to do 
+    // that or not.
+    // Note that only the instruction packet needs to be decoded, the others will
+    // not have any zero bytes and so can be read directly, once the header COBS encoder
+    // is accounted for.
     if(packetBuffer[1]!=dfmID && packetBuffer[1]!=255) return; // Packet not for me    
     if (isInDarkMode == 0) FLIP_GREEN_LED();
-    if(packetBuffer[0]==HEADER3_2){
-        if(packetBuffer[1]==dfmID && packetBuffer[2]==dfmID){
+    if(packetBuffer[2]==STATUSREQUESTBYTE){
+        if(packetBuffer[1]==dfmID && packetBuffer[3]==dfmID){
             DelayMs(15);
             if(bufferSize>MAXPACKETS)
                 num=MAXPACKETS;
@@ -287,14 +268,16 @@ void ProcessPacket() {
                 CurrentStatusPacketSetToUART2(num);                        
         }
     }
-    else if(packetBuffer[0]==HEADER3_3){
-        if(packetBuffer[1]==dfmID && packetBuffer[2]==dfmID){
+    else if(packetBuffer[2]==BUFFERRESETREQUESTBYTE){
+        if(packetBuffer[1]==dfmID && packetBuffer[3]==dfmID){
             InitializeStatusPacketBuffer();
             DelayMs(15);
             SendAck();
+            num=10;
         }
     }
-    else if(packetBuffer[0]==HEADER3){
+    else if(packetBuffer[2]==SENDINSTRUCTIONBYTE){
+        cobsInstructionBufferLength=decodeCOBS(packetBuffer,lastPacketSize,cobsInstructionBuffer);        
         if(!ValidateChecksum()) {
             DelayMs(15);
             SendNAck();
@@ -379,7 +362,7 @@ unsigned int encodeCOBS(unsigned char* buffer,unsigned int bytesToEncode, unsign
         return write_index;
     }
 
-unsigned int decodeCOBS(unsigned char* encodedBuffer,unsigned int bytesToEncode, unsigned char* decodedBuffer)
+unsigned int decodeCOBS(volatile unsigned char* encodedBuffer,unsigned int bytesToEncode, unsigned char* decodedBuffer)
     {
         unsigned int read_index  = 0;
         unsigned int write_index = 0;

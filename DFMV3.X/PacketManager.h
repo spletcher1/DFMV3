@@ -6,10 +6,7 @@ void StepPacketManager();
 void InitializeStatusPacketBuffer();
 
 struct StatusPacket {
-  unsigned char Header1;
-  unsigned char Header2;
-  unsigned char Header3;
-  unsigned char ID;
+  unsigned char ID;  
   unsigned char ErrorFlag;
   unsigned char W1VHigh;
   unsigned char W1High;
@@ -77,9 +74,7 @@ struct StatusPacket {
   unsigned char Checksum4;    
 };
 
-#define STATUSPACKETSIZE 69
-#define NOHEADERSPSIZE 65
-#define COMBINEDPACKETSIZE 329
+#define STATUSPACKETSIZE 66
 
 #endif	/* PACKETMANAGER_H */
 

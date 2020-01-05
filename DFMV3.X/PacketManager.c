@@ -4,7 +4,7 @@
 // pulling data, we will be pulling from too far in 
 // the past.  Alternatively, we can write a signal
 // to reset the buffer just before 
-#define RINGBUFFERSIZE 13
+#define RINGBUFFERSIZE 50
 
 
 struct StatusPacket statusBuffer[RINGBUFFERSIZE]; 
@@ -35,8 +35,8 @@ void inline FillChecksum(struct StatusPacket *tmp){
     unsigned int checksum=0;
     unsigned char *statusPointer;
     int i;
-    statusPointer = (char *)&tmp->Header1;
-    for (i = 4; i < (STATUSPACKETSIZE - 4); i++) checksum += *(statusPointer + i);
+    statusPointer = (char *)&tmp->ID;
+    for (i = 0; i < (STATUSPACKETSIZE - 4); i++) checksum += *(statusPointer + i);
     checksum = (checksum ^ 0xFFFFFFFF) + 0x01;
     tmp->Checksum1 = checksum >> 24;
     tmp->Checksum2 = (checksum >> 16) & 0xFF;
@@ -50,10 +50,7 @@ void FillEmptyPacket(){
     int i,j;
     unsigned char *statusPointer;
     tmpe.bits.STATUSBUFFER=1;
-    
-    emptyPacket.Header1=0xFF;
-    emptyPacket.Header2=0xFF;
-    emptyPacket.Header3=0xFD;   
+         
     emptyPacket.ID=dfmID;     
     emptyPacket.ErrorFlag = tmpe.byte;   
     
@@ -117,13 +114,9 @@ struct StatusPacket *GetNextStatusInLine(){
 
 void AddCurrentStatus() {    
     unsigned char *statusPointer;
-    
-    statusBuffer[head].Header1=0xFF;
-    statusBuffer[head].Header2=0xFF;
-    statusBuffer[head].Header3=0xFD;   
     statusBuffer[head].ID=dfmID;     
     statusBuffer[head].ErrorFlag = currentError.byte;
-    statusPointer = (char *)&statusBuffer[head].Header1;  
+    statusPointer = (char *)&statusBuffer[head].ID;  
     FillCurrentStatus(&statusBuffer[head]);
     statusBuffer[head].Optostate1 = OptoState1;
     statusBuffer[head].Optostate2 = OptoState2;
