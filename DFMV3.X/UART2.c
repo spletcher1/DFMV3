@@ -104,7 +104,7 @@ void ConfigureUART2(void) {
 // interval. This timing could easily handle even 100 DFM.
 void __ISR(_UART2_VECTOR, IPL4AUTO) UART2Interrupt(void){
 	int error;
-	unsigned char data;
+	unsigned char data,tmp;
 	error = UART2GetErrors();	
 	if (error > 0) {
 		if (error & 0x01) { //Overflow Error
@@ -123,11 +123,21 @@ void __ISR(_UART2_VECTOR, IPL4AUTO) UART2Interrupt(void){
             INTClearFlag(INT_U2RX);	
             return;
 		}	
+        else {
+            currentError.bits.TBD3=1;
+            while(DataRdyUART2())            
+                data = UARTGetDataByte(UART2);            
+            UART2ClearAllErrors();
+            ClearPacketBuffer();
+            INTClearFlag(INT_U2E);
+            INTClearFlag(INT_U2RX);	
+        }
 	}	
     while(DataRdyUART2()) {
 		data=UARTGetDataByte(UART2);      
         if(isInPacket){
             packetBuffer[packetIndex++]=data;
+            tmp=packetBuffer[0];
             if(packetBuffer[0]==HEADER3_2 || packetBuffer[0]==HEADER3_3){ // Status Request
                 if(packetIndex>STATUSREQUESTPACKETSIZE){
                     isPacketReceived=1;

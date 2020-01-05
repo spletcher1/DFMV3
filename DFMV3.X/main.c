@@ -22,6 +22,7 @@ extern unsigned int Si7021_Temperature;
 void InitializeRun(){
     Startup();
     InitializeBoard();
+    DelayMs(500);
     currentError.byte=0x00;      
     ConfigureUpdateTimer();
     ConfigureUART2();    
@@ -30,7 +31,7 @@ void InitializeRun(){
     ConfigureI2C2();
     ConfigureButtons();
    
-    DelayMs(50);
+    DelayMs(100);
     if(ConfigureTSL2591()==0){
         currentError.bits.CONFIGURATION=1;
     }
