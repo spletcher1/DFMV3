@@ -25,9 +25,14 @@ unsigned int cobsBufferLength;
 extern int bufferSize;
 
 unsigned char volatile isPacketReceived;
-unsigned char volatile packetBuffer[250];
-unsigned char volatile packetIndex;
-unsigned char volatile lastPacketSize;
+// Note that the packet buffer has to be big enough to
+// properly catch status return calls from other DFM!!!
+// Otherwise things will get out of whack and may lead
+// to other DFM status returns being interpreted as 
+// request calls.
+unsigned char volatile packetBuffer[COBSBUFFERSIZE];
+unsigned int volatile packetIndex;
+unsigned int volatile lastPacketSize;
 
 unsigned char volatile isInPacket;
 
@@ -174,9 +179,10 @@ void CurrentStatusPacketSetToUART2(int numPacketsToSend){
     RX485_ENABLE_SEND();
     for(i=0;i<cobsBufferLength;i++){
         while (!UARTTransmitterIsReady(UART2));
-            UARTSendDataByte(UART2, *(cobsBuffer+i));
+        UARTSendDataByte(UART2, *(cobsBuffer+i));       
     }    
     RX485_DISABLE_SEND();
+    
 }
 
 

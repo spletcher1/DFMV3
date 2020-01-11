@@ -76,7 +76,7 @@ int32_t main(void) {
                 StepTSL2591();
                 StepSi7021();                   
             }
-            timerFlag_1sec = 0;                               
+            timerFlag_1sec = 0;               
         }             
         if (timerFlag_100ms) {
             StepPacketManager();
