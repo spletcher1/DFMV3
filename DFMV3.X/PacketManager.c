@@ -49,7 +49,7 @@ void FillEmptyPacket(){
     errorFlags_t tmpe;
     int i,j;
     unsigned char *statusPointer;
-    tmpe.bits.STATUSBUFFER=1;
+    tmpe.bits.STATUSBUFFER=0;
          
     emptyPacket.ID=dfmID;     
     emptyPacket.ErrorFlag = tmpe.byte;   

@@ -9,7 +9,7 @@
 //UART2B = UART6
 //UART3B = UART5
 
-#define MAXPACKETS 15
+#define MAXPACKETS 15  
 #define STATUSREQUESTBYTE 0xFC
 #define BUFFERRESETREQUESTBYTE 0xFE
 #define SENDINSTRUCTIONBYTE 0xFD
@@ -39,6 +39,8 @@ unsigned char volatile isInPacket;
 extern unsigned char dfmID;
 extern unsigned char isInDarkMode;
 extern errorFlags_t volatile currentError;
+
+extern struct StatusPacket emptyPacket;
 
 /////////////////////////////////////////////////////////////////
 // Select one to specify configuration.
@@ -197,11 +199,22 @@ void CurrentStatusToUART2(struct StatusPacket *cs){
     RX485_DISABLE_SEND();
 }
 
+void EmptyPacketToUART2(){
+    unsigned char *statusPointer = (char *)&emptyPacket.ID;
+    int i;
+    RX485_ENABLE_SEND();
+    for(i=0;i<STATUSPACKETSIZE;i++){
+        while (!UARTTransmitterIsReady(UART2));
+            UARTSendDataByte(UART2, *(statusPointer+i));
+    }    
+    RX485_DISABLE_SEND();
+}
+
 void SendAck(){
     // Need tos end 0x00 char to terminate packets on all listening
     // DFM.
     CharToUART2(dfmID);
-    CharToUART2(0x00);
+    CharToUART2(0x00); 
 }
 
 void SendNAck(){
@@ -271,7 +284,9 @@ void ProcessPacket() {
             else
                 num = bufferSize;
             if(num>0)
-                CurrentStatusPacketSetToUART2(num);                        
+                CurrentStatusPacketSetToUART2(num);   
+            else
+                EmptyPacketToUART2();
         }
     }
     else if(packetBuffer[2]==BUFFERRESETREQUESTBYTE){
