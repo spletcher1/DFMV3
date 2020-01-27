@@ -8,16 +8,9 @@
 #ifndef SI7021_H
 #define	SI7021_H
 
-#ifdef	__cplusplus
-extern "C" {
-#endif
-
-
-
-
-#ifdef	__cplusplus
-}
-#endif
+unsigned char IsSi7021Ready();
+void ConfigureSi7021();
+void StepSi7021();
 
 #endif	/* SI7021_H */
 

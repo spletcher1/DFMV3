@@ -1,6 +1,5 @@
 #include "GlobalIncludes.h"
 
-
 // Address Constant
 #define TSL2591_ADDR  0x29
 // This is the actual address used for I2C communication
@@ -23,6 +22,8 @@
 #define TSL2591_INFRARED          (1)       ///< channel 1
 #define TSL2591_FULLSPECTRUM      (0)       ///< channel 0
 
+
+#define SECONDS_IN_IDLE 58
 
 /// TSL2591 Register map
 
@@ -47,6 +48,29 @@ enum {
     TSL2591_REGISTER_CHAN1_HIGH = 0x17, // Channel 1 data, high byte
 } TSL2591Registers;
 
+enum TSL2591State {
+    Reading,
+    LuxCalculation,
+    LuxReady,
+    Idle,
+} currentState_TSL;
+
+enum TSL2591Gain {
+    Low = 0x00,
+    Medium = 0x10,
+    High = 0x20,
+    Max = 0x30
+} currentGain;
+
+enum TSL2591Timing {
+    Int100ms = 0x00,
+    Int200ms = 0x01,
+    Int300ms = 0x02,
+    Int400ms = 0x03,
+    Int500ms = 0x04,
+    Int600ms = 0x05
+} currentTiming;
+
 
 //private const int TSL2591_STATUS_REG = 0x13;
 
@@ -69,46 +93,32 @@ int TSL2591_LUX;
 int tmpLUX;
 unsigned char isTSL2591Configured;
 unsigned char didSensitivityChange;
-
-enum {
-    Reading,
-    LuxCalculation,
-    LuxReady,
-    Idle,
-} currentState;
-
-enum TSL2591Gain {
-    Low = 0x00,
-    Medium = 0x10,
-    High = 0x20,
-    Max = 0x30
-};
-
-enum TSL2591Timing {
-    Int100ms = 0x00,
-    Int200ms = 0x01,
-    Int300ms = 0x02,
-    Int400ms = 0x03,
-    Int500ms = 0x04,
-    Int600ms = 0x05
-};
-
-enum TSL2591Timing currentTiming;
-enum TSL2591Gain currentGain;
 unsigned char isAtMaxSensitivity;
 unsigned char isAtMinSensitivity;
+int idleCounter_tsl;
+extern errorFlags_t volatile currentError;
 
 unsigned char IsTSL2591Ready() {
-    unsigned char result, found;
+    unsigned char found;
+    I2C_RESULT result;
+    DisableUARTInterrupts();
     result = Read8FromI2C2(TSL2591_ADDR_ADJ, TSL2591_REGISTER_DEVICE_ID | TSL2591_CMD, &found);
-    if (found == 0x50 && result == 0)
+    EnableUARTInterrupts();
+    if (found == 0x50 && result == I2C_SUCCESS)
         return 1;
     else
         return 0;
 }
 
 void SetTimingAndGain(enum TSL2591Gain gain, enum TSL2591Timing timing) {
-    Write8ToI2C2(TSL2591_ADDR_ADJ, TSL2591_REGISTER_CONTROL | TSL2591_CMD, (unsigned char) gain | (unsigned char) timing);
+    I2C_RESULT result;
+    DisableUARTInterrupts();
+    result = Write8ToI2C2(TSL2591_ADDR_ADJ, TSL2591_REGISTER_CONTROL | TSL2591_CMD, (unsigned char) gain | (unsigned char) timing);
+    EnableUARTInterrupts();
+    if (result != I2C_SUCCESS) {
+        currentError.bits.TSL2591 = 1;
+        return;
+    }
     currentGain = gain;
     currentTiming = timing;
     if (currentTiming == Int500ms && currentGain == High) {
@@ -123,97 +133,135 @@ void SetTimingAndGain(enum TSL2591Gain gain, enum TSL2591Timing timing) {
     }
 }
 
-void Enable() {
-    Write8ToI2C2(TSL2591_ADDR_ADJ, TSL2591_REGISTER_ENABLE | TSL2591_CMD, TSL2591_ENABLE_POWERON | TSL2591_ENABLE_AEN); // Power up.    
+void inline Enable() {
+    I2C_RESULT result;
+    DisableUARTInterrupts();
+    result = Write8ToI2C2(TSL2591_ADDR_ADJ, TSL2591_REGISTER_ENABLE | TSL2591_CMD, TSL2591_ENABLE_POWERON | TSL2591_ENABLE_AEN);
+    EnableUARTInterrupts();
+    if (result != I2C_SUCCESS) {
+        currentError.bits.TSL2591 = 1;
+    }
 }
 
-void Disable() {
-    Write8ToI2C2(TSL2591_ADDR_ADJ, TSL2591_REGISTER_ENABLE | TSL2591_CMD, TSL2591_ENABLE_POWERON); // Power up.
+void inline Disable() {
+    I2C_RESULT result;
+    DisableUARTInterrupts();
+    result = Write8ToI2C2(TSL2591_ADDR_ADJ, TSL2591_REGISTER_ENABLE | TSL2591_CMD, TSL2591_ENABLE_POWERON);
+    EnableUARTInterrupts();
+    if (result != I2C_SUCCESS) {
+        currentError.bits.TSL2591 = 1;
+    }
 }
 
-void PowerUp() {
-    Write8ToI2C2(TSL2591_ADDR_ADJ, TSL2591_REGISTER_ENABLE | TSL2591_CMD, TSL2591_ENABLE_POWERON); // Power up.
+void inline PowerUp() {
+    I2C_RESULT result;
+    DisableUARTInterrupts();
+    result = Write8ToI2C2(TSL2591_ADDR_ADJ, TSL2591_REGISTER_ENABLE | TSL2591_CMD, TSL2591_ENABLE_POWERON);
+    EnableUARTInterrupts();
+    if (result != I2C_SUCCESS) {
+        currentError.bits.TSL2591 = 1;
+    }
 }
 
-void PowerDown() {
-    Write8ToI2C2(TSL2591_ADDR_ADJ, TSL2591_REGISTER_ENABLE | TSL2591_CMD, TSL2591_ENABLE_POWEROFF); // Power up.
+void inline PowerDown() {
+    I2C_RESULT result;
+    DisableUARTInterrupts();
+    result = Write8ToI2C2(TSL2591_ADDR_ADJ, TSL2591_REGISTER_ENABLE | TSL2591_CMD, TSL2591_ENABLE_POWEROFF);
+    EnableUARTInterrupts();
+    if (result != I2C_SUCCESS) {
+        currentError.bits.TSL2591 = 1;
+    }
 }
 // Need to wait for at least 200ms after calling StartReading to get these data.
 
-unsigned char GetTSL2591Status(){  
-  unsigned char result, found;
-  Enable();
-  result = Read8FromI2C2(TSL2591_ADDR_ADJ, TSL2591_REGISTER_DEVICE_STATUS | TSL2591_CMD, &found);  
-  //result = Read8FromI2C2(TSL2591_ADDR_ADJ, TSL2591_REGISTER_ENABLE | TSL2591_CMD, &found);  
-  Disable();
-  return found;
-    
+unsigned char GetTSL2591Status() {
+    unsigned char result, found;
+    Enable();
+    DisableUARTInterrupts();
+    result = Read8FromI2C2(TSL2591_ADDR_ADJ, TSL2591_REGISTER_DEVICE_STATUS | TSL2591_CMD, &found);
+    EnableUARTInterrupts();
+    if (result != I2C_SUCCESS) {
+        currentError.bits.TSL2591 = 1;
+    }
+    Disable();
+    return found;
+
 }
 
-unsigned char CheckTimingAndGain(){  
-  unsigned char result, regData;
-  Enable();
-  //result = Read8FromI2C2(TSL2591_ADDR_ADJ, TSL2591_REGISTER_DEVICE_STATUS | TSL2591_CMD, &found);  
-  result = Read8FromI2C2(TSL2591_ADDR_ADJ, TSL2591_REGISTER_CONTROL | TSL2591_CMD, &regData); 
-  Disable();
-  if(currentGain != (regData & 0xF0))
-      return 0;
-  if(currentTiming != (regData & 0x0F))
-      return 0;
-  return 1;    
+unsigned char CheckTimingAndGain() {
+    unsigned char result, regData;
+    Enable();
+    DisableUARTInterrupts();
+    result = Read8FromI2C2(TSL2591_ADDR_ADJ, TSL2591_REGISTER_CONTROL | TSL2591_CMD, &regData);
+    EnableUARTInterrupts();
+    if (result != I2C_SUCCESS) {
+        currentError.bits.TSL2591 = 1;
+    }
+    Disable();
+    if (currentGain != (regData & 0xF0))
+        return 0;
+    if (currentTiming != (regData & 0x0F))
+        return 0;
+    return 1;
 }
 
 void GetFullLuminosity() {
     unsigned char status;
-    status = GetTSL2591Status();            
-    Read32FromI2C2Backward(TSL2591_ADDR_ADJ, TSL2591_CMD | TSL2591_REGISTER_CHAN0_LOW, &fullLuminosity);    
+    I2C_RESULT result;
+    status = GetTSL2591Status();
+    DisableUARTInterrupts();
+    result=Read32FromI2C2Backward(TSL2591_ADDR_ADJ, TSL2591_CMD | TSL2591_REGISTER_CHAN0_LOW, &fullLuminosity);
+    EnableUARTInterrupts();
+    if (result != I2C_SUCCESS) {
+        currentError.bits.TSL2591 = 1;
+    }
     // Need to swap byte order to get luminosity.   
     irLuminosity = fullLuminosity >> 16;
-    visibleLuminosity = (fullLuminosity - irLuminosity);    
+    visibleLuminosity = (fullLuminosity - irLuminosity);
 }
 
 void IncreaseSensitivity() {
     // Only choose a range of sensitivities to avoid so many combinations.
     if (currentTiming == Int100ms) {
         SetTimingAndGain(currentGain, Int300ms);
-        didSensitivityChange=1;
+        didSensitivityChange = 1;
     } else if (currentTiming == Int300ms) {
         SetTimingAndGain(currentGain, Int500ms);
-        didSensitivityChange=1;
+        didSensitivityChange = 1;
     } else if (currentGain == Low) {
         SetTimingAndGain(Medium, currentTiming);
-        didSensitivityChange=1;
+        didSensitivityChange = 1;
     } else if (currentGain == Medium) {
         SetTimingAndGain(High, currentTiming);
-        didSensitivityChange=1;
+        didSensitivityChange = 1;
     }
 }
 
 void DecreaseSensitivity() {
     if (currentGain == High) {
         SetTimingAndGain(Medium, currentTiming);
-        didSensitivityChange=1;
+        didSensitivityChange = 1;
     } else if (currentGain == Medium) {
         SetTimingAndGain(Low, currentTiming);
-        didSensitivityChange=1;
+        didSensitivityChange = 1;
     } else if (currentTiming == Int500ms) {
         SetTimingAndGain(currentGain, Int300ms);
-        didSensitivityChange=1;
+        didSensitivityChange = 1;
     } else if (currentTiming == Int300ms) {
         SetTimingAndGain(currentGain, Int100ms);
-        didSensitivityChange=1;
+        didSensitivityChange = 1;
     }
 }
 
 void GetLux() {
     float lux, d0, d1, lux1, lux2, cpl, again, atime;
-   
-    if(!CheckTimingAndGain()){
-        SetTimingAndGain(currentGain,currentTiming);
-        tmpLUX=-1;
+
+    if (!CheckTimingAndGain()) {
+        SetTimingAndGain(currentGain, currentTiming);
+        tmpLUX = -1;
         return;
     }
-    
+
     atime = (float) ((float) currentTiming + 1) * 100;
     switch (currentGain) {
         case Low: again = 1.0F;
@@ -239,11 +287,11 @@ void GetLux() {
     // If so, abandon ship (calculation will not be accurate)
     if ((CH0 > 45000) || (CH1 > 45000)) // I set this at 40000 (out of 65535) to turn down sensitivity.
     {
-        if (!isAtMinSensitivity) {          
+        if (!isAtMinSensitivity) {
             DecreaseSensitivity();
         }
     } else if ((CH0 + CH1) < 30) {
-        if (!isAtMaxSensitivity) {            
+        if (!isAtMaxSensitivity) {
             IncreaseSensitivity();
         }
     }
@@ -261,47 +309,63 @@ void GetLux() {
     tmpLUX = (int) lux;
 }
 
-unsigned char ConfigureTSL2591() {       
+unsigned char ConfigureTSL2591() {
     PowerUp();
-    DelayMs(10);    
+    DelayMs(10);
     if (!IsTSL2591Ready()) {
         isTSL2591Configured = 0;
         return 0;
     }
-    DelayMs(10);    
-    SetTimingAndGain(Medium, Int300ms);    
-    didSensitivityChange=0;
-    currentState=Idle;
+    isTSL2591Configured = 1;
+    DelayMs(10);
+    SetTimingAndGain(Medium, Int300ms);
+    didSensitivityChange = 0;
+    idleCounter_tsl = SECONDS_IN_IDLE; // This will force a first measure right away.
+    currentState_TSL = Idle;
     return 1;
 }
 
 // This should probably step once every second.
-void StepTSL2591() {    
-    switch(currentState){
+
+void StepTSL2591() {
+    if (isTSL2591Configured == 0) return;
+    switch (currentState_TSL) {
         case Reading:
+            YELLOWLED_ON();
             GetFullLuminosity();
+            YELLOWLED_OFF();
             Disable();
-            currentState=LuxCalculation;
+            currentState_TSL = LuxCalculation;
             break;
         case Idle:
-            Enable();
-            currentState = Reading;
-            break;
-        case LuxCalculation:           
-            GetLux();
-            if(didSensitivityChange) {
-                currentState=Idle;
-                didSensitivityChange=0;
+            if (idleCounter_tsl++ >= SECONDS_IN_IDLE) {
+                YELLOWLED_ON();
+                Enable();
+                YELLOWLED_OFF();
+                currentState_TSL = Reading;
+                idleCounter_tsl = 0;
             }
-            else
-                currentState=LuxReady;
+            break;
+        case LuxCalculation:
+            GetLux();
+            if (didSensitivityChange) {
+                YELLOWLED_ON();
+                Enable();
+                YELLOWLED_OFF();
+                currentState_TSL = Reading;
+                didSensitivityChange = 0;
+            } else
+                currentState_TSL = LuxReady;
             break;
         case LuxReady:
-            TSL2591_LUX=tmpLUX;
-            currentState=Idle;
+            if(currentError.bits.I2C==1 || currentError.bits.TSL2591==1)
+                TSL2591_LUX = 0;
+            else
+                TSL2591_LUX = tmpLUX;
+            currentState_TSL = Idle;
             break;
         default:
             break;
     }
-    
+
 }

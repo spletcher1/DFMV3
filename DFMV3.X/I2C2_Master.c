@@ -1,185 +1,239 @@
 #include "GlobalIncludes.h"
 
+
+// I am using a mixture of the last PLib libraries and the legacy libraries.
+// The "newer" ones don't send and receive correctly, but they make configuration
+// of the module and interrupts a bit more intuitive.
+
+
+
 // Normally I2C devices run at either 100khz or 400 khz, although some can do 2MHz
 // The propellor seems to only manage 100khz
-#define BAUDRATE 400000 // Set at 400000 for normal EEPROM and 100000 for Propeller
+#define I2C_CLOCK_FREQ 400000 // Set at 400000 for normal EEPROM and 100000 for Propeller
 int ErrorCount;
+I2C_RESULT theCurrentI2CResult;
+extern errorFlags_t volatile currentError;
+
+// the IdleFunction 
+// while(I2C2CONbits.SEN || I2C2CONbits.PEN || I2C2CONbits.RSEN || I2C2CONbits.RCEN || I2C2CONbits.ACKEN || I2C2STATbits.TRSTAT);
+
+void FreeI2C(){
+    int i;
+    I2CEnable(I2C2, FALSE);
+    TRISAbits.TRISA2=0;
+    TRISAbits.TRISA3=1;
+    
+    for(i=0;i<50;i++){
+        PORTAINV = 0x0004;
+        Delay10us(1);        
+    }                      
+    I2CEnable(I2C2, TRUE);
+}
+
 
 void ConfigureI2C2(void) {
-    int brg;
-    if ((GetPeripheralClock()) == 40000000) {
-        if (BAUDRATE == 100000)
-            brg = 0x0C6;
-        if (BAUDRATE == 400000)
-            brg = 0x030;
-    }
-    SetPriorityIntI2C2(5);
-    EnableIntMI2C2;
-    EnableIntBI2C2;
+    int actualClock;      
+    INTSetVectorPriority(INT_I2C_2_VECTOR, INT_PRIORITY_LEVEL_5);
+    //INTEnable(INT_I2C2M, INT_ENABLED); // Master event
+    INTEnable(INT_I2C2B, INT_ENABLED); // Bus collision event
     INTClearFlag(INT_I2C2M);
-    INTClearFlag(INT_I2C2B);
-    OpenI2C2(I2C_ON | I2C_IDLE_CON | I2C_CLK_REL | I2C_STRICT_DIS | I2C_7BIT_ADD | I2C_SLW_EN |
-			I2C_SM_DIS | I2C_GC_DIS | I2C_STR_DIS | I2C_ACK | I2C_ACK_EN | I2C_RCV_EN | I2C_STOP_DIS |
-			I2C_RESTART_DIS | I2C_START_EN, brg);
-    //OpenI2C2(I2C_EN, brg);    
+    INTClearFlag(INT_I2C2B);    
+    I2CConfigure(I2C2, I2C_ENABLE_SLAVE_CLOCK_STRETCHING);
+    actualClock = I2CSetFrequency(I2C2, GetPeripheralClock(), I2C_CLOCK_FREQ);
+    if ( abs(actualClock-I2C_CLOCK_FREQ) > I2C_CLOCK_FREQ/10 ){
+        // Some error condition here.
+    }    
+    I2CEnable(I2C2, TRUE);
 }
+
 void __ISR(_I2C_2_VECTOR, IPL5AUTO) I2C2InterruptServiceRoutine(void) {
     // check for MASTER and Bus events and respond accordingly
     if (IFS1bits.I2C2SIF == 1) { // Should never be here because we don't operate as slave.
         //if(IsInDarkMode==0)
         //    IO_LED6_ON();
-        mI2C2MClearIntFlag();
+        INTClearFlag(INT_I2C2M);
+        currentError.bits.I2C=1;
         return;
     }
     if (IFS1bits.I2C2BIF == 1) {
+        currentError.bits.I2C=1;
+        FreeI2C();
+        if(I2C2STATbits.BCL==0)
+            currentError.bits.I2C=0;
         //if(IsInDarkMode==0)
         //    IO_LED5_ON();
-        mI2C2BClearIntFlag();
+        INTClearFlag(INT_I2C2B);
+        
         return;
     }
     INTClearFlag(INT_I2C2M);      
 }
 
-// This function is simplified for single byte addresses
-// slaveaddress should already be shifted left to most significant bits to leave
-// LSB open for read/write indication.
-unsigned char Read8FromI2C2(unsigned char slaveaddress, unsigned char dataaddress, unsigned char *data) {
-
+I2C_RESULT Read8FromI2C2(unsigned char slaveaddress, unsigned char dataaddress, unsigned char *data) {    
+    IdleI2C2();
 	// Now begin the send sequence
 	StartI2C2(); // Send the start bit.
+    if(currentError.bits.I2C==1) return I2C_ERROR;
 	IdleI2C2(); // Wait until this is complete.
 
 	// Send the slave address and memory start address	
 	MasterWriteI2C2(slaveaddress);	
+    if(currentError.bits.I2C==1) return I2C_ERROR;
 	IdleI2C2();
-	if(I2C2STATbits.ACKSTAT) return 1; // If this bit is 1, then slave failed to ackknowledge, so break.	
+	if(I2C2STATbits.ACKSTAT) return I2C_ERROR; // Make sure it is acked.	
 	
 	MasterWriteI2C2(dataaddress);
+    if(currentError.bits.I2C==1) return I2C_ERROR;
 	IdleI2C2();
-	if(I2C2STATbits.ACKSTAT) return 2; // If this bit is 1, then slave failed to ackknowledge, so break.	
-		
-	StopI2C2(); // Send the stop condition.
-	IdleI2C2(); // Wait until done.
+	if(I2C2STATbits.ACKSTAT) return I2C_ERROR; 
+			
 	
 	RestartI2C2(); // Send restart.
+    if(currentError.bits.I2C==1) return I2C_ERROR;
 	IdleI2C2();
 	
 	MasterWriteI2C2(slaveaddress | 0x01); // Send slave address but last bit changed to 1 to indicate a read.
+    if(currentError.bits.I2C==1) return I2C_ERROR;
 	IdleI2C2();
+    if(I2C2STATbits.ACKSTAT) return I2C_ERROR; 
 	
 	*data = MasterReadI2C2();
+    if(currentError.bits.I2C==1) return I2C_ERROR;
 	IdleI2C2();
-	if(I2C2STATbits.ACKSTAT) {return 4;} // If this bit is 1, then slave failed to ackknowledge, so break.
+    NotAckI2C2();
 	
-	StopI2C2();
-	IdleI2C2();
-	return 0;
+	if(currentError.bits.I2C==1) return I2C_ERROR;
+    IdleI2C2();
+	StopI2C2();	
+	return I2C_SUCCESS;
 }
 
-unsigned char Read16FromI2C2(unsigned char slaveaddress, unsigned char dataaddress, unsigned int *data) {
 
-	// Now begin the send sequence
+I2C_RESULT Read16FromI2C2(unsigned char slaveaddress, unsigned char dataaddress, unsigned int *data) {
+// Now begin the send sequence
+    if(currentError.bits.I2C==1) return I2C_ERROR;
+    IdleI2C2();
 	StartI2C2(); // Send the start bit.
+    if(currentError.bits.I2C==1) return I2C_ERROR;
 	IdleI2C2(); // Wait until this is complete.
 
 	// Send the slave address and memory start address	
 	MasterWriteI2C2(slaveaddress);	
+    if(currentError.bits.I2C==1) return I2C_ERROR;
 	IdleI2C2();
-	if(I2C2STATbits.ACKSTAT) return 1; // If this bit is 1, then slave failed to ackknowledge, so break.	
+	if(I2C2STATbits.ACKSTAT) return I2C_ERROR; // Make sure it is acked.	
 	
 	MasterWriteI2C2(dataaddress);
+    if(currentError.bits.I2C==1) return I2C_ERROR;
 	IdleI2C2();
-	if(I2C2STATbits.ACKSTAT) return 2; // If this bit is 1, then slave failed to ackknowledge, so break.	
-		
-	StopI2C2(); // Send the stop condition.
-	IdleI2C2(); // Wait until done.
+	if(I2C2STATbits.ACKSTAT) return I2C_ERROR; 
+			
 	
 	RestartI2C2(); // Send restart.
+    if(currentError.bits.I2C==1) return I2C_ERROR;
 	IdleI2C2();
 	
 	MasterWriteI2C2(slaveaddress | 0x01); // Send slave address but last bit changed to 1 to indicate a read.
+    if(currentError.bits.I2C==1) return I2C_ERROR;
 	IdleI2C2();
+    if(I2C2STATbits.ACKSTAT) return I2C_ERROR; 
 	
 	*data = MasterReadI2C2();
 	AckI2C2();
-	IdleI2C2();
-    
-    *data = (*data << 8) + MasterReadI2C2();
-	AckI2C2();
-	IdleI2C2();
+    if(currentError.bits.I2C==1) return I2C_ERROR;
+    IdleI2C2();    
 	
-	StopI2C2();
-	IdleI2C2();
-	return 0;
+	
+    *data = (*data << 8) + MasterReadI2C2();
+    NotAckI2C2();
+    if(currentError.bits.I2C==1) return I2C_ERROR;
+    IdleI2C2();
+    	
+    
+	StopI2C2();	
+	return I2C_SUCCESS;  
 }
 
-unsigned char Read32FromI2C2(unsigned char slaveaddress, unsigned char dataaddress, unsigned int *data) {
-
+I2C_RESULT Read32FromI2C2(unsigned char slaveaddress, unsigned char dataaddress, unsigned int *data) {
+    if(currentError.bits.I2C==1) return I2C_ERROR;
+    IdleI2C2();
 	// Now begin the send sequence
 	StartI2C2(); // Send the start bit.
+    if(currentError.bits.I2C==1) return I2C_ERROR;
 	IdleI2C2(); // Wait until this is complete.
 
 	// Send the slave address and memory start address	
 	MasterWriteI2C2(slaveaddress);	
+    if(currentError.bits.I2C==1) return I2C_ERROR;
 	IdleI2C2();
-	if(I2C2STATbits.ACKSTAT) return 1; // If this bit is 1, then slave failed to ackknowledge, so break.	
+	if(I2C2STATbits.ACKSTAT) return I2C_ERROR; 
 	
 	MasterWriteI2C2(dataaddress);
+    if(currentError.bits.I2C==1) return I2C_ERROR;
 	IdleI2C2();
-	if(I2C2STATbits.ACKSTAT) return 2; // If this bit is 1, then slave failed to ackknowledge, so break.	
+	if(I2C2STATbits.ACKSTAT) return I2C_ERROR; 
 		
-	StopI2C2(); // Send the stop condition.
-	IdleI2C2(); // Wait until done.
-	
 	RestartI2C2(); // Send restart.
+    if(currentError.bits.I2C==1) return I2C_ERROR;
 	IdleI2C2();
 	
 	MasterWriteI2C2(slaveaddress | 0x01); // Send slave address but last bit changed to 1 to indicate a read.
+    if(currentError.bits.I2C==1) return I2C_ERROR;
 	IdleI2C2();
 	
 	*data = MasterReadI2C2();
 	AckI2C2();
+    if(currentError.bits.I2C==1) return I2C_ERROR;
 	IdleI2C2();
     
     *data = (*data << 8) + MasterReadI2C2();
 	AckI2C2();
+    if(currentError.bits.I2C==1) return I2C_ERROR;
 	IdleI2C2();
 	
     *data = (*data << 8) + MasterReadI2C2();
 	AckI2C2();
+    if(currentError.bits.I2C==1) return I2C_ERROR;
 	IdleI2C2();
     
     *data = (*data << 8) + MasterReadI2C2();
-	AckI2C2();
+	NotAckI2C2();
+    if(currentError.bits.I2C==1) return I2C_ERROR;
 	IdleI2C2();
     
 	StopI2C2();
-	IdleI2C2();
-	return 0;
+	return I2C_SUCCESS;
 }
 
-unsigned char Read32FromI2C2Backward(unsigned char slaveaddress, unsigned char dataaddress, unsigned int *data) {
+I2C_RESULT Read32FromI2C2Backward(unsigned char slaveaddress, unsigned char dataaddress, unsigned int *data) {
     unsigned char a,b,c,d;
+    if(currentError.bits.I2C==1) return I2C_ERROR;
+    IdleI2C2();
 	// Now begin the send sequence
 	StartI2C2(); // Send the start bit.
+    if(currentError.bits.I2C==1) return I2C_ERROR;
 	IdleI2C2(); // Wait until this is complete.
 
 	// Send the slave address and memory start address	
 	MasterWriteI2C2(slaveaddress);	
+    if(currentError.bits.I2C==1) return I2C_ERROR;
 	IdleI2C2();
-	if(I2C2STATbits.ACKSTAT) return 1; // If this bit is 1, then slave failed to ackknowledge, so break.	
+	if(I2C2STATbits.ACKSTAT) return I2C_ERROR; // If this bit is 1, then slave failed to ackknowledge, so break.	
 	
 	MasterWriteI2C2(dataaddress);
+    if(currentError.bits.I2C==1) return I2C_ERROR;
 	IdleI2C2();
-	if(I2C2STATbits.ACKSTAT) return 2; // If this bit is 1, then slave failed to ackknowledge, so break.	
+	if(I2C2STATbits.ACKSTAT) return I2C_ERROR; // If this bit is 1, then slave failed to ackknowledge, so break.	
 		
-	StopI2C2(); // Send the stop condition.
-	IdleI2C2(); // Wait until done.
+	//StopI2C2(); // Send the stop condition.
+	//IdleI2C2(); // Wait until done.
 	
 	RestartI2C2(); // Send restart.
+    if(currentError.bits.I2C==1) return I2C_ERROR;
 	IdleI2C2();
 	
 	MasterWriteI2C2(slaveaddress | 0x01); // Send slave address but last bit changed to 1 to indicate a read.
+    if(currentError.bits.I2C==1) return I2C_ERROR;
 	IdleI2C2();
 	
 	*data = 0;
@@ -187,48 +241,113 @@ unsigned char Read32FromI2C2Backward(unsigned char slaveaddress, unsigned char d
 	// also expected to be clear, there is no reason to check Idel before sending and acknowledgement.
 	a = MasterReadI2C2();
 	AckI2C2();
+    if(currentError.bits.I2C==1) return I2C_ERROR;
 	IdleI2C2();
 	
 	b = MasterReadI2C2();
 	AckI2C2();
+    if(currentError.bits.I2C==1) return I2C_ERROR;
 	IdleI2C2();
 
 	c = MasterReadI2C2();
 	AckI2C2();
+    if(currentError.bits.I2C==1) return I2C_ERROR;
 	IdleI2C2();	
 	
 	d = MasterReadI2C2();
-	
-	StopI2C2();
+	NotAckI2C2();
+    if(currentError.bits.I2C==1) return I2C_ERROR;
 	IdleI2C2();
     
+	StopI2C2();	
      *(data)=(d<<24) + (c<<16) + (b<<8) + a;
-	return 0;
+	return I2C_SUCCESS;
 }
 
 
 // This function is simplified for single byte addresses
-unsigned char Write8ToI2C2(unsigned char slaveaddress, unsigned char dataaddress, unsigned char data) {
-
+I2C_RESULT Write8ToI2C2(unsigned char slaveaddress, unsigned char dataaddress, unsigned char data) {
+    if(currentError.bits.I2C==1) return I2C_ERROR;
+    IdleI2C2();
 	// Begin the send sequence
 	StartI2C2(); // Send the start bit.
+    if(currentError.bits.I2C==1) return I2C_ERROR;
 	IdleI2C2(); // Wait until this is complete.
 
 	MasterWriteI2C2(slaveaddress);
+    if(currentError.bits.I2C==1) return I2C_ERROR;
 	IdleI2C2();
-	if(I2C2STATbits.ACKSTAT) return 1; // If this bit is 1, then slave failed to ackknowledge, so break.	
+	if(I2C2STATbits.ACKSTAT) return I2C_ERROR; // If this bit is 1, then slave failed to ackknowledge, so break.	
 		
 	MasterWriteI2C2(dataaddress);
+    if(currentError.bits.I2C==1) return I2C_ERROR;
 	IdleI2C2();
-	if(I2C2STATbits.ACKSTAT) return 2; // If this bit is 1, then slave failed to ackknowledge, so break.	
+	if(I2C2STATbits.ACKSTAT) return I2C_ERROR; // If this bit is 1, then slave failed to ackknowledge, so break.	
 	
 	MasterWriteI2C2(data);
+    if(currentError.bits.I2C==1) return I2C_ERROR;
 	IdleI2C2();
-	if(I2C2STATbits.ACKSTAT) return 4; // If this bit is 1, then slave failed to ackknowledge, so break.	
+	if(I2C2STATbits.ACKSTAT) return I2C_ERROR; // If this bit is 1, then slave failed to ackknowledge, so break.	
 	
-	I2CStop(I2C2);// Send the stop condition.
-	IdleI2C2(); // Wait until done.
-		
-	return 0;
+	I2CStop(I2C2);// Send the stop condition.		
+	return I2C_SUCCESS;
 
+}
+
+
+I2C_RESULT RequestMeasureSi7021I2C2(unsigned char slaveaddress, unsigned char dataaddress) {
+    if(currentError.bits.I2C==1) return I2C_ERROR;
+    IdleI2C2();
+	// Begin the send sequence
+	StartI2C2(); // Send the start bit.
+    if(currentError.bits.I2C==1) return I2C_ERROR;
+	IdleI2C2(); // Wait until this is complete.
+
+	MasterWriteI2C2(slaveaddress);
+    if(currentError.bits.I2C==1) return I2C_ERROR;
+	IdleI2C2();
+	if(I2C2STATbits.ACKSTAT) return I2C_ERROR; // If this bit is 1, then slave failed to ackknowledge, so break.	
+		
+	MasterWriteI2C2(dataaddress);
+    if(currentError.bits.I2C==1) return I2C_ERROR;
+	IdleI2C2();
+	if(I2C2STATbits.ACKSTAT) return I2C_ERROR; // If this bit is 1, then slave failed to ackknowledge, so break.	
+	
+    RestartI2C2(); // Send restart.
+    if(currentError.bits.I2C==1) return I2C_ERROR;
+	IdleI2C2();
+	    
+	MasterWriteI2C2(slaveaddress);
+    if(currentError.bits.I2C==1) return I2C_ERROR;
+	IdleI2C2();
+	if(!I2C2STATbits.ACKSTAT) return I2C_ERROR; // If this bit is 1, then slave failed to ackknowledge, so break.	
+	
+	I2CStop(I2C2);// Send the stop condition.		
+	return I2C_SUCCESS;
+
+}
+
+I2C_RESULT ReadHumidityFromSi7021I2C2(unsigned char slaveaddress, unsigned int *data) {
+// Now begin the send sequence
+    if(currentError.bits.I2C==1) return I2C_ERROR;
+    IdleI2C2();
+	StartI2C2(); // Send the start bit.
+    if(currentError.bits.I2C==1) return I2C_ERROR;
+	IdleI2C2(); // Wait until this is complete.	
+	
+	MasterWriteI2C2(slaveaddress | 0x01); // Send slave address but last bit changed to 1 to indicate a read.
+    if(currentError.bits.I2C==1) return I2C_ERROR;
+	IdleI2C2();
+    if(I2C2STATbits.ACKSTAT) return I2C_ERROR; 
+	
+	*data = MasterReadI2C2();
+    if(currentError.bits.I2C==1) return I2C_ERROR;
+	IdleI2C2();    
+	AckI2C2();
+	
+    *data = (*data << 8) + MasterReadI2C2();
+    NotAckI2C2();
+    if(currentError.bits.I2C==1) return I2C_ERROR;
+    IdleI2C2();
+   	return I2C_SUCCESS;  
 }
