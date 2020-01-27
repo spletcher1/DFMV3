@@ -289,7 +289,7 @@ void SetMaxTimeOn(unsigned int maxTime){
 }
 
 
-void SetCurrentOptoState() {
+void SetCurrentOptoStateOld() {
     int OptoState1, OptoState2;
     OptoState1 = OptoState2 = 0;
     if (IsLEDOn[0])
@@ -318,7 +318,17 @@ void SetCurrentOptoState() {
         OptoState2 |= 0x20;
     SetOptoState(OptoState1, OptoState2);
 }
-
+//For camera control
+void SetCurrentOptoState(){
+    int i,OptoState1, OptoState2,sum=0;
+    OptoState1 = OptoState2 = 0;
+    for(i=0;i<12;i++)
+        sum+=IsLEDOn[i];
+    if(sum>0){
+        OptoState1=OptoState2=0x3F;        
+    }
+    SetOptoState(OptoState1, OptoState2);            
+}
 void StepLEDControl() {
     unsigned char i;
     for (i = 0; i < 12; i++)
