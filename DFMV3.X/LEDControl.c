@@ -1,4 +1,7 @@
 
+#include "LEDControl.h"
+
+
 int LEDDecayCounter[12];
 int LEDDelayCounter[12];
 int LEDMaxTimeOnCounter[12];
@@ -7,7 +10,7 @@ unsigned int LEDDecayValues[12];
 unsigned int LEDDelayValues[12];
 unsigned int LEDMaxTimeOnValues[12];
 
-unsigned char IsLEDOn[12];
+LEDFLAGS IsLEDOn;
 unsigned char IsOverMaxTimeOn[12];
 
 extern int CurrentValues[13]; // This has one extra place for the input voltage reading from the DFM.
@@ -49,47 +52,47 @@ void SetLEDThresholds(int *thresh){
 
 void UpdateLEDSimplest(unsigned char led) {
     if (LEDThresholdValues[led] == 0) {
-        IsLEDOn[led] = 1;
+        IsLEDOn.ledField |= (1<<led);
         return;
     }
     if (LEDThresholdValues[led] == -1) {
-        IsLEDOn[led] = 0;
+        IsLEDOn.ledField &= ~(1<<led);
         return;
     }
     if (CurrentValues[led] > LEDThresholdValues[led]) {
-        IsLEDOn[led] = 1;
+        IsLEDOn.ledField |= (1<<led);
     } else {
-        IsLEDOn[led] = 0;
+         IsLEDOn.ledField &= ~(1<<led);
     }
 }
 
 void UpdateLEDWithDecay(unsigned char led) {
     if (LEDThresholdValues[led] == 0) {
-        IsLEDOn[led] = 1;
+        IsLEDOn.ledField |= (1<<led);
         return;
     }
     if (LEDThresholdValues[led] == -1) {
-        IsLEDOn[led] = 0;
+        IsLEDOn.ledField &= ~(1<<led);
         return;
     }
     if (CurrentValues[led] > LEDThresholdValues[led]) {
-        IsLEDOn[led] = 1;
+        IsLEDOn.ledField |= (1<<led);
         LEDDecayCounter[led] = LEDDecayValues[led];
     } else if (LEDDecayValues[led] > 0 && LEDDecayCounter[led] > 0) {
         LEDDecayCounter[led]--;
-        IsLEDOn[led] = 1;
+        IsLEDOn.ledField |= (1<<led);
     } else {
-        IsLEDOn[led] = 0;
+        IsLEDOn.ledField &= ~(1<<led);
     }
 }
 
 void UpdateLEDWithDecayAndMaxTime(unsigned char led) {
     if (LEDThresholdValues[led] == 0) {
-        IsLEDOn[led] = 1;
+        IsLEDOn.ledField |= (1<<led);
         return;
     }
     if (LEDThresholdValues[led] == -1) {
-        IsLEDOn[led] = 0;
+        IsLEDOn.ledField &= ~(1<<led);
         return;
     }
     if (CurrentValues[led] > LEDThresholdValues[led]) {
@@ -98,12 +101,12 @@ void UpdateLEDWithDecayAndMaxTime(unsigned char led) {
         }
         if (LEDMaxTimeOnValues[led] > 0) {
             if (LEDMaxTimeOnCounter[led]-- <= 0) {
-                IsLEDOn[led] = 0;
+                IsLEDOn.ledField &= ~(1<<led);
             } else {
-                IsLEDOn[led] = 1;
+                IsLEDOn.ledField |= (1<<led);
             }
         } else {
-            IsLEDOn[led] = 1;
+            IsLEDOn.ledField |= (1<<led);
         }
 
     } else {
@@ -111,19 +114,19 @@ void UpdateLEDWithDecayAndMaxTime(unsigned char led) {
             if (LEDDecayCounter[led]-- > 0) {
                 if (LEDMaxTimeOnValues[led] > 0) {
                     if (LEDMaxTimeOnCounter[led]-- <= 0) {
-                        IsLEDOn[led] = 0;
+                        IsLEDOn.ledField &= ~(1<<led);
                     } else {
-                        IsLEDOn[led] = 1;
+                        IsLEDOn.ledField |= (1<<led);
                     }
                 } else {
-                    IsLEDOn[led] = 1;
+                    IsLEDOn.ledField |= (1<<led);
                 }
             } else {
-                IsLEDOn[led] = 0;
+                IsLEDOn.ledField &= ~(1<<led);
                 LEDMaxTimeOnCounter[led] = LEDMaxTimeOnValues[led];
             }
         } else {
-            IsLEDOn[led] = 0;
+            IsLEDOn.ledField &= ~(1<<led);
             LEDMaxTimeOnCounter[led] = LEDMaxTimeOnValues[led];
         }
     }
@@ -136,26 +139,26 @@ void UpdateLEDWithDecayAndMaxTime(unsigned char led) {
 
 void UpdateLEDWithDelay(unsigned char led) {
     if (LEDThresholdValues[led] == 0) {
-        IsLEDOn[led] = 1;
+        IsLEDOn.ledField |= (1<<led);
         return;
     }
     if (LEDThresholdValues[led] == -1) {
-        IsLEDOn[led] = 0;
+        IsLEDOn.ledField &= ~(1<<led);
         return;
     }
     if (CurrentValues[led] > LEDThresholdValues[led]) {
-        IsLEDOn[led] = 0;
+        IsLEDOn.ledField &= ~(1<<led);
         LEDDelayCounter[led] = LEDDelayValues[led];
         LEDDecayCounter[led] = LEDDecayValues[led];
     } else {
         if (LEDDelayCounter[led]-- > 0) {
-            IsLEDOn[led] = 0;
+            IsLEDOn.ledField &= ~(1<<led);
             LEDDecayCounter[led] = LEDDecayValues[led];
         } else {
             if (LEDDecayCounter[led]-- >= 0) {
-                IsLEDOn[led] = 1;
+                IsLEDOn.ledField |= (1<<led);
             } else {
-                IsLEDOn[led] = 0;
+                IsLEDOn.ledField &= ~(1<<led);
                 LEDMaxTimeOnCounter[led] = LEDMaxTimeOnValues[led];
             }
         }
@@ -163,85 +166,6 @@ void UpdateLEDWithDelay(unsigned char led) {
 }
 
 
-// This function was deprecated because it is too complicated
-// and not required.
-// This is because when there is a delay, the lights on time
-// should be determined specifically by the decay
-void UpdateLEDFullOLD(unsigned char led) {
-    if (LEDThresholdValues[led] == 0) {
-        IsLEDOn[led] = 1;
-        return;
-    }
-    if (LEDThresholdValues[led] == -1) {
-        IsLEDOn[led] = 0;
-        return;
-    }
-    if (CurrentValues[led] > LEDThresholdValues[led]) {
-        if (LEDDelayValues[led] > 0) {
-            IsLEDOn[led] = 0;
-            LEDDelayCounter[led] = LEDDelayValues[led];
-            LEDDecayCounter[led] = LEDDecayValues[led];
-            LEDMaxTimeOnCounter[led] = LEDMaxTimeOnValues[led];
-        } else {
-            if (LEDDecayValues[led] > 0) {
-                LEDDecayCounter[led] = LEDDecayValues[led];
-            }
-            if (LEDMaxTimeOnValues[led] > 0) {
-                if (LEDMaxTimeOnCounter[led]-- <= 0) {
-                    IsLEDOn[led] = 0;
-                } else {
-                    IsLEDOn[led] = 1;
-                }
-            }
-            else {
-                IsLEDOn[led] = 1;
-            }
-        }
-    } else {
-        if (LEDDelayValues[led] > 0) {
-            if (LEDDelayCounter[led]-- > 0) {
-                IsLEDOn[led] = 0;
-                LEDDecayCounter[led] = LEDDecayValues[led];
-                LEDMaxTimeOnCounter[led] = LEDMaxTimeOnValues[led];
-            } else {
-                if (LEDDecayCounter[led]-- >= 0) {
-                    if (LEDMaxTimeOnValues[led] > 0) {
-                        if (LEDMaxTimeOnCounter[led]-- <= 0) {
-                            IsLEDOn[led] = 0;
-                        } else {
-                            IsLEDOn[led] = 1;
-                        }
-                    } else {
-                        IsLEDOn[led] = 1;
-                    }
-                } else {
-                    IsLEDOn[led] = 0;
-                    LEDMaxTimeOnCounter[led] = LEDMaxTimeOnValues[led];
-                }
-            }
-        } else {
-            if (LEDDecayValues[led] > 0) {
-                if (LEDDecayCounter[led]-- > 0) {
-                    if (LEDMaxTimeOnValues[led] > 0) {
-                        if (LEDMaxTimeOnCounter[led]-- <= 0) {
-                            IsLEDOn[led] = 0;
-                        } else {
-                            IsLEDOn[led] = 1;
-                        }
-                    } else {
-                        IsLEDOn[led] = 1;
-                    }
-                } else {
-                    IsLEDOn[led] = 0;
-                    LEDMaxTimeOnCounter[led] = LEDMaxTimeOnValues[led];
-                }
-            } else {
-                IsLEDOn[led] = 0;
-                LEDMaxTimeOnCounter[led] = LEDMaxTimeOnValues[led];
-            }
-        }
-    }
-}
 
 // Note that one has to be careful to set the parameters in the right manner
 // or constraints may result in some unintended changes.
@@ -260,7 +184,7 @@ void SetLEDParams(unsigned int decayval, unsigned int delayval, unsigned int max
         LEDDecayCounter[i] = 0;
         LEDDelayCounter[i] = LEDDelayValues[i];
         LEDMaxTimeOnCounter[i] = LEDMaxTimeOnValues[i];
-        IsLEDOn[i] = 0;
+        IsLEDOn.ledField &= ~(1<<i);
     }
     if (delayval == 0 && maxtimeonval == 0 && decayval == 0) {
         LEDUpdateFunction = &UpdateLEDSimplest;
@@ -292,29 +216,29 @@ void SetMaxTimeOn(unsigned int maxTime){
 void SetCurrentOptoState() {
     int OptoState1, OptoState2;
     OptoState1 = OptoState2 = 0;
-    if (IsLEDOn[0])
+    if (IsLEDOn.bits.LED1)
         OptoState1 = 0x01;
-    if (IsLEDOn[1])
+    if (IsLEDOn.bits.LED2)
         OptoState2 = 0x01;
-    if (IsLEDOn[2])
+    if (IsLEDOn.bits.LED3)
         OptoState1 |= 0x02;
-    if (IsLEDOn[3])
+    if (IsLEDOn.bits.LED4)
         OptoState2 |= 0x02;
-    if (IsLEDOn[4])
+    if (IsLEDOn.bits.LED5)
         OptoState1 |= 0x04;
-    if (IsLEDOn[5])
+    if (IsLEDOn.bits.LED6)
         OptoState2 |= 0x04;
-    if (IsLEDOn[6])
+    if (IsLEDOn.bits.LED7)
         OptoState1 |= 0x08;
-    if (IsLEDOn[7])
+    if (IsLEDOn.bits.LED8)
         OptoState2 |= 0x08;
-    if (IsLEDOn[8])
+    if (IsLEDOn.bits.LED9)
         OptoState1 |= 0x10;
-    if (IsLEDOn[9])
+    if (IsLEDOn.bits.LED10)
         OptoState2 |= 0x10;
-    if (IsLEDOn[10])
+    if (IsLEDOn.bits.LED11)
         OptoState1 |= 0x20;
-    if (IsLEDOn[11])
+    if (IsLEDOn.bits.LED12)
         OptoState2 |= 0x20;
     SetOptoState(OptoState1, OptoState2);
 }
@@ -322,6 +246,6 @@ void SetCurrentOptoState() {
 void StepLEDControl() {
     unsigned char i;
     for (i = 0; i < 12; i++)
-        LEDUpdateFunction(i);
+        LEDUpdateFunction(i); 
     SetCurrentOptoState();
 }
