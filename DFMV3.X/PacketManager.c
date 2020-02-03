@@ -4,7 +4,7 @@
 // pulling data, we will be pulling from too far in 
 // the past.  Alternatively, we can write a signal
 // to reset the buffer just before 
-#define RINGBUFFERSIZE 50
+#define RINGBUFFERSIZE 15
 
 
 struct StatusPacket statusBuffer[RINGBUFFERSIZE]; 
