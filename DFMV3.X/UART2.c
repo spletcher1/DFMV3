@@ -13,6 +13,7 @@
 #define STATUSREQUESTBYTE 0xFC
 #define BUFFERRESETREQUESTBYTE 0xFE
 #define SENDINSTRUCTIONBYTE 0xFD
+#define SENDLINKAGEBYTE 0xFB
 
 #define COBSBUFFERSIZE (STATUSPACKETSIZE*MAXPACKETS)+10
 
@@ -222,17 +223,17 @@ void SendNAck(){
     CharToUART2(0x00);
 }
 
-unsigned char ValidateChecksum(){    
+unsigned char ValidateChecksum(int length){    
     int i;
     unsigned int checksum=0,actual;
-    for(i=0;i<37;i++)
+    for(i=0;i<(length-4);i++)
         checksum+=cobsInstructionBuffer[i];
     checksum = (checksum ^ 0xFFFFFFFF)+1;
     
-    actual=(unsigned int)(cobsInstructionBuffer[37]<<24);
-    actual+=(unsigned int)(cobsInstructionBuffer[38]<<16);
-    actual+=(unsigned int)(cobsInstructionBuffer[39]<<8);
-    actual+=(unsigned int)(cobsInstructionBuffer[40]);
+    actual=(unsigned int)(cobsInstructionBuffer[(length-4)]<<24);
+    actual+=(unsigned int)(cobsInstructionBuffer[(length-3)]<<16);
+    actual+=(unsigned int)(cobsInstructionBuffer[(length-2)]<<8);
+    actual+=(unsigned int)(cobsInstructionBuffer[(length-1)]);
     // Checksum is calculated excluding the header characters.    
     return (checksum==actual);
 }
@@ -263,6 +264,15 @@ void ExecuteInstructionPacket(){
     SetOptoParameters(freq,pw);
     SetLEDParams(decay,delay,maxTime);
     SetLEDThresholds(thresh);                   
+}
+
+void ExecuteLinkagePacket(){    
+    unsigned char index=2,i;   
+    unsigned char linkage[12];
+    for(i=0;i<12;i++){
+        linkage[i]=(cobsInstructionBuffer[index+i]);        
+    }
+    SetLEDLinkFlags(linkage);
 }
 
 void ProcessPacket() {           
@@ -299,7 +309,7 @@ void ProcessPacket() {
     }
     else if(packetBuffer[2]==SENDINSTRUCTIONBYTE){
         cobsInstructionBufferLength=decodeCOBS(packetBuffer,lastPacketSize,cobsInstructionBuffer);        
-        if(!ValidateChecksum()) {
+        if(!ValidateChecksum(41)) {
             DelayMs(15);
             SendNAck();
             return;
@@ -308,6 +318,17 @@ void ProcessPacket() {
         SendAck();
         ExecuteInstructionPacket();
     }   
+    else if(packetBuffer[2]==SENDLINKAGEBYTE){
+        cobsInstructionBufferLength=decodeCOBS(packetBuffer,lastPacketSize,cobsInstructionBuffer);        
+        if(!ValidateChecksum(18)) {
+            DelayMs(15);
+            SendNAck();
+            return;
+        }
+        DelayMs(15);
+        SendAck();
+        ExecuteLinkagePacket();
+    }
 }
 
 void ShortIntToUART2(int a){

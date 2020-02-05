@@ -30,12 +30,12 @@ void ClearLEDLinkFlags(){
     int i;
     for(i=0;i<12;i++){
         LEDLinkFlags[i].ledField=(1<<i);
-    }
+    }    
 }
 
 // Link defs will be an array of length 12, one for each LED
 // LEDs with the same number will be linked.  Max number is 12.
-void SetLEDLinkFlags(char *linkdefs){
+void SetLEDLinkFlags(unsigned char *linkdefs){
     int i,j;
     char currentLinkNumber;
     for(i=0;i<12;i++){
@@ -52,10 +52,10 @@ void SetLEDLinkFlags(char *linkdefs){
 
 
 void InitializeLEDControl(unsigned int decayval,unsigned int delayval,unsigned int maxtimeval) {    
-    int i;
+    int i; 
     for(i=0;i<12;i++)
-        LEDThresholdValues[i]=-1;
-    ClearLEDLinkFlags();
+        LEDThresholdValues[i]=-1;       
+    ClearLEDLinkFlags();    
     SetLEDParams(decayval,delayval,maxtimeval);
 }
 
@@ -268,9 +268,9 @@ void SetCurrentOptoState() {
 
 void StepLEDControl() {
     unsigned char i;
-    for (i = 0; i < 12; i++){
-        // We now start by assuming everyone is off.
-        IsLEDOn.ledField=0;
+    // We now start by assuming everyone is off.
+    IsLEDOn.ledField=0;
+    for (i = 0; i < 12; i++){               
         // LED Update only sets those as on.
         LEDUpdateFunction(i);        
     }

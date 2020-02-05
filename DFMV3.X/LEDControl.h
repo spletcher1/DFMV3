@@ -8,6 +8,7 @@ void SetDecay(unsigned int decay);
 void SetMaxTimeOn(unsigned int maxTime);
 void SetLEDThresholds(int *thresh);
 void ClearLEDThresholds();
+void SetLEDLinkFlags(unsigned char *linkdefs);
 
 typedef union {
     unsigned short ledField;
