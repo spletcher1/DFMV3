@@ -304,7 +304,7 @@ void ProcessPacket() {
             InitializeStatusPacketBuffer();
             DelayMs(15);
             SendAck();
-            num=10;
+            return;
         }
     }
     else if(packetBuffer[2]==SENDINSTRUCTIONBYTE){
