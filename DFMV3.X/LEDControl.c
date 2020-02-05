@@ -173,10 +173,12 @@ void UpdateLEDWithDelay(unsigned char led) {
     if (CurrentValues[led] > LEDThresholdValues[led]) {        
         LEDDelayCounter[led] = LEDDelayValues[led];
         LEDDecayCounter[led] = LEDDecayValues[led];
-    } else {
+    } 
+    else {
         if (LEDDelayCounter[led]-- > 0) {            
             LEDDecayCounter[led] = LEDDecayValues[led];
-        } else {
+        } 
+        else {
             if (LEDDecayCounter[led]-- >= 0) {
                 SetLEDOn(led);
             } else {                
@@ -203,7 +205,11 @@ void SetLEDParams(unsigned int decayval, unsigned int delayval, unsigned int max
         LEDMaxTimeOnValues[i] = maxtimeonval;
 
         LEDDecayCounter[i] = 0;
-        LEDDelayCounter[i] = LEDDelayValues[i];
+        if(delayval>0)
+            LEDDelayCounter[i] = 0;
+        else
+            LEDDelayCounter[i] = LEDDelayValues[i];
+        
         LEDMaxTimeOnCounter[i] = LEDMaxTimeOnValues[i];        
     }
     IsLEDOn.ledField=0;
