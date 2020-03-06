@@ -179,8 +179,13 @@ void StepADC(){
     int i,j;  
     
     for(i=0;i<13;i++){
-        CurrentValues[i]+=(tmpValues[i]-values[i][counter]);
-        values[i][counter]=tmpValues[i];                
+        j=tmpValues[i]; // Need this here to avoid interrupt changing it mid calculation.    
+        CurrentValues[i]+=(j-values[i][counter]);  
+        values[i][counter]=j; 
+        if(CurrentValues[i]<0)
+            CurrentValues[i]=0;
+        
+       
     }
     
     counter++; 
