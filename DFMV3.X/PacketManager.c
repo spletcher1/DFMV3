@@ -6,7 +6,6 @@
 struct StatusPacket statusBuffer[RINGBUFFERSIZE]; 
 unsigned char head = 0, tail = 0;
 int bufferSize=0;
-unsigned char appendedStatusPackets[309];
 
 struct StatusPacket emptyPacket;
 
@@ -41,14 +40,12 @@ void inline FillChecksum(struct StatusPacket *tmp){
 }
 
 
-void FillEmptyPacket(){    
-    errorFlags_t tmpe;
+void FillEmptyPacket(){        
     int i,j;
-    unsigned char *statusPointer;
-    tmpe.bits.STATUSBUFFER=0;
+    unsigned char *statusPointer;    
          
     emptyPacket.ID=dfmID;     
-    emptyPacket.ErrorFlag = tmpe.byte;   
+    emptyPacket.ErrorFlag = 0;   
     
     statusPointer = &emptyPacket.W1VHigh;    
     j=0;
@@ -114,6 +111,24 @@ struct StatusPacket *GetNextStatusInLine(){
 
 void AddCurrentStatus() {    
     unsigned char *statusPointer;
+    
+    // I moved this above the addition of head data
+    // in case somehow the tail entry is called during
+    // the addition of the new status point.
+    if(bufferSize>=RINGBUFFERSIZE) {     
+        BLUELED_ON();// TEMP Check
+        currentError.bits.STATUSBUFFER=1;
+        bufferSize=RINGBUFFERSIZE;        
+        tail++;
+        if(tail>=RINGBUFFERSIZE){
+            tail=0;               
+        }
+    }
+    else {
+        bufferSize++;
+    }
+    
+    
     statusBuffer[head].ID=dfmID;     
     statusBuffer[head].ErrorFlag = currentError.byte;
     statusPointer = (char *)&statusBuffer[head].ID;  
@@ -140,17 +155,7 @@ void AddCurrentStatus() {
     statusBuffer[head].Index2 = ((recordCounter >> 16) & 0xFF);
     statusBuffer[head].Index3 = ((recordCounter >> 8) & 0xFF);
     statusBuffer[head].Index4 = (recordCounter & 0xFF);    
-       
-    bufferSize++;
-    if(bufferSize>RINGBUFFERSIZE) {     
-        BLUELED_LAT=0;// TEMP Check
-        currentError.bits.STATUSBUFFER=1;
-        bufferSize=RINGBUFFERSIZE;        
-        tail++;
-        if(tail>=RINGBUFFERSIZE){
-            tail=0;               
-        }
-    }
+           
     // This is after in case the error flag is changed.
     FillChecksum(&statusBuffer[head]);    
         
