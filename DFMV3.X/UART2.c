@@ -113,24 +113,28 @@ void __ISR(_UART2_VECTOR, IPL4AUTO) UART2Interrupt(void){
 	unsigned char data,tmp;
 	error = UART2GetErrors();	
 	if (error > 0) {
-		if (error & 0x01) { //Overflow Error
+		if (U2STA & 0x02) { //Overflow Error
+            while(DataRdyUART2())            
+                data = UARTGetDataByte(UART2);   
 			U2STAbits.OERR = 0;
 			INTClearFlag(INT_U2E);
 			ClearPacketBuffer();
             INTClearFlag(INT_U2RX);	           
-            currentError.bits.UART=1;
+            currentError.bits.OERR=1;
             return;
 		}
-		else if(error & 0x02) {
+		else if(U2STA & 0x04) {
+            while(DataRdyUART2())            
+                data = UARTGetDataByte(UART2);   
 			U2STAbits.FERR=0;
 			ClearPacketBuffer();			
 			INTClearFlag(INT_U2E);
-            currentError.bits.UART=1;
+            currentError.bits.FERR=1;
             INTClearFlag(INT_U2RX);	
             return;
 		}	
-        else {
-            currentError.bits.TBD3=1;
+        else if(U2STA & 0x08) {
+            currentError.bits.PERR=1;
             while(DataRdyUART2())            
                 data = UARTGetDataByte(UART2);            
             UART2ClearAllErrors();
@@ -289,10 +293,13 @@ void ProcessPacket() {
     if(packetBuffer[2]==STATUSREQUESTBYTE){
         if(packetBuffer[1]==dfmID && packetBuffer[3]==dfmID){
             DelayMs(15);
-            if(bufferSize>MAXPACKETS)
+            if(bufferSize>MAXPACKETS) {
                 num=MAXPACKETS;
-            else
+                 YELLOWLED_ON();
+            }
+            else{
                 num = bufferSize;
+            }
             if(num>0)
                 CurrentStatusPacketSetToUART2(num);   
             else

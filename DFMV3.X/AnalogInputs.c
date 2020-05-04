@@ -183,9 +183,7 @@ void StepADC(){
         CurrentValues[i]+=(j-values[i][counter]);  
         values[i][counter]=j; 
         if(CurrentValues[i]<0)
-            CurrentValues[i]=0;
-        
-       
+            CurrentValues[i]=0;              
     }
     
     counter++; 

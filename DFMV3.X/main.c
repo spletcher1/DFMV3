@@ -33,11 +33,11 @@ void InitializeRun(){
    
     DelayMs(100);
     if(ConfigureTSL2591()==0){
-        currentError.bits.CONFIGURATION=1;
+        currentError.bits.TSL2591=1;
     }
     DelayMs(50);
     if(ConfigureSi7021()==0){
-        currentError.bits.CONFIGURATION=1;
+        currentError.bits.Si7021=1;
        }
     InitializeLEDControl(0,0,0);    
     InitializeStatusPacketBuffer();   

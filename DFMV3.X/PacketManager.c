@@ -1,9 +1,5 @@
 #include "GlobalIncludes.h"
 
-// This has to be small or else when we start
-// pulling data, we will be pulling from too far in 
-// the past.  Alternatively, we can write a signal
-// to reset the buffer just before 
 #define RINGBUFFERSIZE 50
 
 
@@ -94,7 +90,11 @@ void InitializeStatusPacketBuffer(){
     bufferSize=0;
     head=tail=0;
     FillEmptyPacket();
-    // We set this to avoid error on first use.           
+    // We set this to avoid error on first use.       
+
+    BLUELED_OFF();// TEMP Check    
+    Nop();Nop();Nop();
+    YELLOWLED_OFF();// TEMP Check    
 }
 
 struct StatusPacket *GetNextStatusInLine(){    
@@ -124,7 +124,8 @@ void AddCurrentStatus() {
     statusBuffer[head].OptoFreq2 = hertz & 0xFF;
     statusBuffer[head].OptoPW1 = pulseWidth_ms >> 8;
     statusBuffer[head].OptoPW2 = pulseWidth_ms & 0xFF;
-    statusBuffer[head].DarkMode = isInDarkMode;
+    //statusBuffer[head].DarkMode = isInDarkMode;
+    statusBuffer[head].DarkMode = bufferSize;
     statusBuffer[head].Temperature1 = (Si7021_Temperature >> 24);
     statusBuffer[head].Temperature2 = ((Si7021_Temperature >> 16) & 0xFF);
     statusBuffer[head].Temperature3 = ((Si7021_Temperature >> 8) & 0xFF);
@@ -141,11 +142,14 @@ void AddCurrentStatus() {
     statusBuffer[head].Index4 = (recordCounter & 0xFF);    
        
     bufferSize++;
-    if(bufferSize>RINGBUFFERSIZE) {        
+    if(bufferSize>RINGBUFFERSIZE) {     
+        BLUELED_LAT=0;// TEMP Check
+        currentError.bits.STATUSBUFFER=1;
         bufferSize=RINGBUFFERSIZE;        
         tail++;
-        if(tail>=RINGBUFFERSIZE)
-            tail=0;   
+        if(tail>=RINGBUFFERSIZE){
+            tail=0;               
+        }
     }
     // This is after in case the error flag is changed.
     FillChecksum(&statusBuffer[head]);    
