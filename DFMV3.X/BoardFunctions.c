@@ -22,6 +22,7 @@ void InitializeBoard(){
     USERBUTTON2_TRIS=1;    
     
     RX485_SEND_TRIS = 0;
+    RX485_SEND_TRIS2 = 0;
     RX485_DISABLE_SEND();
     
     DelayMs(1000);

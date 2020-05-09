@@ -60,11 +60,12 @@
 #define GETIDSELECTOR_VALUE() ((~PORTD & 0xF000) >> 12)
 
 #define RX485_DELAY() DelayMs(1)
-#define RX485_ENABLE_SEND() _LATF13=1;RX485_DELAY()
-#define RX485_DISABLE_SEND() RX485_DELAY();_LATF13=0
+#define RX485_ENABLE_SEND() _LATF13=1;Nop();Nop();_LATG15=1;RX485_DELAY()
+#define RX485_DISABLE_SEND() RX485_DELAY();_LATF13=0;Nop();Nop();_LATG15=0
 
 
 #define RX485_SEND_TRIS _TRISF13
+#define RX485_SEND_TRIS2 _TRISG15
 
 
 /*********************************************************************

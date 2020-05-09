@@ -1,6 +1,6 @@
 #include "GlobalIncludes.h"
 
-#define RINGBUFFERSIZE 50
+#define RINGBUFFERSIZE 1500
 
 
 struct StatusPacket statusBuffer[RINGBUFFERSIZE]; 
