@@ -115,8 +115,7 @@ void AddCurrentStatus() {
     // I moved this above the addition of head data
     // in case somehow the tail entry is called during
     // the addition of the new status point.
-    if(bufferSize>=RINGBUFFERSIZE) {     
-        BLUELED_ON();// TEMP Check
+    if(bufferSize>=RINGBUFFERSIZE) {          
         currentError.bits.STATUSBUFFER=1;
         bufferSize=RINGBUFFERSIZE;        
         tail++;

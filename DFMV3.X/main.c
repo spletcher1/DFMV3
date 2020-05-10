@@ -6,7 +6,7 @@
 #include "SP_ConfigP32.h"           /* User funct/params, such as InitApp             */
 
 errorFlags_t volatile currentError;
-extern unsigned char volatile isPacketReceived;
+extern enum PacketState currentPacketState;
 extern unsigned char volatile timerFlag_1ms;
 extern unsigned char volatile timerFlag_100ms;
 extern unsigned char volatile timerFlag_1sec;
@@ -59,9 +59,9 @@ int32_t main(void) {
     DelayMs(100);
     //counter=0;
     while (1) {         
-         if (isPacketReceived) {
+         if (currentPacketState==Complete) {
             ProcessPacket();
-            isPacketReceived = 0;        
+            currentPacketState = None;        
         }
         if(analogUpdateFlag){
             StepADC();                   

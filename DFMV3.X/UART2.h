@@ -12,4 +12,12 @@ void inline EnableUARTInterrupts();
 unsigned int encodeCOBS(unsigned char* buffer,unsigned int bytesToEncode, unsigned char* encodedBuffer); 
 unsigned int decodeCOBS(volatile unsigned char* encodedBuffer,unsigned int bytesToEncode, unsigned char* decodedBuffer);
 
+enum PacketState {
+    None,
+    GettingID,
+    InPacket,
+    Ignoring,
+    Complete
+};
+
 #endif

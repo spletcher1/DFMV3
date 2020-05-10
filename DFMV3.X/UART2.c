@@ -9,12 +9,15 @@
 //UART2B = UART6
 //UART3B = UART5
 
+
+
 #define MAXPACKETS 60  
 #define STATUSREQUESTBYTE 0xFC
 #define BUFFERRESETREQUESTBYTE 0xFE
 #define SENDINSTRUCTIONBYTE 0xFD
 #define SENDLINKAGEBYTE 0xFB
 
+#define PACKETBUFFERSIZE 500
 #define COBSBUFFERSIZE (STATUSPACKETSIZE*(MAXPACKETS+2))+10
 
 unsigned char cobsInstructionBuffer[100];
@@ -25,17 +28,16 @@ unsigned char preCodedBuffer[COBSBUFFERSIZE];
 unsigned int cobsBufferLength;
 extern int bufferSize;
 
-unsigned char volatile isPacketReceived;
+enum PacketState volatile currentPacketState;
+
 // Note that the packet buffer has to be big enough to
 // properly catch status return calls from other DFM!!!
 // Otherwise things will get out of whack and may lead
 // to other DFM status returns being interpreted as 
 // request calls.
-unsigned char volatile packetBuffer[COBSBUFFERSIZE];
+unsigned char volatile packetBuffer[PACKETBUFFERSIZE];
 unsigned int volatile packetIndex;
 unsigned int volatile lastPacketSize;
-
-unsigned char volatile isInPacket;
 
 extern unsigned char dfmID;
 extern unsigned char isInDarkMode;
@@ -81,11 +83,6 @@ void ConfigureUART2Interrupts(){
 	INTEnable(INT_U2E,INT_ENABLED);
 }
 
-void inline ClearPacketBuffer(){
-    packetIndex=0;
-    isInPacket=0;     
-}
-
 void ConfigureUART2(void) {
     // Note: As of now, the baud rate set for the parallax RFID reader is 2400.
     // Data bits = 8; no parity; stop bits = 1;
@@ -97,7 +94,8 @@ void ConfigureUART2(void) {
     UARTEnable(UART2,UART_ENABLE_FLAGS(UART_ENABLE | UART_TX | UART_RX | UART_PERIPHERAL));
 
     ConfigureUART2Interrupts();
-    ClearPacketBuffer(); 
+    packetIndex=0;
+    currentPacketState = None;
        
 }
 
@@ -117,46 +115,85 @@ void __ISR(_UART2_VECTOR, IPL4AUTO) UART2Interrupt(void){
             while(DataRdyUART2())            
                 data = UARTGetDataByte(UART2);   
 			U2STAbits.OERR = 0;
-			INTClearFlag(INT_U2E);
-			ClearPacketBuffer();
+			INTClearFlag(INT_U2E);			
             INTClearFlag(INT_U2RX);	           
             currentError.bits.OERR=1;
+            packetIndex=0;
+            currentPacketState=None;
             return;
 		}
 		else if(U2STA & 0x04) {
             while(DataRdyUART2())            
                 data = UARTGetDataByte(UART2);   
-			U2STAbits.FERR=0;
-			ClearPacketBuffer();			
+			U2STAbits.FERR=0;				
 			INTClearFlag(INT_U2E);
             currentError.bits.FERR=1;
             INTClearFlag(INT_U2RX);	
+            packetIndex=0;		
+            currentPacketState=None;
             return;
 		}	
         else if(U2STA & 0x08) {
             currentError.bits.PERR=1;
             while(DataRdyUART2())            
                 data = UARTGetDataByte(UART2);            
-            UART2ClearAllErrors();
-            ClearPacketBuffer();
+            UART2ClearAllErrors();            
             INTClearFlag(INT_U2E);
             INTClearFlag(INT_U2RX);	
+            packetIndex=0;
+            currentPacketState=None;
         }
 	}	
     while(DataRdyUART2()) {
 		data=UARTGetDataByte(UART2);  
-        if(data==0x00){
-            isPacketReceived=1;                    
-            isInPacket=0;
-            lastPacketSize=packetIndex;
-            packetIndex=0;
-        }        
-        else {
-            packetBuffer[packetIndex++]=data; 
-            isInPacket=1;             		
+        switch(currentPacketState){
+            case None:
+                packetBuffer[packetIndex++]=data;     
+                currentPacketState = GettingID;
+                break;
+            case GettingID:
+                if(data==dfmID){
+                    packetBuffer[packetIndex++]=data;  
+                    currentPacketState =InPacket;
+                }
+                else if(data==0x00){ // will be here when other DFMs ack
+                    currentPacketState = None;
+                    packetIndex=0;
+                }
+                else {
+                    currentPacketState = Ignoring;
+                }
+                break;
+            case InPacket:               
+                if(data==0x00){                   
+                    currentPacketState = Complete;
+                    lastPacketSize=packetIndex;
+                    packetIndex=0;
+                }
+                else {
+                   packetBuffer[packetIndex++]=data;                 
+                }
+                break;           
+            case Ignoring:
+                if(data==0x00){
+                    currentPacketState = None;
+                    packetIndex=0;
+                }
+                break; 
+            case Complete:
+                YELLOWLED_ON();
+                currentError.bits.STATUSBUFFER=1;
+                currentPacketState = Ignoring;
+                // Should never be here. Should be able to process packet before getting another.
+                break;
         }
-    }
-    
+        if(packetIndex>=PACKETBUFFERSIZE){
+            BLUELED_ON();
+            currentError.bits.STATUSBUFFER=1;
+            currentPacketState=None;            
+            packetIndex=0;
+        }
+    }    
     INTClearFlag(INT_U2RX);		
 }
 
@@ -288,14 +325,18 @@ void ProcessPacket() {
     // Note that only the instruction packet needs to be decoded, the others will
     // not have any zero bytes and so can be read directly, once the header COBS encoder
     // is accounted for.
-    if(packetBuffer[1]!=dfmID && packetBuffer[1]!=255) return; // Packet not for me    
+    if(packetBuffer[1]!=dfmID) {
+        // Should never be here with new packet handling code
+        YELLOWLED_ON();
+        currentError.bits.STATUSBUFFER=1;
+        return; // Packet not for me    
+    }
     if (isInDarkMode == 0) FLIP_GREEN_LED();
     if(packetBuffer[2]==STATUSREQUESTBYTE){
         if(packetBuffer[1]==dfmID && packetBuffer[3]==dfmID){
             DelayMs(15);
             if(bufferSize>MAXPACKETS) {
-                num=MAXPACKETS;
-                 YELLOWLED_ON();
+                num=MAXPACKETS;                 
             }
             else{
                 num = bufferSize;
