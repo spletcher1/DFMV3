@@ -6,7 +6,7 @@
 struct StatusPacket statusBuffer[RINGBUFFERSIZE]; 
 unsigned char head = 0, tail = 0;
 int bufferSize=0;
-
+ 
 struct StatusPacket emptyPacket;
 
 extern errorFlags_t volatile currentError;
@@ -134,8 +134,8 @@ void AddCurrentStatus() {
     statusBuffer[head].OptoFreq2 = hertz & 0xFF;
     statusBuffer[head].OptoPW1 = pulseWidth_ms >> 8;
     statusBuffer[head].OptoPW2 = pulseWidth_ms & 0xFF;
-    //statusBuffer[head].DarkMode = isInDarkMode;
-    statusBuffer[head].DarkMode = bufferSize;
+    statusBuffer[head].DarkMode = isInDarkMode;
+    //statusBuffer[head].DarkMode = bufferSize;
     statusBuffer[head].Temperature1 = (Si7021_Temperature >> 24);
     statusBuffer[head].Temperature2 = ((Si7021_Temperature >> 16) & 0xFF);
     statusBuffer[head].Temperature3 = ((Si7021_Temperature >> 8) & 0xFF);
