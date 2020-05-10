@@ -88,10 +88,6 @@ void InitializeStatusPacketBuffer(){
     head=tail=0;
     FillEmptyPacket();
     // We set this to avoid error on first use.       
-
-    BLUELED_OFF();// TEMP Check    
-    Nop();Nop();Nop();
-    YELLOWLED_OFF();// TEMP Check    
 }
 
 struct StatusPacket *GetNextStatusInLine(){    

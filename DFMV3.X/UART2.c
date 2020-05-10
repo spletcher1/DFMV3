@@ -180,17 +180,15 @@ void __ISR(_UART2_VECTOR, IPL4AUTO) UART2Interrupt(void){
                     packetIndex=0;
                 }
                 break; 
-            case Complete:
-                YELLOWLED_ON();
-                currentError.bits.STATUSBUFFER=1;
+            case Complete:                
+                currentError.bits.PACKET=1;
                 currentPacketState = Ignoring;
                 // Should never be here. Should be able to process packet before getting another.
                 break;
         }
-        if(packetIndex>=PACKETBUFFERSIZE){
-            BLUELED_ON();
-            currentError.bits.STATUSBUFFER=1;
-            currentPacketState=None;            
+        if(packetIndex>=PACKETBUFFERSIZE){            
+            currentError.bits.PACKET=1;   
+            currentPacketState=None;
             packetIndex=0;
         }
     }    
@@ -326,9 +324,8 @@ void ProcessPacket() {
     // not have any zero bytes and so can be read directly, once the header COBS encoder
     // is accounted for.
     if(packetBuffer[1]!=dfmID) {
-        // Should never be here with new packet handling code
-        YELLOWLED_ON();
-        currentError.bits.STATUSBUFFER=1;
+        // Should never be here with new packet handling code    
+        currentError.bits.PACKET=1;
         return; // Packet not for me    
     }
     if (isInDarkMode == 0) FLIP_GREEN_LED();
