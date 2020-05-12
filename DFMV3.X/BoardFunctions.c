@@ -29,9 +29,9 @@ void InitializeBoard(){
     dfmID = GETIDSELECTOR_VALUE();      
     usingNewPortOnly = !SWITCH_PORT; 
     if(usingNewPortOnly)
-        YELLOWLED_OFF();
-    else
         YELLOWLED_ON();
+    else
+        YELLOWLED_OFF();
 }
 
 void SetDarkMode(unsigned char mode){    
