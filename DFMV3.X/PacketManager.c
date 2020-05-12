@@ -1,17 +1,12 @@
 #include "GlobalIncludes.h"
 
-// This has to be small or else when we start
-// pulling data, we will be pulling from too far in 
-// the past.  Alternatively, we can write a signal
-// to reset the buffer just before 
-#define RINGBUFFERSIZE 50
+#define RINGBUFFERSIZE 1500
 
 
 struct StatusPacket statusBuffer[RINGBUFFERSIZE]; 
 unsigned char head = 0, tail = 0;
 int bufferSize=0;
-unsigned char appendedStatusPackets[309];
-
+ 
 struct StatusPacket emptyPacket;
 
 extern errorFlags_t volatile currentError;
@@ -45,14 +40,12 @@ void inline FillChecksum(struct StatusPacket *tmp){
 }
 
 
-void FillEmptyPacket(){    
-    errorFlags_t tmpe;
+void FillEmptyPacket(){        
     int i,j;
-    unsigned char *statusPointer;
-    tmpe.bits.STATUSBUFFER=0;
+    unsigned char *statusPointer;    
          
     emptyPacket.ID=dfmID;     
-    emptyPacket.ErrorFlag = tmpe.byte;   
+    emptyPacket.ErrorFlag = 0;   
     
     statusPointer = &emptyPacket.W1VHigh;    
     j=0;
@@ -94,7 +87,7 @@ void InitializeStatusPacketBuffer(){
     bufferSize=0;
     head=tail=0;
     FillEmptyPacket();
-    // We set this to avoid error on first use.           
+    // We set this to avoid error on first use.       
 }
 
 struct StatusPacket *GetNextStatusInLine(){    
@@ -114,6 +107,23 @@ struct StatusPacket *GetNextStatusInLine(){
 
 void AddCurrentStatus() {    
     unsigned char *statusPointer;
+    
+    // I moved this above the addition of head data
+    // in case somehow the tail entry is called during
+    // the addition of the new status point.
+    if(bufferSize>=RINGBUFFERSIZE) {          
+        currentError.bits.STATUSBUFFER=1;
+        bufferSize=RINGBUFFERSIZE;        
+        tail++;
+        if(tail>=RINGBUFFERSIZE){
+            tail=0;               
+        }
+    }
+    else {
+        bufferSize++;
+    }
+    
+    
     statusBuffer[head].ID=dfmID;     
     statusBuffer[head].ErrorFlag = currentError.byte;
     statusPointer = (char *)&statusBuffer[head].ID;  
@@ -125,6 +135,7 @@ void AddCurrentStatus() {
     statusBuffer[head].OptoPW1 = pulseWidth_ms >> 8;
     statusBuffer[head].OptoPW2 = pulseWidth_ms & 0xFF;
     statusBuffer[head].DarkMode = isInDarkMode;
+    //statusBuffer[head].DarkMode = bufferSize;
     statusBuffer[head].Temperature1 = (Si7021_Temperature >> 24);
     statusBuffer[head].Temperature2 = ((Si7021_Temperature >> 16) & 0xFF);
     statusBuffer[head].Temperature3 = ((Si7021_Temperature >> 8) & 0xFF);
@@ -139,14 +150,7 @@ void AddCurrentStatus() {
     statusBuffer[head].Index2 = ((recordCounter >> 16) & 0xFF);
     statusBuffer[head].Index3 = ((recordCounter >> 8) & 0xFF);
     statusBuffer[head].Index4 = (recordCounter & 0xFF);    
-       
-    bufferSize++;
-    if(bufferSize>RINGBUFFERSIZE) {        
-        bufferSize=RINGBUFFERSIZE;        
-        tail++;
-        if(tail>=RINGBUFFERSIZE)
-            tail=0;   
-    }
+           
     // This is after in case the error flag is changed.
     FillChecksum(&statusBuffer[head]);    
         

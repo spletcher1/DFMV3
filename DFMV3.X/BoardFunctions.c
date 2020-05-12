@@ -22,15 +22,16 @@ void InitializeBoard(){
     USERBUTTON2_TRIS=1;    
     
     RX485_SEND_TRIS = 0;
+    RX485_SEND_TRIS2 = 0;
     RX485_DISABLE_SEND();
     
     DelayMs(1000);
     dfmID = GETIDSELECTOR_VALUE();      
     usingNewPortOnly = !SWITCH_PORT; 
     if(usingNewPortOnly)
-        YELLOWLED_LAT=0;
+        YELLOWLED_ON();
     else
-        YELLOWLED_LAT=1;
+        YELLOWLED_OFF();
 }
 
 void SetDarkMode(unsigned char mode){    

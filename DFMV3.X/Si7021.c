@@ -117,23 +117,17 @@ void UpdateTempAndHumidity() {
 void StepSi7021() {
     if (isSi7021Configured == 0) return;
     switch (currentState_Si) {
-        case Measuring:
-            YELLOWLED_ON();
+        case Measuring:          
             GetHumidityData();
-            YELLOWLED_OFF();
             currentState_Si = GettingTemperature;
             break;
         case GettingTemperature:
-            YELLOWLED_ON();
             GetTemperatureData();
-            YELLOWLED_OFF();
             currentState_Si = Calculation;
             break;
         case Idle:
             if (idleCounter_Si++ >= SECONDS_IN_IDLE) {
-                YELLOWLED_ON();
                 CallForTempHumidityMeasure();
-                YELLOWLED_OFF();
                 currentState_Si = Measuring;
                 idleCounter_Si = 0;
             }

@@ -330,28 +330,22 @@ unsigned char ConfigureTSL2591() {
 void StepTSL2591() {
     if (isTSL2591Configured == 0) return;
     switch (currentState_TSL) {
-        case Reading:
-            YELLOWLED_ON();
-            GetFullLuminosity();
-            YELLOWLED_OFF();
+        case Reading:            
+            GetFullLuminosity();            
             Disable();
             currentState_TSL = LuxCalculation;
             break;
         case Idle:
-            if (idleCounter_tsl++ >= SECONDS_IN_IDLE) {
-                YELLOWLED_ON();
-                Enable();
-                YELLOWLED_OFF();
+            if (idleCounter_tsl++ >= SECONDS_IN_IDLE) {                
+                Enable();                
                 currentState_TSL = Reading;
                 idleCounter_tsl = 0;
             }
             break;
         case LuxCalculation:
             GetLux();
-            if (didSensitivityChange) {
-                YELLOWLED_ON();
-                Enable();
-                YELLOWLED_OFF();
+            if (didSensitivityChange) {                
+                Enable();                
                 currentState_TSL = Reading;
                 didSensitivityChange = 0;
             } else

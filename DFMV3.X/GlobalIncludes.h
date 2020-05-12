@@ -26,13 +26,13 @@ typedef union {
     unsigned char byte;
     struct ErrorBits {
         unsigned I2C : 1;
-        unsigned UART : 1;
+        unsigned OERR : 1;
         unsigned PACKET : 1;
         unsigned Si7021 : 1;
         unsigned TSL2591 : 1;
-        unsigned CONFIGURATION : 1;
+        unsigned FERR : 1;
         unsigned STATUSBUFFER : 1;
-        unsigned TBD3 : 1;
+        unsigned PERR : 1;
     } bits;
 } errorFlags_t;
 
