@@ -227,25 +227,21 @@ void CurrentStatusPacketSetToUART2(int numPacketsToSend){
     
 }
 
-
-void CurrentStatusToUART2(struct StatusPacket *cs){
-    unsigned char *statusPointer = (char *)&cs->ID;
-    int i;
-    RX485_ENABLE_SEND();
-    for(i=0;i<STATUSPACKETSIZE;i++){
-        while (!UARTTransmitterIsReady(UART2));
-            UARTSendDataByte(UART2, *(statusPointer+i));
-    }    
-    RX485_DISABLE_SEND();
-}
-
 void EmptyPacketToUART2(){
+    int i,counter=0;
     unsigned char *statusPointer = (char *)&emptyPacket.ID;
-    int i;
-    RX485_ENABLE_SEND();
+    
     for(i=0;i<STATUSPACKETSIZE;i++){
+        preCodedBuffer[counter]=*(statusPointer+i);        
+        counter++;        
+    }    
+    
+    cobsBufferLength=encodeCOBS(preCodedBuffer,counter,cobsBuffer);
+    cobsBuffer[cobsBufferLength++]=0x00;
+    RX485_ENABLE_SEND();
+    for(i=0;i<cobsBufferLength;i++){
         while (!UARTTransmitterIsReady(UART2));
-            UARTSendDataByte(UART2, *(statusPointer+i));
+        UARTSendDataByte(UART2, *(cobsBuffer+i));       
     }    
     RX485_DISABLE_SEND();
 }

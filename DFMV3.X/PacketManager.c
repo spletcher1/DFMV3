@@ -152,13 +152,12 @@ void AddCurrentStatus() {
     statusBuffer[head].Index4 = (recordCounter & 0xFF);    
            
     // This is after in case the error flag is changed.
-    FillChecksum(&statusBuffer[head]);    
-        
+    FillChecksum(&statusBuffer[head]);          
     head++;
     if(head>=RINGBUFFERSIZE)
         head=0;       
     recordCounter++;
-    currentError.byte = 0x00;       
+    currentError.byte = 0x00;      
 }
 
 // This function is meant to be called every 100ms
