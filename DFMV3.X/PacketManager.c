@@ -23,7 +23,7 @@ extern unsigned int Si7021_Humidity;
 extern unsigned int Si7021_Temperature;
 
 
-int counter100ms;
+int counter1ms;
 unsigned int recordCounter;
 
 void inline FillChecksum(struct StatusPacket *tmp){
@@ -82,7 +82,7 @@ void FillEmptyPacket(){
 
 
 void InitializeStatusPacketBuffer(){   
-    counter100ms=0;
+    counter1ms=0;
     recordCounter=1;
     bufferSize=0;
     head=tail=0;
@@ -131,11 +131,11 @@ void AddCurrentStatus() {
     statusBuffer[head].Optostate1 = OptoState1;
     statusBuffer[head].Optostate2 = OptoState2;
     statusBuffer[head].OptoFreq1 = hertz >> 8;
-    statusBuffer[head].OptoFreq2 = hertz & 0xFF;
+    statusBuffer[head].OptoFreq2 = hertz & 0xFF; 
     statusBuffer[head].OptoPW1 = pulseWidth_ms >> 8;
     statusBuffer[head].OptoPW2 = pulseWidth_ms & 0xFF;
-    statusBuffer[head].DarkMode = isInDarkMode;
-    //statusBuffer[head].DarkMode = bufferSize;
+    //statusBuffer[head].DarkMode = isInDarkMode;
+    statusBuffer[head].DarkMode = bufferSize;
     statusBuffer[head].Temperature1 = (Si7021_Temperature >> 24);
     statusBuffer[head].Temperature2 = ((Si7021_Temperature >> 16) & 0xFF);
     statusBuffer[head].Temperature3 = ((Si7021_Temperature >> 8) & 0xFF);
@@ -162,8 +162,8 @@ void AddCurrentStatus() {
 
 // This function is meant to be called every 100ms
 void StepPacketManager(){
-    if(++counter100ms>=2){
+    if(++counter1ms>=200){        
         AddCurrentStatus();
-        counter100ms=0;
+        counter1ms=0;
     }    
 }

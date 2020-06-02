@@ -1,7 +1,7 @@
 #include "GlobalIncludes.h"
 
 
-#define OPTOPRESCALE               256
+#define OPTOPRESCALE               1
 #define OPTOTOGGLES_PER_SEC        1000
 #define OPTO_TICK               (GetPeripheralClock()/OPTOPRESCALE/OPTOTOGGLES_PER_SEC)
 
@@ -136,8 +136,8 @@ void ConfigureOptoTimer(void) {
     //SetHertz(100);
     //Set101();
     SetOptoParameters(40, 8);
-    OpenTimer2(T2_ON | T2_SOURCE_INT | T2_PS_1_256, OPTO_TICK);
-    ConfigIntTimer2(T2_INT_ON | T2_INT_PRIOR_6);
+    OpenTimer2(T2_ON | T2_SOURCE_INT | T2_PS_1_1, OPTO_TICK);
+    ConfigIntTimer2(T2_INT_ON | T2_INT_PRIOR_7);
     currentOptoTimerState = OFF;
     OptoState1=OptoState2=0x00;
     timerFlag_1ms = 0;
@@ -146,7 +146,7 @@ void ConfigureOptoTimer(void) {
 // When scoped, this Timer goes off properly at 1ms.
 // The time it takes to complete the interrupt is 500ns.
 
-void __ISR(_TIMER_2_VECTOR, IPL6AUTO) Timer2Handler(void) {    
+void __ISR(_TIMER_2_VECTOR, IPL7SRS) Timer2Handler(void) {    
     if (currentOptoTimerState == OFF) {// All lights off
         optoOffCounter++;
         if (optoOffCounter >= opto_msOFF) {

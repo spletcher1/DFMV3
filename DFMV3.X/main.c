@@ -8,7 +8,6 @@
 errorFlags_t volatile currentError;
 extern enum PacketState currentPacketState;
 extern unsigned char volatile timerFlag_1ms;
-extern unsigned char volatile timerFlag_100ms;
 extern unsigned char volatile timerFlag_1sec;
 extern unsigned char volatile analogUpdateFlag;
 
@@ -77,14 +76,11 @@ int32_t main(void) {
                 StepSi7021();                   
             }
             timerFlag_1sec = 0;               
-        }             
-        if (timerFlag_100ms) {
-            StepPacketManager();
-            timerFlag_100ms = 0;
-        }
+        }                   
         if (timerFlag_1ms) {            
             ProcessButtonStep();
             StepLEDControl();
+            StepPacketManager();
             timerFlag_1ms = 0;            
         }
             

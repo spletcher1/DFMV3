@@ -46,7 +46,7 @@ void ConfigureI2C2(void) {
     I2CEnable(I2C2, TRUE);
 }
 
-void __ISR(_I2C_2_VECTOR, IPL5AUTO) I2C2InterruptServiceRoutine(void) {
+void __ISR(_I2C_2_VECTOR, IPL5SOFT) I2C2InterruptServiceRoutine(void) {
     // check for MASTER and Bus events and respond accordingly
     if (IFS1bits.I2C2SIF == 1) { // Should never be here because we don't operate as slave.
         //if(IsInDarkMode==0)

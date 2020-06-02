@@ -143,7 +143,7 @@ void StartContinuousSampling(){
     AD1CON1SET = 0x8000; // Turn on the ADC.
     counter=0;  
     // Set Interrupt
-    ConfigIntADC10(ADC_INT_ON | ADC_INT_PRI_5);
+    ConfigIntADC10(ADC_INT_ON | ADC_INT_PRI_4);
 }
 
 // If there are problems will this interrupt maybe it is because it is sticky?
@@ -154,7 +154,7 @@ void StartContinuousSampling(){
 // Again, summarizing above, this interrupt is called about every 2.1ms.
 // It takes about 4us to execute the interrupt.
 
-void __ISR(_ADC_VECTOR, IPL5SOFT) ADCHandler(void)
+void __ISR(_ADC_VECTOR, IPL4SOFT) ADCHandler(void)
 {
     tmpValues[12]=ADC1BUF0; // Voltage
     tmpValues[0]=ADC1BUF1; //A1        

@@ -8,7 +8,6 @@
 int volatile HBCounter;
 int volatile secondCounter;
 unsigned char isInDarkMode;
-unsigned char volatile timerFlag_100ms;
 unsigned char volatile timerFlag_1sec;
 
 void ConfigureUpdateTimer(void) {
@@ -28,7 +27,6 @@ void __ISR(_TIMER_1_VECTOR, IPL2SOFT) Timer1Handler(void) {
     if(secondCounter++>=10) {
         secondCounter=0;
         timerFlag_1sec=1;         
-    } 
-    timerFlag_100ms=1;
+    }     
     mT1ClearIntFlag();
 }
