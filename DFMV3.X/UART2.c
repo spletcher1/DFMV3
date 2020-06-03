@@ -100,7 +100,7 @@ void ConfigureUART2(void) {
     ConfigureUART2Interrupts();
     packetIndex=0;
     currentPacketState = None;
-    isAckReceived=0;
+    isAckReceived=1;
        
 }
 
@@ -202,16 +202,45 @@ void __ISR(_UART2_VECTOR, IPL6SOFT) UART2Interrupt(void){
     INTClearFlag(INT_U2RX);		
 }
 
-void CurrentStatusPacketSetToUART2(int numPacketsToSend){
+void EmptyPacketToUART2(){
+    int i,counter=0;
+    unsigned char *statusPointer = (char *)&emptyPacket.ID;
+    
+    for(i=0;i<STATUSPACKETSIZE;i++){
+        preCodedBuffer[counter]=*(statusPointer+i);        
+        counter++;        
+    }    
+    
+    cobsBufferLength=encodeCOBS(preCodedBuffer,counter,cobsBuffer);
+    cobsBuffer[cobsBufferLength++]=0x00;
+    RX485_ENABLE_SEND();
+    for(i=0;i<cobsBufferLength;i++){
+        while (!UARTTransmitterIsReady(UART2));
+        UARTSendDataByte(UART2, *(cobsBuffer+i));       
+    }    
+    RX485_DISABLE_SEND();
+}
+
+void CurrentStatusPacketSetToUART2(){
     struct StatusPacket *cs1;
     unsigned char *statusPointer;
-    
+    int numPacketsToSend;
+        
     if(isAckReceived)
         SetTailPlaceHolder();
     else
         ResetTail();
     
+    if(bufferSize>MAXPACKETS)
+        numPacketsToSend=MAXPACKETS;                        
+    else
+        numPacketsToSend = bufferSize;
     
+    if(numPacketsToSend==0){
+        EmptyPacketToUART2();
+        return;
+    }
+       
     cs1 = GetNextStatusInLine();
     statusPointer= (char *)&cs1->ID;
     int i,j,counter=0;
@@ -241,24 +270,7 @@ void CurrentStatusPacketSetToUART2(int numPacketsToSend){
     isAckReceived=0;
 }
 
-void EmptyPacketToUART2(){
-    int i,counter=0;
-    unsigned char *statusPointer = (char *)&emptyPacket.ID;
-    
-    for(i=0;i<STATUSPACKETSIZE;i++){
-        preCodedBuffer[counter]=*(statusPointer+i);        
-        counter++;        
-    }    
-    
-    cobsBufferLength=encodeCOBS(preCodedBuffer,counter,cobsBuffer);
-    cobsBuffer[cobsBufferLength++]=0x00;
-    RX485_ENABLE_SEND();
-    for(i=0;i<cobsBufferLength;i++){
-        while (!UARTTransmitterIsReady(UART2));
-        UARTSendDataByte(UART2, *(cobsBuffer+i));       
-    }    
-    RX485_DISABLE_SEND();
-}
+
 
 void SendAck(){
     // Need tos end 0x00 char to terminate packets on all listening
@@ -342,21 +354,13 @@ void ProcessPacket() {
     if(packetBuffer[2]==STATUSREQUESTBYTE){
         if(packetBuffer[1]==dfmID && packetBuffer[3]==dfmID){
             DelayMs(15);
-            if(bufferSize>MAXPACKETS) {
-                num=MAXPACKETS;                 
-            }
-            else{
-                num = bufferSize;
-            }
-            if(num>0)
-                CurrentStatusPacketSetToUART2(num);   
-            else
-                EmptyPacketToUART2();
+            CurrentStatusPacketSetToUART2();
         }
     }
     else if(packetBuffer[2]==BUFFERRESETREQUESTBYTE){
         if(packetBuffer[1]==dfmID && packetBuffer[3]==dfmID){
             InitializeStatusPacketBuffer();
+            isAckReceived=1;
             DelayMs(15);
             SendAck();
             return;
@@ -385,6 +389,7 @@ void ProcessPacket() {
         ExecuteLinkagePacket();
     }
      else if(packetBuffer[2]==ACKBYTE){
+        BLUELED_ON();
         if(packetBuffer[1]==dfmID && packetBuffer[3]==dfmID){
             isAckReceived=1;
             return;

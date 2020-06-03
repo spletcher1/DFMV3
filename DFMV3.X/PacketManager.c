@@ -95,7 +95,14 @@ void inline SetTailPlaceHolder(){
 }
 
 void inline ResetTail(){
+    int diff;
+    if(tail>tailPlaceHolder) // didn't go around ring buffer since last ack
+        diff = tail - tailPlaceHolder;
+    else
+        diff = tail + (RINGBUFFERSIZE-tailPlaceHolder) +1;
+               
     tail = tailPlaceHolder;
+    bufferSize+=diff;
 }
 
 struct StatusPacket *GetNextStatusInLine(){    
@@ -170,7 +177,7 @@ void AddCurrentStatus() {
 
 // This function is meant to be called every 100ms
 void StepPacketManager(){
-    if(++counter1ms>=200){        
+    if(++counter1ms>=197){        
         AddCurrentStatus();
         counter1ms=0;
     }    
