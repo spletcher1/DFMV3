@@ -16,7 +16,7 @@
 #define BUFFERRESETREQUESTBYTE 0xFE
 #define SENDINSTRUCTIONBYTE 0xFD
 #define SENDLINKAGEBYTE 0xFB
-
+#define ACKBYTE 0xFA
 #define PACKETBUFFERSIZE 500
 #define COBSBUFFERSIZE (STATUSPACKETSIZE*(MAXPACKETS+2))+10
 
@@ -27,6 +27,8 @@ unsigned char cobsBuffer[COBSBUFFERSIZE];
 unsigned char preCodedBuffer[COBSBUFFERSIZE];
 unsigned int cobsBufferLength;
 extern int bufferSize;
+
+char isAckReceived;
 
 enum PacketState volatile currentPacketState;
 
@@ -98,6 +100,7 @@ void ConfigureUART2(void) {
     ConfigureUART2Interrupts();
     packetIndex=0;
     currentPacketState = None;
+    isAckReceived=0;
        
 }
 
@@ -202,6 +205,13 @@ void __ISR(_UART2_VECTOR, IPL6SOFT) UART2Interrupt(void){
 void CurrentStatusPacketSetToUART2(int numPacketsToSend){
     struct StatusPacket *cs1;
     unsigned char *statusPointer;
+    
+    if(isAckReceived)
+        SetTailPlaceHolder();
+    else
+        ResetTail();
+    
+    
     cs1 = GetNextStatusInLine();
     statusPointer= (char *)&cs1->ID;
     int i,j,counter=0;
@@ -228,7 +238,7 @@ void CurrentStatusPacketSetToUART2(int numPacketsToSend){
         UARTSendDataByte(UART2, *(cobsBuffer+i));       
     }    
     RX485_DISABLE_SEND();
-    
+    isAckReceived=0;
 }
 
 void EmptyPacketToUART2(){
@@ -328,7 +338,7 @@ void ProcessPacket() {
         currentError.bits.PACKET=1;
         return; // Packet not for me    
     }
-    if (isInDarkMode == 0) FLIP_GREEN_LED();
+    if (isInDarkMode == 0 && packetBuffer[2]!=ACKBYTE) FLIP_GREEN_LED();
     if(packetBuffer[2]==STATUSREQUESTBYTE){
         if(packetBuffer[1]==dfmID && packetBuffer[3]==dfmID){
             DelayMs(15);
@@ -373,6 +383,12 @@ void ProcessPacket() {
         DelayMs(15);
         SendAck();
         ExecuteLinkagePacket();
+    }
+     else if(packetBuffer[2]==ACKBYTE){
+        if(packetBuffer[1]==dfmID && packetBuffer[3]==dfmID){
+            isAckReceived=1;
+            return;
+        }
     }
 }
 

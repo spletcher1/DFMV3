@@ -4,7 +4,7 @@
 
 
 struct StatusPacket statusBuffer[RINGBUFFERSIZE]; 
-unsigned char head = 0, tail = 0;
+unsigned char head = 0, tail = 0,tailPlaceHolder=0;
 int bufferSize=0;
  
 struct StatusPacket emptyPacket;
@@ -85,9 +85,17 @@ void InitializeStatusPacketBuffer(){
     counter1ms=0;
     recordCounter=1;
     bufferSize=0;
-    head=tail=0;
+    head=tail=tailPlaceHolder=0;
     FillEmptyPacket();
     // We set this to avoid error on first use.       
+}
+
+void inline SetTailPlaceHolder(){
+    tailPlaceHolder=tail;
+}
+
+void inline ResetTail(){
+    tail = tailPlaceHolder;
 }
 
 struct StatusPacket *GetNextStatusInLine(){    

@@ -4,6 +4,8 @@
 struct StatusPacket *GetNextStatusInLine();
 void StepPacketManager();
 void InitializeStatusPacketBuffer();
+void inline ResetTail(void);
+void inline SetTailPlaceHolder(void);
 
 struct StatusPacket {
   unsigned char ID;  
