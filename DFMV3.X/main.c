@@ -25,7 +25,7 @@ void InitializeRun(){
     currentError.byte=0x00;      
     ConfigureUpdateTimer();
     ConfigureUART2();    
-    ConfigureOpto();
+   // ConfigureOpto();
     FreeI2C();
     ConfigureI2C2();
     ConfigureButtons();
@@ -57,16 +57,24 @@ int32_t main(void) {
     //CurrentValues[8] = 300*128;
     DelayMs(100);
     //counter=0;
-    while (1) {         
-         if (currentPacketState==Complete) {
-            ProcessPacket();
-            currentPacketState = None;        
+    ConfigureOpto();
+    while (1) {      
+        if (timerFlag_1ms) {            
+            ProcessButtonStep();
+            StepLEDControl();
+            StepPacketManager();
+            timerFlag_1ms = 0;            
         }
-        if(analogUpdateFlag){
+        
+        else if(analogUpdateFlag){
             StepADC();                   
             analogUpdateFlag=0;            
         }
-        if (timerFlag_1sec) {    
+        else if (currentPacketState==Complete) {
+            ProcessPacket();
+            currentPacketState = None;        
+        }        
+        else if (timerFlag_1sec) {    
             //StringToUART2("One Second!\n\r");
             //myprintf("1 = %d   2 = %d\n", CurrentValues[0],CurrentValues[1]);            
             //myprintf("(%d) T = %d   H = %d   L = %d\r", counter++, Si7021_Temperature,Si7021_Humidity,TSL2591_LUX);            
@@ -77,12 +85,7 @@ int32_t main(void) {
             }
             timerFlag_1sec = 0;               
         }                   
-        if (timerFlag_1ms) {            
-            ProcessButtonStep();
-            StepLEDControl();
-            StepPacketManager();
-            timerFlag_1ms = 0;            
-        }
+       
             
        
     }

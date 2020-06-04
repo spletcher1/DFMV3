@@ -147,6 +147,8 @@ void ConfigureOptoTimer(void) {
 // The time it takes to complete the interrupt is 500ns.
 
 void __ISR(_TIMER_2_VECTOR, IPL7SRS) Timer2Handler(void) {    
+    if(timerFlag_1ms == 1)
+        YELLOWLED_ON();
     if (currentOptoTimerState == OFF) {// All lights off
         optoOffCounter++;
         if (optoOffCounter >= opto_msOFF) {
