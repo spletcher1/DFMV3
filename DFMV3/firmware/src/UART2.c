@@ -1,0 +1,448 @@
+#include "GlobalIncludes.h"
+
+#define MAXPACKETS 60  
+#define STATUSREQUESTBYTE 0xFC
+#define BUFFERRESETREQUESTBYTE 0xFE
+#define SENDINSTRUCTIONBYTE 0xFD
+#define SENDLINKAGEBYTE 0xFB
+#define ACKBYTE 0xFA
+#define PACKETBUFFERSIZE 500
+#define COBSBUFFERSIZE (STATUSPACKETSIZE*(MAXPACKETS+2))+10
+
+unsigned char cobsInstructionBuffer[100];
+unsigned int cobsInstructionBufferLength;
+
+//unsigned char cobsBuffer[COBSBUFFERSIZE]={"Hi there my good man how are you I hope you are well"};
+unsigned char cobsBuffer[100];
+unsigned char readBuffer[10];
+unsigned char preCodedBuffer[COBSBUFFERSIZE];
+unsigned int cobsBufferLength;
+extern int bufferSize;
+
+char isAckReceived;
+char waitingCounter=0;
+
+enum PacketState volatile currentPacketState;
+enum UARTState volatile currentUARTState;
+
+// Note that the packet buffer has to be big enough to
+// properly catch status return calls from other DFM!!!
+// Otherwise things will get out of whack and may lead
+// to other DFM status returns being interpreted as 
+// request calls.
+unsigned char volatile packetBuffer[PACKETBUFFERSIZE];
+unsigned int volatile packetIndex;
+unsigned int volatile lastPacketSize;
+
+extern unsigned char dfmID;
+extern unsigned char isInDarkMode;
+extern errorFlags_t volatile currentError;
+
+extern struct StatusPacket emptyPacket;
+
+/////////////////////////////////////////////////////////////////
+// Select one to specify configuration.
+// Baud Rate 19200
+// Baud rate 38400
+// Baud rate 115200
+// #define TARGET_BAUD_RATE  921600
+//#define TARGET_BAUD_RATE  115200
+#define TARGET_BAUD_RATE  250000
+
+
+void UART2_ReadCallback(uint32_t status){
+    unsigned char data;
+    UART_ERROR tmp=UART2_ErrorGet();
+    if(tmp != UART_ERROR_NONE)
+    {       
+        if(tmp & UART_ERROR_OVERRUN)
+             currentError.bits.OERR=1;
+        if(tmp & UART_ERROR_PARITY)
+             currentError.bits.PERR=1;
+        if(tmp & UART_ERROR_FRAMING)
+             currentError.bits.FERR=1;    
+        packetIndex=0;
+        currentPacketState=None;
+    }
+    else
+    {                       
+        data=readBuffer[0];
+        switch(currentPacketState){
+            case None:
+                packetBuffer[packetIndex++]=data;     
+                currentPacketState = GettingID;
+                break;
+            case GettingID:
+                if(data==dfmID){
+                    packetBuffer[packetIndex++]=data;  
+                    currentPacketState =InPacket;
+                }
+                else if(data==0x00){ // will be here when other DFMs ack
+                    currentPacketState = None;
+                    packetIndex=0;
+                }
+                else {
+                    currentPacketState = Ignoring;
+                }
+                break;
+            case InPacket:               
+                if(data==0x00){                   
+                    currentPacketState = Complete;
+                    currentUARTState = WaitingToProcess;
+                    lastPacketSize=packetIndex;
+                    packetIndex=0;
+                }
+                else {
+                   packetBuffer[packetIndex++]=data;                 
+                }
+                break;           
+            case Ignoring:
+                if(data==0x00){
+                    currentPacketState = None;
+                    packetIndex=0;
+                }
+                break; 
+            case Complete:     
+                // This needs to ignore all data until process packet 
+                // allows it to collect again.  We really shouldn't
+                // even acknowledge a termination 0 to send bacy to None because
+                // in theory we could still be processing the packetBuffer.
+                // So we don't do anything. Just ignore the data.          
+                break;
+        }
+        if(packetIndex>=PACKETBUFFERSIZE){            
+            currentError.bits.PACKET=1;   
+            currentPacketState=None;
+            packetIndex=0;
+        }
+        UART2_Read(readBuffer,1);
+        //Transfer completed successfully
+    }
+}
+
+void UART2_WriteCallback(uint32_t status){
+    UART_ERROR tmp=UART2_ErrorGet();
+    if(tmp != UART_ERROR_NONE)
+    {       
+        if(tmp & UART_ERROR_OVERRUN)
+             currentError.bits.OERR=1;
+        if(tmp & UART_ERROR_PARITY)
+             currentError.bits.PERR=1;
+        if(tmp & UART_ERROR_FRAMING)
+             currentError.bits.FERR=1;    
+        packetIndex=0;
+        currentPacketState=None;
+    }
+    else
+    {
+        RX485_DISABLE_SEND();
+        UART2_Read(readBuffer,1);        
+    }
+}
+
+
+void ConfigureUART2(void) {
+    // Note: As of now, the baud rate set for the parallax RFID reader is 2400.
+    // Data bits = 8; no parity; stop bits = 1;
+
+    UART2_ReadCallbackRegister(UART2_ReadCallback,(uintptr_t)NULL);
+    UART2_WriteCallbackRegister(UART2_WriteCallback,(uintptr_t)NULL);   
+   
+    packetIndex=0;
+    currentPacketState = None;
+    currentUARTState = UARTIdle;
+    isAckReceived=1;
+    waitingCounter=0;    
+  
+    // Start Listening
+    UART2_Read(readBuffer,1);
+       
+}
+
+void WriteCOBSBuffer(void){
+    RX485_ENABLE_SEND();
+    UART2_Write(cobsBuffer,cobsBufferLength);
+}
+
+void EmptyPacketToUART2(){
+    int i,counter=0;
+    unsigned char *statusPointer = (unsigned char *)&emptyPacket.ID;
+    
+    for(i=0;i<STATUSPACKETSIZE;i++){
+        preCodedBuffer[counter]=*(statusPointer+i);        
+        counter++;        
+    }    
+    
+    cobsBufferLength=encodeCOBS(preCodedBuffer,counter,cobsBuffer);
+    cobsBuffer[cobsBufferLength++]=0x00;
+    WriteCOBSBuffer();
+}
+
+
+void CurrentStatusPacketSetToUART2(){
+    struct StatusPacket *cs1;
+    unsigned char *statusPointer;
+    int numPacketsToSend;
+        
+    if(isAckReceived)
+        SetTailPlaceHolder();
+    else
+        ResetTail();
+    
+    if(bufferSize>MAXPACKETS)
+        numPacketsToSend=MAXPACKETS;                        
+    else
+        numPacketsToSend = bufferSize;
+    
+    if(numPacketsToSend==0){
+        EmptyPacketToUART2();
+        return;
+    }
+       
+    cs1 = GetNextStatusInLine();
+    statusPointer= (unsigned char *)&cs1->ID;
+    int i,j,counter=0;
+    
+    for(i=0;i<STATUSPACKETSIZE;i++){
+        preCodedBuffer[counter]=*(statusPointer+i);        
+        counter++;        
+    }    
+    
+    for(j=1;j<numPacketsToSend;j++){
+        cs1 = GetNextStatusInLine();
+        statusPointer = (unsigned char *)&cs1->ID;
+        for(i=0;i<STATUSPACKETSIZE;i++){
+            preCodedBuffer[counter]=*(statusPointer+i);        
+            counter++;    
+        }    
+    }
+   
+    cobsBufferLength=encodeCOBS(preCodedBuffer,counter,cobsBuffer);
+    cobsBuffer[cobsBufferLength++]=0x00;
+    WriteCOBSBuffer();
+    isAckReceived=0;
+}
+
+unsigned char ValidateChecksum(int length){    
+    int i;
+    unsigned int checksum=0,actual;
+    for(i=0;i<(length-4);i++)
+        checksum+=cobsInstructionBuffer[i];
+    checksum = (checksum ^ 0xFFFFFFFF)+1;
+    
+    actual=(unsigned int)(cobsInstructionBuffer[(length-4)]<<24);
+    actual+=(unsigned int)(cobsInstructionBuffer[(length-3)]<<16);
+    actual+=(unsigned int)(cobsInstructionBuffer[(length-2)]<<8);
+    actual+=(unsigned int)(cobsInstructionBuffer[(length-1)]);
+    // Checksum is calculated excluding the header characters.    
+    return (checksum==actual);
+}
+
+void SendAck(){
+    // Need tos end 0x00 char to terminate packets on all listening
+    // DFM.
+    cobsBuffer[0]=2;  
+    cobsBuffer[1]=dfmID;  
+    cobsBuffer[2]=0x00;
+    cobsBufferLength=3;
+    WriteCOBSBuffer();
+}
+
+void SendNAck(){
+    cobsBuffer[0]=2;  
+    cobsBuffer[1]=0xFE;  
+    cobsBuffer[2]=0x00;
+    cobsBufferLength=3;
+    WriteCOBSBuffer();  
+}
+
+void ExecuteInstructionPacket(){    
+    unsigned char index=2,i;
+    unsigned int freq,pw,decay,delay,maxTime;
+    int thresh[12];
+    if(cobsInstructionBuffer[index++]==0)
+        SetDarkMode(0);
+    else
+        SetDarkMode(1);
+    
+    freq = (unsigned int)(cobsInstructionBuffer[index]<<8)+(unsigned int)(cobsInstructionBuffer[index+1]);
+    index+=2;
+    pw = (unsigned int)(cobsInstructionBuffer[index]<<8)+(unsigned int)(cobsInstructionBuffer[index+1]);
+    index+=2;
+    decay = (unsigned int)(cobsInstructionBuffer[index]<<8)+(unsigned int)(cobsInstructionBuffer[index+1]);
+    index+=2;
+    delay = (unsigned int)(cobsInstructionBuffer[index]<<8)+(unsigned int)(cobsInstructionBuffer[index+1]);
+    index+=2;
+    maxTime = (unsigned int)(cobsInstructionBuffer[index]<<8)+(unsigned int)(cobsInstructionBuffer[index+1]);
+    index+=2;   
+    for(i=0;i<12;i++){
+        thresh[i]=(unsigned int)(cobsInstructionBuffer[index]<<8)+(unsigned int)(cobsInstructionBuffer[index+1]);
+        index+=2;
+    }
+    SetOptoParameters(freq,pw);
+    SetLEDParams(decay,delay,maxTime);
+    SetLEDThresholds(thresh);                   
+}
+void ExecuteLinkagePacket(){    
+    unsigned char index=2,i;   
+    unsigned char linkage[12];
+    for(i=0;i<12;i++){
+        linkage[i]=(cobsInstructionBuffer[index+i]);        
+    }
+    SetLEDLinkFlags(linkage);
+}
+
+void ProcessPacket() {             
+    // With COBS encoding, packetBuffer[0] is the COBS encoder.]
+    // because the first two byte of the actual packet will never be zero
+    // we can query these before decoding to determine whether we have to do 
+    // that or not.
+    // Note that only the instruction packet needs to be decoded, the others will
+    // not have any zero bytes and so can be read directly, once the header COBS encoder
+    // is accounted for.
+    if(packetBuffer[1]!=dfmID) {
+        // Should never be here with new packet handling code    
+        currentError.bits.PACKET=1;
+        return; // Packet not for me    
+    }
+    if (isInDarkMode == 0 && packetBuffer[2]!=ACKBYTE) FLIP_GREEN_LED();
+    if(packetBuffer[2]==STATUSREQUESTBYTE){
+        if(packetBuffer[1]==dfmID && packetBuffer[3]==dfmID){
+            waitingCounter=15;
+            currentUARTState = WaitingToSendStatus; 
+        }
+    }
+    else if(packetBuffer[2]==BUFFERRESETREQUESTBYTE){
+        if(packetBuffer[1]==dfmID && packetBuffer[3]==dfmID){
+            InitializeStatusPacketBuffer();
+            isAckReceived=1;
+            waitingCounter=15;
+            currentUARTState = WaitingToAck;       
+            return;
+        }
+    }
+    else if(packetBuffer[2]==SENDINSTRUCTIONBYTE){
+        cobsInstructionBufferLength=decodeCOBS(packetBuffer,lastPacketSize,cobsInstructionBuffer);        
+        if(!ValidateChecksum(41)) {
+            waitingCounter=15;
+            currentUARTState = WaitingToNAck; 
+            return;
+        }
+        waitingCounter=15;
+        currentUARTState = WaitingToAck;  
+        ExecuteInstructionPacket();
+    }   
+    else if(packetBuffer[2]==SENDLINKAGEBYTE){
+        cobsInstructionBufferLength=decodeCOBS(packetBuffer,lastPacketSize,cobsInstructionBuffer);        
+        if(!ValidateChecksum(18)) {
+            waitingCounter=15;
+            currentUARTState = WaitingToNAck; 
+            return;
+        }
+        waitingCounter=15;
+        currentUARTState = WaitingToAck;  
+        ExecuteLinkagePacket();
+    }
+     else if(packetBuffer[2]==ACKBYTE){    
+        if(packetBuffer[1]==dfmID && packetBuffer[3]==dfmID){
+            isAckReceived=1;
+            return;
+        }
+    }
+}
+
+void StepUART(){
+    switch(currentUARTState){
+        case UARTIdle:
+            break;
+        case WaitingToProcess:
+            ProcessPacket();       
+        case WaitingToAck:
+            if(waitingCounter--<=0){
+                SendAck();                
+                currentUARTState=ClearPacket;
+            }
+            break;
+        case WaitingToNAck:
+            if(waitingCounter--<=0){
+                SendNAck();                
+                currentUARTState=ClearPacket;
+            }
+            break;
+        case WaitingToSendStatus:
+            if(waitingCounter--<=0){
+                CurrentStatusPacketSetToUART2();  
+                currentUARTState=ClearPacket;
+            }
+            break;
+        case ClearPacket:
+            currentPacketState = None;  
+            currentUARTState=UARTIdle;
+            break;
+                                          
+    }
+    
+}
+unsigned int encodeCOBS(unsigned char* buffer,unsigned int bytesToEncode, unsigned char* encodedBuffer)
+    {
+        unsigned int read_index  = 0;
+        unsigned write_index = 1;
+        unsigned int code_index  = 0;
+        unsigned char coded = 1;
+
+        while (read_index < bytesToEncode)
+        {
+
+            if (buffer[read_index] == 0)
+            {
+                encodedBuffer[code_index] = coded;
+                coded = 1;
+                code_index = write_index++;
+                read_index++;
+            }
+            else
+            {
+                encodedBuffer[write_index++] = buffer[read_index++];
+                coded++;
+                if (coded == 0xFF)
+                {
+                    encodedBuffer[code_index] = coded;
+                    coded = 1;
+                    code_index = write_index++;
+                }
+            }
+        }
+        encodedBuffer[code_index] = coded;
+        return write_index;
+    }
+
+unsigned int decodeCOBS(volatile unsigned char* encodedBuffer,unsigned int bytesToEncode, unsigned char* decodedBuffer)
+    {
+        unsigned int read_index  = 0;
+        unsigned int write_index = 0;
+        unsigned char coded = 0;
+        unsigned char i =  0;
+
+        if (bytesToEncode == 0)
+            return 0;
+
+        while (read_index < bytesToEncode)
+        {
+            coded = encodedBuffer[read_index];
+            if (read_index + coded > bytesToEncode && coded != 1)
+            {
+                return 0;
+            }
+            read_index++;
+            for (i = 1; i < coded; i++)
+            {
+                decodedBuffer[write_index++] = encodedBuffer[read_index++];
+            }
+            if (coded != 0xFF && read_index != bytesToEncode)
+            {
+                decodedBuffer[write_index++] = '\0';
+            }
+        }
+        return write_index;
+    }
+
