@@ -52,15 +52,15 @@ void InitializeRun(){
     ConfigureUART2();    
     
     //FreeI2C();
-    //ConfigureI2C2();
+    ConfigureI2C2();
     ConfigureButtons();
    
-    //DelayMs(100);
-    //if(ConfigureTSL2591()==0){
-    //    currentError.bits.TSL2591=1;
-    //    BLUELED_ON();
-    //}
-    //DelayMs(50);
+    DelayMs(100);
+    if(ConfigureTSL2591()==0){
+        currentError.bits.TSL2591=1;
+        BLUELED_ON();
+    }
+    DelayMs(50);
     //if(ConfigureSi7021()==0){
     //    currentError.bits.Si7021=1;
     //   }

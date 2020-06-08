@@ -346,8 +346,10 @@ void ProcessPacket() {
      else if(packetBuffer[2]==ACKBYTE){    
         if(packetBuffer[1]==dfmID && packetBuffer[3]==dfmID){
             isAckReceived=1;
+            currentUARTState=ClearPacket;
             return;
         }
+        currentUARTState=ClearPacket;
     }
 }
 

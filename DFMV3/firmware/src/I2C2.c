@@ -7,7 +7,7 @@ void I2C2_Callback(uint32_t status){
     if(I2C_ERROR_NONE != I2C2_ErrorGet())
     {
          currentError.bits.I2C=1;
-         //YELLOWLED_ON();
+         BLUELED_ON();
     }
 }
 

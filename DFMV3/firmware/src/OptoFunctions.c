@@ -173,6 +173,8 @@ void TIMER2_EventHandler(uint32_t status, uintptr_t context) {
     }
     timer200msCounter++;
     if(timer200msCounter>=200){       
+        if(timerFlag_200ms==1)
+            YELLOWLED_ON();            
         timerFlag_200ms=1;
         timer200msCounter=0;
     }
