@@ -76,7 +76,8 @@ int main ( void )
 {
     /* Initialize all modules */
     SYS_Initialize ( NULL );         
-    InitializeRun();    
+    InitializeRun();  
+    YELLOWLED_OFF();
     while ( true )
     {
         if (timerFlag_1ms) { 
@@ -102,8 +103,7 @@ int main ( void )
             ProcessPacket();
             currentPacketState = None;        
         }       
-        if(analogUpdateFlag){
-            //FLIP_BLUE_LED();
+        if(analogUpdateFlag){            
             StepADC();                   
             analogUpdateFlag=0;            
         }

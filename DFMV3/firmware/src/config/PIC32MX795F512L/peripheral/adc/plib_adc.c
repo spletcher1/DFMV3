@@ -129,11 +129,10 @@ void ADC_CallbackRegister(ADC_CALLBACK callback, uintptr_t context)
 }
 
 void ADC_InterruptHandler(void)
-{
-    IFS1CLR = _IFS1_AD1IF_MASK;
-
+{       
     if (ADC_CallbackObj.callback_fn != NULL)
     {
-        ADC_CallbackObj.callback_fn(ADC_CallbackObj.context);
+        ADC_CallbackObj.callback_fn(ADC_CallbackObj.context);        
     }
+    IFS1CLR = _IFS1_AD1IF_MASK; 
 }

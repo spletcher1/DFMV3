@@ -49,8 +49,8 @@
           <Security dnOrder="2">NON_SECURE</Security>
           <LogicalPath dnOrder="3">config/PIC32MX795F512L/peripheral/adc/</LogicalPath>
           <PhysicalPath dnOrder="4">/peripheral/adc/</PhysicalPath>
-          <GeneratedChecksum dnOrder="5">5ECC0A3990A4002BD6B6AE2B4DD90674</GeneratedChecksum>
-          <UserChecksum dnOrder="6">020F27A55943E12333A9C5DE635CDD5A</UserChecksum>
+          <GeneratedChecksum dnOrder="5">A73C2CF3BAD36D699E040CF1B5336B06</GeneratedChecksum>
+          <UserChecksum dnOrder="6">B16EF5086E0EB66FDE0C507554ED2DAB</UserChecksum>
         </File>
         <File dnOrder="5">
           <Type dnOrder="0">SOURCE</Type>

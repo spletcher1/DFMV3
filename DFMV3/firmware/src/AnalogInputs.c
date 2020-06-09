@@ -29,9 +29,12 @@ void ClearAnalogValues(){
           values[j][i] = 0;
     }    
 }
-void ADC_EventHandler(uint32_t status) {   
-    int blah;
-    BLUELED_ON();
+
+// Not that the MCH puts the clear flag before the call back, which
+// I think, doesn't actually clear the flag because the buffers were not
+// read.  It is cleared the second time through.  This needs to be changed manually 
+// after the code is created.
+void ADC_EventHandler(uint32_t status) {          
     if (analogUpdateFlag==1)
         YELLOWLED_ON();
     tmpValues[12]=ADC_ResultGet(ADC_RESULT_BUFFER_0); // Voltage
@@ -46,14 +49,8 @@ void ADC_EventHandler(uint32_t status) {
     tmpValues[8]=ADC_ResultGet(ADC_RESULT_BUFFER_9); // E1    
     tmpValues[5]=ADC_ResultGet(ADC_RESULT_BUFFER_10);  // C2  
     tmpValues[9]=ADC_ResultGet(ADC_RESULT_BUFFER_11); // E2   
-    tmpValues[6]=ADC_ResultGet(ADC_RESULT_BUFFER_12); // D1   
-    blah = ADC_ResultGet(ADC_RESULT_BUFFER_13);
-    blah = ADC_ResultGet(ADC_RESULT_BUFFER_14);
-    blah = ADC_ResultGet(ADC_RESULT_BUFFER_15);
-    analogUpdateFlag=blah;
-    analogUpdateFlag=1;   
-    
-    BLUELED_OFF();
+    tmpValues[6]=ADC_ResultGet(ADC_RESULT_BUFFER_12); // D1      
+    analogUpdateFlag=1;       
 }
 
 /*
