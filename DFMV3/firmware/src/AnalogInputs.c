@@ -29,22 +29,31 @@ void ClearAnalogValues(){
           values[j][i] = 0;
     }    
 }
-void ADC_EventHandler(uint32_t status) {    
-    tmpValues[12]=ADC_ResultGet(ADC_RESULT_BUFFER_0);; // Voltage
-    tmpValues[0]=ADC_ResultGet(ADC_RESULT_BUFFER_1);; //A1        
-    tmpValues[2]=ADC_ResultGet(ADC_RESULT_BUFFER_2);; //B1    
-    tmpValues[1]=ADC_ResultGet(ADC_RESULT_BUFFER_3);; // A2    
-    tmpValues[3]=ADC_ResultGet(ADC_RESULT_BUFFER_4);; // B2    
-    tmpValues[10]=ADC_ResultGet(ADC_RESULT_BUFFER_5);; // F1    
-    tmpValues[7]=ADC_ResultGet(ADC_RESULT_BUFFER_6);; // D2   
-    tmpValues[11]=ADC_ResultGet(ADC_RESULT_BUFFER_7);; // F2   
-    tmpValues[4]=ADC_ResultGet(ADC_RESULT_BUFFER_8);; // C1   
-    tmpValues[8]=ADC_ResultGet(ADC_RESULT_BUFFER_9);; // E1    
-    tmpValues[5]=ADC_ResultGet(ADC_RESULT_BUFFER_10);;  // C2  
+void ADC_EventHandler(uint32_t status) {   
+    int blah;
+    BLUELED_ON();
+    if (analogUpdateFlag==1)
+        YELLOWLED_ON();
+    tmpValues[12]=ADC_ResultGet(ADC_RESULT_BUFFER_0); // Voltage
+    tmpValues[0]=ADC_ResultGet(ADC_RESULT_BUFFER_1); //A1        
+    tmpValues[2]=ADC_ResultGet(ADC_RESULT_BUFFER_2); //B1    
+    tmpValues[1]=ADC_ResultGet(ADC_RESULT_BUFFER_3); // A2    
+    tmpValues[3]=ADC_ResultGet(ADC_RESULT_BUFFER_4); // B2    
+    tmpValues[10]=ADC_ResultGet(ADC_RESULT_BUFFER_5); // F1    
+    tmpValues[7]=ADC_ResultGet(ADC_RESULT_BUFFER_6); // D2   
+    tmpValues[11]=ADC_ResultGet(ADC_RESULT_BUFFER_7); // F2   
+    tmpValues[4]=ADC_ResultGet(ADC_RESULT_BUFFER_8); // C1   
+    tmpValues[8]=ADC_ResultGet(ADC_RESULT_BUFFER_9); // E1    
+    tmpValues[5]=ADC_ResultGet(ADC_RESULT_BUFFER_10);  // C2  
     tmpValues[9]=ADC_ResultGet(ADC_RESULT_BUFFER_11); // E2   
-    tmpValues[6]=ADC_ResultGet(ADC_RESULT_BUFFER_12);; // D1   
-           
+    tmpValues[6]=ADC_ResultGet(ADC_RESULT_BUFFER_12); // D1   
+    blah = ADC_ResultGet(ADC_RESULT_BUFFER_13);
+    blah = ADC_ResultGet(ADC_RESULT_BUFFER_14);
+    blah = ADC_ResultGet(ADC_RESULT_BUFFER_15);
+    analogUpdateFlag=blah;
     analogUpdateFlag=1;   
+    
+    BLUELED_OFF();
 }
 
 /*

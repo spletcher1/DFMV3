@@ -57,16 +57,14 @@ void InitializeRun(){
    
     DelayMs(100);
     if(ConfigureTSL2591()==0){
-        currentError.bits.TSL2591=1;
-        BLUELED_ON();
+        currentError.bits.TSL2591=1;      
     }
-    DelayMs(50);
-    //if(ConfigureSi7021()==0){
-    //    currentError.bits.Si7021=1;
-    //   }
+    DelayMs(100);
+    if(ConfigureSi7021()==0){
+        currentError.bits.Si7021=1;        
+    }
     InitializeLEDControl(0,0,0);    
-    InitializeStatusPacketBuffer();   
-    ConfigureAnalogInputs(); 
+    InitializeStatusPacketBuffer();     
     ConfigureOpto();
     
 }
@@ -78,7 +76,7 @@ int main ( void )
 {
     /* Initialize all modules */
     SYS_Initialize ( NULL );         
-    InitializeRun();
+    InitializeRun();    
     while ( true )
     {
         if (timerFlag_1ms) { 
@@ -92,9 +90,11 @@ int main ( void )
              timerFlag_200ms = 0;  
         }
         if(timerFlag_1sec){  
-            if(currentError.bits.I2C==0){                               
-                //StepTSL2591();
-                //StepSi7021();                   
+            if(currentError.bits.I2C==0){   
+                if(currentError.bits.TSL2591==0)
+                    StepTSL2591();
+                if(currentError.bits.Si7021==0)
+                    StepSi7021();                   
             }
             timerFlag_1sec=0;
         }
@@ -103,6 +103,7 @@ int main ( void )
             currentPacketState = None;        
         }       
         if(analogUpdateFlag){
+            //FLIP_BLUE_LED();
             StepADC();                   
             analogUpdateFlag=0;            
         }

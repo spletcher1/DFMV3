@@ -15,6 +15,7 @@
 #include "Buttons.h"
 #include "I2C2.h"
 #include "TSL2591.h"
+#include "Si7021.h"
 
 
 

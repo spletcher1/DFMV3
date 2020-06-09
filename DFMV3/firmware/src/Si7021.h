@@ -8,9 +8,15 @@
 #ifndef SI7021_H
 #define	SI7021_H
 
-unsigned char IsSi7021Ready();
-void ConfigureSi7021();
+unsigned char ConfigureSi7021();
 void StepSi7021();
+
+enum Si7021State {
+    Measuring,
+    Calculation,
+    GettingTemperature,
+    Si7021Idle,
+};
 
 #endif	/* SI7021_H */
 

@@ -1,7 +1,6 @@
 #include "GlobalIncludes.h"
 
 #define Si7021_address                          0x40
-#define Si7021_address_adj                      0x80
 
 #define Si7021_Measure_RH_Hold_Mode             0xE5
 #define Si7021_Measure_RH_No_Hold_Mode          0xF5
@@ -34,12 +33,9 @@
 
 #define SECONDS_IN_IDLE 57
 
-enum Si7021State {
-    Measuring,
-    Calculation,
-    GettingTemperature,
-    Idle,
-} currentState_Si;
+enum Si7021State currentState_Si;
+
+unsigned char waitingOnSIRequest;
 
 unsigned int Si7021_Humidity;
 unsigned int Si7021_Temperature;
@@ -48,12 +44,14 @@ unsigned char isSi7021Configured = 0;
 int idleCounter_Si;
 extern errorFlags_t volatile currentError;
 
-/*
+
 unsigned char IsSi7021Ready() {
     unsigned char found;
-    I2C_RESULT result;    
-    //result = Read8FromI2C2(Si7021_address_adj, Si7021_Read_Config_Register, &found);    
-    if (found != 0x00 && result == I2C_SUCCESS)
+    unsigned char data[1];
+    data[0]=Si7021_Read_Config_Register;
+    I2C2_WriteRead(Si7021_address,&data[0],1,&found,1); 
+    while(I2C2_IsBusy());
+    if (found != 0x00)
         return 1;
     else
         return 0;
@@ -68,32 +66,33 @@ unsigned char ConfigureSi7021() {
     }
     isSi7021Configured = 1;
     idleCounter_Si = SECONDS_IN_IDLE; // This will force a first measure right away.
-    currentState_Si = Idle;
+    currentState_Si = Si7021Idle;
     return 1;
 }
 
 void CallForTempHumidityMeasure() {
-    I2C_RESULT result;    
-    //result = RequestMeasureSi7021I2C2(Si7021_address_adj, Si7021_Measure_RH_No_Hold_Mode);    
-    if (result != I2C_SUCCESS) {
-        currentError.bits.Si7021 = 1;
-    }
+    unsigned char reg = Si7021_Measure_RH_No_Hold_Mode;
+    unsigned char data[1];
+    waitingOnSIRequest=1;
+    I2C2_WriteRead(Si7021_address,&reg,1,&data[0],1); 
+    //I2C2_Write(Si7021_address,&data[0],2);     
+    while(I2C2_IsBusy());
+    waitingOnSIRequest=0;
 }
 
 void GetHumidityData() {
-    I2C_RESULT result;    
-    //result = ReadHumidityFromSi7021I2C2(Si7021_address_adj, &tmpHumidity);    
-    if (result != I2C_SUCCESS) {
-        currentError.bits.Si7021 = 1;
-    }
+    unsigned char data[2];            
+    I2C2_Read(Si7021_address,&data[0],2);
+    while(I2C2_IsBusy()); 
+    tmpHumidity = (data[0]<<8)+data[1];        
 }
 
 void GetTemperatureData() {
-    I2C_RESULT result;    
-    //result = Read16FromI2C2(Si7021_address_adj, Si7021_Read_T_from_Last_RH_Value, &tmpTemperature);    
-    if (result != I2C_SUCCESS) {
-        currentError.bits.Si7021 = 1;
-    }
+    unsigned char reg = Si7021_Read_T_from_Last_RH_Value;
+    unsigned char data[2];        
+    I2C2_WriteRead(Si7021_address,&reg,1,&data[0],2); 
+    while(I2C2_IsBusy());  
+    tmpTemperature = (data[0]<<8)+data[1];
 }
 
 void UpdateTempAndHumidity() {
@@ -118,7 +117,7 @@ void StepSi7021() {
             GetTemperatureData();
             currentState_Si = Calculation;
             break;
-        case Idle:
+        case Si7021Idle:
             if (idleCounter_Si++ >= SECONDS_IN_IDLE) {
                 CallForTempHumidityMeasure();
                 currentState_Si = Measuring;
@@ -132,10 +131,10 @@ void StepSi7021() {
             }
             else
                 UpdateTempAndHumidity();
-            currentState_Si = Idle;
+            currentState_Si = Si7021Idle;
             break;
         default:
             break;
     }
 
-}*/
+}

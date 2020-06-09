@@ -2,9 +2,7 @@
 
 // Address Constant
 #define TSL2591_ADDR  0x29
-// This is the actual address used for I2C communication
-// it is 0x29 shifted one to left to leave LSB open.
-#define TSL2591_ADDR_ADJ  0x52
+
 // Commands
 #define TSL2591_CMD 0xA0
 
@@ -100,22 +98,34 @@ extern errorFlags_t volatile currentError;
 
 
 unsigned char IsTSL2591Ready() {
-    unsigned char found;   
+    unsigned char found=0;   
     unsigned char data[1];    
     data[0]=TSL2591_REGISTER_DEVICE_ID | TSL2591_CMD;              
-    I2C2_WriteRead(TSL2591_ADDR_ADJ,&data[0],1,&found,1);
+    I2C2_WriteRead(TSL2591_ADDR,&data[0],1,&found,1);
+    // Make this blocking because it is only used to initialize.
+    while(I2C2_IsBusy());
     if (found == 0x50)
         return 1;
     else {        
         return 0;
     }
 }
+void inline PowerUp() {
+    unsigned char data[2];    
+    data[0]=TSL2591_REGISTER_ENABLE | TSL2591_CMD;
+    data[1]=TSL2591_ENABLE_POWERON;   
+    I2C2_Write(TSL2591_ADDR,&data[0],2);   
+    // Make this blocking because it is called only at the beginning.
+    while(I2C2_IsBusy());
+        
+}
 
 void SetTimingAndGain(enum TSL2591Gain gain, enum TSL2591Timing timing) {
     unsigned char data[2];
     data[0]=TSL2591_REGISTER_CONTROL | TSL2591_CMD;
     data[1]=(unsigned char) gain | (unsigned char) timing;
-    I2C2_Write(TSL2591_ADDR_ADJ,&data[0],2);   
+    I2C2_Write(TSL2591_ADDR,&data[0],2);   
+    while(I2C2_IsBusy());
     currentGain = gain;
     currentTiming = timing;
     if (currentTiming == Int500ms && currentGain == High) {
@@ -130,32 +140,50 @@ void SetTimingAndGain(enum TSL2591Gain gain, enum TSL2591Timing timing) {
     }
 }
 
+
+unsigned char ConfigureTSL2591() {
+    PowerUp();
+    DelayMs(10);
+    if (!IsTSL2591Ready()) {
+        isTSL2591Configured = 0;
+        return 0;
+    }
+    isTSL2591Configured = 1;
+    DelayMs(10);
+    SetTimingAndGain(Medium, Int300ms);
+    didSensitivityChange = 0;
+    idleCounter_tsl = SECONDS_IN_IDLE; // This will force a first measure right away.
+    currentState_TSL = Idle;
+    return 1;
+}
+
+
+
+
 void inline Enable() {
     unsigned char data[2];
     data[0]=TSL2591_REGISTER_ENABLE | TSL2591_CMD;
     data[1]=TSL2591_ENABLE_POWERON | TSL2591_ENABLE_AEN;
-    I2C2_Write(TSL2591_ADDR_ADJ,&data[0],2);       
+    I2C2_Write(TSL2591_ADDR,&data[0],2);     
+    while(I2C2_IsBusy());
 }
 
 void inline Disable() {
     unsigned char data[2];
     data[0]=TSL2591_REGISTER_ENABLE | TSL2591_CMD;
     data[1]=TSL2591_ENABLE_POWERON;
-    I2C2_Write(TSL2591_ADDR_ADJ,&data[0],2);           
+    I2C2_Write(TSL2591_ADDR,&data[0],2);           
+    while(I2C2_IsBusy());
 }
 
-void inline PowerUp() {
-    unsigned char data[2];
-    data[0]=TSL2591_REGISTER_ENABLE | TSL2591_CMD;
-    data[1]=TSL2591_ENABLE_POWERON;
-    I2C2_Write(TSL2591_ADDR_ADJ,&data[0],2);    
-}
+
 
 void inline PowerDown() {
    unsigned char data[2];
     data[0]=TSL2591_REGISTER_ENABLE | TSL2591_CMD;
     data[1]=TSL2591_ENABLE_POWEROFF;
-    I2C2_Write(TSL2591_ADDR_ADJ,&data[0],2);     
+    I2C2_Write(TSL2591_ADDR,&data[0],2);     
+    while(I2C2_IsBusy());
 }
 // Need to wait for at least 200ms after calling StartReading to get these data.
 
@@ -165,8 +193,8 @@ unsigned char GetTSL2591Status() {
     Enable();    
     
     data[0]=TSL2591_REGISTER_DEVICE_STATUS | TSL2591_CMD;              
-    I2C2_WriteRead(TSL2591_ADDR_ADJ,&data[0],1,&found,1);
-   
+    I2C2_WriteRead(TSL2591_ADDR,&data[0],1,&found,1);
+    while(I2C2_IsBusy());
     Disable();
     return found;
 
@@ -177,8 +205,8 @@ unsigned char CheckTimingAndGain() {
     unsigned char data[1];    
     Enable();    
     data[0]=TSL2591_REGISTER_CONTROL | TSL2591_CMD;              
-    I2C2_WriteRead(TSL2591_ADDR_ADJ,&data[0],1,&regData,1);
-    
+    I2C2_WriteRead(TSL2591_ADDR,&data[0],1,&regData,1);
+    while(I2C2_IsBusy());
     Disable();
     if (currentGain != (regData & 0xF0))
         return 0;
@@ -189,9 +217,9 @@ unsigned char CheckTimingAndGain() {
 
 void GetFullLuminosity() {    
     unsigned char reg = TSL2591_CMD | TSL2591_REGISTER_CHAN0_LOW;
-    unsigned char data[4];   
-    GetTSL2591Status();   
-    I2C2_WriteRead(TSL2591_ADDR_ADJ,&reg,1,&data[0],4);
+    unsigned char data[4];        
+    I2C2_WriteRead(TSL2591_ADDR,&reg,1,&data[0],4);
+    while(I2C2_IsBusy());
     fullLuminosity=(data[3]<<24) + (data[2]<<16) + (data[1]<<8) + data[0];
     // Need to swap byte order to get luminosity.   
     irLuminosity = fullLuminosity >> 16;
@@ -287,21 +315,7 @@ void GetLux() {
     tmpLUX = (int) lux;
 }
 
-unsigned char ConfigureTSL2591() {
-    PowerUp();
-    DelayMs(10);
-    if (!IsTSL2591Ready()) {
-        isTSL2591Configured = 0;
-        return 0;
-    }
-    isTSL2591Configured = 1;
-    DelayMs(10);
-    SetTimingAndGain(Medium, Int300ms);
-    didSensitivityChange = 0;
-    idleCounter_tsl = SECONDS_IN_IDLE; // This will force a first measure right away.
-    currentState_TSL = Idle;
-    return 1;
-}
+
 
 // This should probably step once every second.
 
