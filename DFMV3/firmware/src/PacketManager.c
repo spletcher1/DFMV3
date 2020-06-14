@@ -2,10 +2,9 @@
 
 #define RINGBUFFERSIZE 1500
 
-
 struct StatusPacket statusBuffer[RINGBUFFERSIZE]; 
-unsigned char head = 0, tail = 0,tailPlaceHolder=0;
-int bufferSize=0;
+unsigned int head = 0, tail = 0,tailPlaceHolder=0;
+unsigned int bufferSize=0;
  
 struct StatusPacket emptyPacket;
 
@@ -23,6 +22,8 @@ extern unsigned int Si7021_Humidity;
 extern unsigned int Si7021_Temperature;
 
 unsigned int recordCounter;
+
+unsigned char tempError;
 
 void inline FillChecksum(struct StatusPacket *tmp){
     unsigned int checksum=0;
@@ -91,7 +92,8 @@ void inline SetTailPlaceHolder(){
     tailPlaceHolder=tail;
 }
 
-void inline ResetTail(){
+void inline ResetTail(){   
+    return;
     int diff;
     if(tail>=tailPlaceHolder) // didn't go around ring buffer since last ack
         diff = tail - tailPlaceHolder;
@@ -144,8 +146,8 @@ void AddCurrentStatus() {
     statusBuffer[head].OptoFreq2 = hertz & 0xFF; 
     statusBuffer[head].OptoPW1 = pulseWidth_ms >> 8;
     statusBuffer[head].OptoPW2 = pulseWidth_ms & 0xFF;
-    //statusBuffer[head].DarkMode = isInDarkMode;
-    statusBuffer[head].DarkMode = bufferSize;
+    statusBuffer[head].DarkMode = isInDarkMode;
+    //statusBuffer[head].DarkMode = tempError;
     statusBuffer[head].Temperature1 = (Si7021_Temperature >> 24);
     statusBuffer[head].Temperature2 = ((Si7021_Temperature >> 16) & 0xFF);
     statusBuffer[head].Temperature3 = ((Si7021_Temperature >> 8) & 0xFF);

@@ -29,7 +29,7 @@ extern unsigned char usingNewPortOnly;
 void ConfigureOptoTimer(void);
 
 void ConfigureOpto() {
-
+    /*
     // Definitions for legacy port
     TRISFCLR = 0x40;
     TRISGCLR = 0x1C0;
@@ -49,7 +49,7 @@ void ConfigureOpto() {
     TRISDCLR = 0x0FFF;
     ODCDSET = 0xFFF;
     LATDCLR = 0xFFF;
-
+    */
     OptoState1 = OptoState2 = 0;    
     ConfigureOptoTimer();
 }
@@ -139,8 +139,17 @@ void SetHertz(unsigned int hz) {
 }
 
 void TIMER2_EventHandler(uint32_t status, uintptr_t context) {   
-    if(timerFlag_1ms == 1)
-        YELLOWLED_ON();
+    //if(timerFlag_1ms == 1)
+    //    YELLOWLED_ON();    
+    timer200msCounter++;
+    if(timer200msCounter>=200){       
+        //if(timerFlag_200ms==1)
+        //    YELLOWLED_ON();            
+        timerFlag_200ms=1;
+        timer200msCounter=0;
+    }
+    timerFlag_1ms = 1;    
+    return;
     if (currentOptoTimerState == OFF) {// All lights off
         optoOffCounter++;
         if (optoOffCounter >= opto_msOFF) {
@@ -171,14 +180,7 @@ void TIMER2_EventHandler(uint32_t status, uintptr_t context) {
             currentOptoTimerState = OFF;
         }
     }
-    timer200msCounter++;
-    if(timer200msCounter>=200){       
-        if(timerFlag_200ms==1)
-            YELLOWLED_ON();            
-        timerFlag_200ms=1;
-        timer200msCounter=0;
-    }
-    timerFlag_1ms = 1;    
+   
 }
 void ConfigureOptoTimer(void) {
     // This timer is set to go off every 1ms.    

@@ -12,8 +12,7 @@
 unsigned char cobsInstructionBuffer[100];
 unsigned int cobsInstructionBufferLength;
 
-//unsigned char cobsBuffer[COBSBUFFERSIZE]={"Hi there my good man how are you I hope you are well"};
-unsigned char cobsBuffer[100];
+unsigned char cobsBuffer[COBSBUFFERSIZE];
 unsigned char readBuffer[10];
 unsigned char preCodedBuffer[COBSBUFFERSIZE];
 unsigned int cobsBufferLength;
@@ -40,6 +39,9 @@ extern errorFlags_t volatile currentError;
 
 extern struct StatusPacket emptyPacket;
 
+char volatile waitingToDisable=-1;
+char volatile waitingAfterEnable=-1;
+
 /////////////////////////////////////////////////////////////////
 // Select one to specify configuration.
 // Baud Rate 19200
@@ -52,7 +54,7 @@ extern struct StatusPacket emptyPacket;
 
 void UART2_ReadCallback(uint32_t status){
     unsigned char data;
-    UART_ERROR tmp=UART2_ErrorGet();
+    UART_ERROR tmp=UART2_ErrorGet();    
     if(tmp != UART_ERROR_NONE)
     {       
         if(tmp & UART_ERROR_OVERRUN)
@@ -61,14 +63,14 @@ void UART2_ReadCallback(uint32_t status){
              currentError.bits.PERR=1;
         if(tmp & UART_ERROR_FRAMING)
              currentError.bits.FERR=1;    
-        packetIndex=0;
-        currentPacketState=None;
+        packetIndex=0;        
+        currentPacketState=None;        
     }
     else
     {                       
         data=readBuffer[0];
         switch(currentPacketState){
-            case None:
+            case None:              
                 packetBuffer[packetIndex++]=data;     
                 currentPacketState = GettingID;
                 break;
@@ -76,19 +78,15 @@ void UART2_ReadCallback(uint32_t status){
                 if(data==dfmID){
                     packetBuffer[packetIndex++]=data;  
                     currentPacketState =InPacket;
-                }
-                else if(data==0x00){ // will be here when other DFMs ack
-                    currentPacketState = None;
-                    packetIndex=0;
-                }
+                }              
                 else {
                     currentPacketState = Ignoring;
                 }
                 break;
-            case InPacket:               
+            case InPacket:                 
                 if(data==0x00){                   
-                    currentPacketState = Complete;
-                    currentUARTState = WaitingToProcess;
+                    currentPacketState = None;
+                    currentUARTState = WaitingToProcess; 
                     lastPacketSize=packetIndex;
                     packetIndex=0;
                 }
@@ -96,48 +94,24 @@ void UART2_ReadCallback(uint32_t status){
                    packetBuffer[packetIndex++]=data;                 
                 }
                 break;           
-            case Ignoring:
+            case Ignoring:              
                 if(data==0x00){
                     currentPacketState = None;
                     packetIndex=0;
                 }
-                break; 
-            case Complete:     
-                // This needs to ignore all data until process packet 
-                // allows it to collect again.  We really shouldn't
-                // even acknowledge a termination 0 to send bacy to None because
-                // in theory we could still be processing the packetBuffer.
-                // So we don't do anything. Just ignore the data.          
-                break;
+                break;            
         }
         if(packetIndex>=PACKETBUFFERSIZE){            
             currentError.bits.PACKET=1;   
             currentPacketState=None;
             packetIndex=0;
-        }
-        UART2_Read(readBuffer,1);
-        //Transfer completed successfully
-    }
+        }     
+    }    
+    UART2_Read(readBuffer,1);      
 }
 
-void UART2_WriteCallback(uint32_t status){
-    UART_ERROR tmp=UART2_ErrorGet();
-    if(tmp != UART_ERROR_NONE)
-    {       
-        if(tmp & UART_ERROR_OVERRUN)
-             currentError.bits.OERR=1;
-        if(tmp & UART_ERROR_PARITY)
-             currentError.bits.PERR=1;
-        if(tmp & UART_ERROR_FRAMING)
-             currentError.bits.FERR=1;    
-        packetIndex=0;
-        currentPacketState=None;
-    }
-    else
-    {
-        RX485_DISABLE_SEND();
-        UART2_Read(readBuffer,1);        
-    }
+void UART2_WriteCallback(uint32_t status){      
+    waitingToDisable=2;    
 }
 
 
@@ -160,8 +134,8 @@ void ConfigureUART2(void) {
 }
 
 void WriteCOBSBuffer(void){
-    RX485_ENABLE_SEND();
-    UART2_Write(cobsBuffer,cobsBufferLength);
+    RX485_ENABLE_SEND();   
+    waitingAfterEnable=2;
 }
 
 void EmptyPacketToUART2(){
@@ -183,10 +157,11 @@ void CurrentStatusPacketSetToUART2(){
     struct StatusPacket *cs1;
     unsigned char *statusPointer;
     int numPacketsToSend;
-        
+    int i,j,counter=0;
+    
     if(isAckReceived)
         SetTailPlaceHolder();
-    else
+    else        
         ResetTail();
     
     if(bufferSize>MAXPACKETS)
@@ -201,8 +176,7 @@ void CurrentStatusPacketSetToUART2(){
        
     cs1 = GetNextStatusInLine();
     statusPointer= (unsigned char *)&cs1->ID;
-    int i,j,counter=0;
-    
+        
     for(i=0;i<STATUSPACKETSIZE;i++){
         preCodedBuffer[counter]=*(statusPointer+i);        
         counter++;        
@@ -240,7 +214,7 @@ unsigned char ValidateChecksum(int length){
 
 void SendAck(){
     // Need tos end 0x00 char to terminate packets on all listening
-    // DFM.
+    // DFM.    
     cobsBuffer[0]=2;  
     cobsBuffer[1]=dfmID;  
     cobsBuffer[2]=0x00;
@@ -248,7 +222,7 @@ void SendAck(){
     WriteCOBSBuffer();
 }
 
-void SendNAck(){
+void SendNAck(){    
     cobsBuffer[0]=2;  
     cobsBuffer[1]=0xFE;  
     cobsBuffer[2]=0x00;
@@ -312,8 +286,8 @@ void ProcessPacket() {
             currentUARTState = WaitingToSendStatus; 
         }
     }
-    else if(packetBuffer[2]==BUFFERRESETREQUESTBYTE){
-        if(packetBuffer[1]==dfmID && packetBuffer[3]==dfmID){
+    else if(packetBuffer[2]==BUFFERRESETREQUESTBYTE){        
+        if(packetBuffer[1]==dfmID && packetBuffer[3]==dfmID){            
             InitializeStatusPacketBuffer();
             isAckReceived=1;
             waitingCounter=15;
@@ -353,36 +327,71 @@ void ProcessPacket() {
     }
 }
 
-void StepUART(){
+void StepUART(){    
+    FLIP_EXTRALED2();
     switch(currentUARTState){
         case UARTIdle:
             break;
         case WaitingToProcess:
+            BLUELED_OFF(); Nop();Nop();Nop();
+            REDLED_OFF(); Nop();Nop();Nop(); 
+            YELLOWLED_ON();
             ProcessPacket();       
         case WaitingToAck:
-            if(waitingCounter--<=0){
-                SendAck();                
-                currentUARTState=ClearPacket;
+            BLUELED_OFF(); Nop();Nop();Nop();
+            REDLED_ON(); Nop();Nop();Nop(); 
+            YELLOWLED_OFF();
+            if(waitingCounter>=0){
+                if(waitingCounter--<=0){
+                    SendAck();                
+                    currentUARTState=ClearPacket;
+                    waitingCounter=-1;
+                }
             }
             break;
         case WaitingToNAck:
-            if(waitingCounter--<=0){
-                SendNAck();                
-                currentUARTState=ClearPacket;
+            if(waitingCounter>=0){
+                if(waitingCounter--<=0){
+                    SendNAck();                
+                    currentUARTState=ClearPacket;
+                    waitingCounter=-1;
+                }
             }
             break;
         case WaitingToSendStatus:
-            if(waitingCounter--<=0){
-                CurrentStatusPacketSetToUART2();  
-                currentUARTState=ClearPacket;
+            BLUELED_ON(); Nop();Nop();Nop();
+            REDLED_OFF(); Nop();Nop();Nop(); 
+            YELLOWLED_OFF();
+            if(waitingCounter>=0){
+                if(waitingCounter--<=0){
+                    CurrentStatusPacketSetToUART2();  
+                    currentUARTState=ClearPacket;
+                    waitingCounter=-1;
+                }
             }
             break;
         case ClearPacket:
+            BLUELED_OFF(); Nop();Nop();Nop();
+            REDLED_OFF(); Nop();Nop();Nop(); 
+            YELLOWLED_OFF();
             currentPacketState = None;  
             currentUARTState=UARTIdle;
-            break;
-                                          
+            break;            
     }
+    if(waitingToDisable>=0){
+        if(waitingToDisable--<=0) {
+            RX485_DISABLE_SEND();  
+            waitingToDisable=-1;
+        }
+    }
+    if(waitingAfterEnable>=0){
+        if(waitingAfterEnable--<=0) {
+            UART2_Write(cobsBuffer,cobsBufferLength);
+            waitingAfterEnable=-1;
+        }
+    }
+    
+    
     
 }
 unsigned int encodeCOBS(unsigned char* buffer,unsigned int bytesToEncode, unsigned char* encodedBuffer)

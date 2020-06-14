@@ -34,9 +34,10 @@ void ClearAnalogValues(){
 // I think, doesn't actually clear the flag because the buffers were not
 // read.  It is cleared the second time through.  This needs to be changed manually 
 // after the code is created.
-void ADC_EventHandler(uint32_t status) {          
-    if (analogUpdateFlag==1)
-        YELLOWLED_ON();
+void ADC_EventHandler(uint32_t status) {             
+    //if (analogUpdateFlag==1)
+    //    BLUELED_ON();
+    FLIP_EXTRALED1();
     tmpValues[12]=ADC_ResultGet(ADC_RESULT_BUFFER_0); // Voltage
     tmpValues[0]=ADC_ResultGet(ADC_RESULT_BUFFER_1); //A1        
     tmpValues[2]=ADC_ResultGet(ADC_RESULT_BUFFER_2); //B1    
@@ -116,7 +117,7 @@ void ConfigureAnalogInputs(){
 
 void StepADC(){
     int i,j;  
-    
+    FLIP_EXTRALED3();
     for(i=0;i<13;i++){
         j=tmpValues[i]; // Need this here to avoid interrupt changing it mid calculation.    
         CurrentValues[i]+=(j-values[i][counter]);  

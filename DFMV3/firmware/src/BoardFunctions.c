@@ -24,6 +24,7 @@ void InitializeBoard(){
         YELLOWLED_ON();
     else
         YELLOWLED_OFF();
+    RX485_DISABLE_SEND();
 }
 
 void SetDarkMode(unsigned char mode){    

@@ -26,7 +26,6 @@ enum PacketState {
     GettingID,
     InPacket,
     Ignoring,
-    Complete
 };
 
 enum UARTState {
@@ -35,7 +34,7 @@ enum UARTState {
     ClearPacket,
     WaitingToAck,
     WaitingToNAck,
-    WaitingToSendStatus,        
+    WaitingToSendStatus    
 };
 
 

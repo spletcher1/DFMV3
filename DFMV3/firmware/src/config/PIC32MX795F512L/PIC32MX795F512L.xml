@@ -230,7 +230,7 @@
         </Hex>
         <Hex dnOrder="30" id="ADC_AD1CSSL">
           <Values dnOrder="0">
-            <Dynamic dnOrder="0" id="adc" value="261168"/>
+            <Dynamic dnOrder="0" id="adc" value="326445"/>
           </Values>
         </Hex>
         <Boolean dnOrder="31" id="ADC_INTERRUPT">
@@ -1577,8 +1577,8 @@
         <ElementPosition dnOrder="2" id="dfp" x="20" y="20"/>
         <ElementPosition dnOrder="3" id="i2c2" x="455" y="21"/>
         <ElementPosition dnOrder="4" id="tmr1" x="801" y="173"/>
-        <ElementPosition dnOrder="5" id="tmr2" x="804" y="244"/>
-        <ElementPosition dnOrder="6" id="uart2" x="809" y="320"/>
+        <ElementPosition dnOrder="5" id="tmr2" x="805" y="244"/>
+        <ElementPosition dnOrder="6" id="uart2" x="810" y="320"/>
       </ElementPositions>
     </ComponentGraph>
   </UserData>
