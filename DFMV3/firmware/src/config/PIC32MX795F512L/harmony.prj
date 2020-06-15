@@ -85,8 +85,8 @@
           <Security dnOrder="2">NON_SECURE</Security>
           <LogicalPath dnOrder="3">config/PIC32MX795F512L/peripheral/i2c/</LogicalPath>
           <PhysicalPath dnOrder="4">/peripheral/i2c/</PhysicalPath>
-          <GeneratedChecksum dnOrder="5">4C66B12CD9F1BA01247B204F6B1B4FA2</GeneratedChecksum>
-          <UserChecksum dnOrder="6">4C66B12CD9F1BA01247B204F6B1B4FA2</UserChecksum>
+          <GeneratedChecksum dnOrder="5">FF285F012EE6F1ED20038D7F48062ADB</GeneratedChecksum>
+          <UserChecksum dnOrder="6">FF285F012EE6F1ED20038D7F48062ADB</UserChecksum>
         </File>
         <File dnOrder="9">
           <Type dnOrder="0">SOURCE</Type>
@@ -184,8 +184,8 @@
           <Security dnOrder="2">NON_SECURE</Security>
           <LogicalPath dnOrder="3">config/PIC32MX795F512L/peripheral/i2c/</LogicalPath>
           <PhysicalPath dnOrder="4">/peripheral/i2c/</PhysicalPath>
-          <GeneratedChecksum dnOrder="5">DE11A22E8708454E290E1F0A33663B2C</GeneratedChecksum>
-          <UserChecksum dnOrder="6">DE11A22E8708454E290E1F0A33663B2C</UserChecksum>
+          <GeneratedChecksum dnOrder="5">4C0CE17BA0ADEDCDF7967B4C9C4A7A58</GeneratedChecksum>
+          <UserChecksum dnOrder="6">4C0CE17BA0ADEDCDF7967B4C9C4A7A58</UserChecksum>
         </File>
         <File dnOrder="20">
           <Type dnOrder="0">HEADER</Type>

@@ -2,13 +2,35 @@
 
 extern errorFlags_t volatile currentError;
 extern unsigned char waitingOnSIRequest;
-
+extern enum TSL2591State currentState_TSL;
+extern unsigned char tslData[4];        
 
 void I2C2_Callback(uint32_t status){ 
     I2C_ERROR tmp = I2C2_ErrorGet();
     if(tmp == I2C_ERROR_NACK && waitingOnSIRequest==1){
         return;
     }
+    
+    if (currentState_TSL != Idle){
+        switch(currentState_TSL){
+            case RequestLuminosity:
+                StoreFullLuminosity();
+                break;
+            case RequestTimingAndGain:
+                CheckTimingAndGain();
+                break;
+            case RequestTimingAndGainChange:
+                TimingAndGainChangeComplete();
+                break;
+            case LuxCalculation:
+                break;
+            case LuxReady:
+                break;
+            case Idle:
+                break;
+        }   
+    }
+    
     else if(I2C_ERROR_NONE != tmp)
     {
          currentError.bits.I2C=1;        

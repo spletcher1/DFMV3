@@ -10,5 +10,18 @@
 
 unsigned char ConfigureTSL2591();
 void StepTSL2591();
+void StoreFullLuminosity();
+void CheckTimingAndGain();
+void TimingAndGainChangeComplete();
+
+enum TSL2591State {
+    RequestLuminosity,    
+    LuxCalculation,
+    RequestTimingAndGain,
+    RequestTimingAndGainChange,
+    LuxReady,
+    Idle,
+};
+
 #endif	/* TSL2591_H */
 
