@@ -11,8 +11,8 @@ unsigned char volatile timerFlag_1sec;
 
 void TIMER1_EventHandler(uint32_t status, uintptr_t context) {     
     if (HBCounter >= TOGGLES_PER_HALFSEC) {
-        //if (isInDarkMode == 0)
-        //    FLIP_HEARTBEAT_LED();       
+        if (isInDarkMode == 0)
+            FLIP_HEARTBEAT_LED();       
         HBCounter=0;
     }
     HBCounter++;

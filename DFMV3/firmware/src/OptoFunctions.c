@@ -30,6 +30,8 @@ void ConfigureOptoTimer(void);
 
 void ConfigureOpto() {
     /*
+     * Note that these outputs are not configured by the MHC in the plib
+     * initialization.  This will be removed from further versions.
     // Definitions for legacy port
     TRISFCLR = 0x40;
     TRISGCLR = 0x1C0;
@@ -139,17 +141,18 @@ void SetHertz(unsigned int hz) {
 }
 
 void TIMER2_EventHandler(uint32_t status, uintptr_t context) {   
-    //if(timerFlag_1ms == 1)
-    //    YELLOWLED_ON();    
+    if(timerFlag_1ms == 1)
+        YELLOWLED_ON();   
+    
     timer200msCounter++;
     if(timer200msCounter>=200){       
-        //if(timerFlag_200ms==1)
-        //    YELLOWLED_ON();            
+        if(timerFlag_200ms==1)
+            YELLOWLED_ON();            
         timerFlag_200ms=1;
         timer200msCounter=0;
     }
     timerFlag_1ms = 1;    
-    return;
+    
     if (currentOptoTimerState == OFF) {// All lights off
         optoOffCounter++;
         if (optoOffCounter >= opto_msOFF) {

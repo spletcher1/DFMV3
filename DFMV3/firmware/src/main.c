@@ -40,9 +40,6 @@ extern unsigned char volatile timerFlag_1sec;
 extern unsigned char volatile analogUpdateFlag;
 extern unsigned char volatile timerFlag_200ms;
 
-//extern unsigned int Si7021_Humidity;
-//extern unsigned int Si7021_Temperature;
-
 
 void InitializeRun(){ 
     InitializeBoard(); 
@@ -91,8 +88,7 @@ int main ( void )
              StepPacketManager();
              timerFlag_200ms = 0;  
         }
-        if(timerFlag_1sec){  
-            FLIP_EXTRALED4();
+        if(timerFlag_1sec){          
             //if(currentError.bits.I2C==0){   
             //    if(currentError.bits.TSL2591==0)
             //        StepTSL2591();

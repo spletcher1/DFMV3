@@ -327,20 +327,13 @@ void ProcessPacket() {
     }
 }
 
-void StepUART(){    
-    FLIP_EXTRALED2();
+void StepUART(){       
     switch(currentUARTState){
         case UARTIdle:
             break;
-        case WaitingToProcess:
-            BLUELED_OFF(); Nop();Nop();Nop();
-            REDLED_OFF(); Nop();Nop();Nop(); 
-            YELLOWLED_ON();
+        case WaitingToProcess:            
             ProcessPacket();       
-        case WaitingToAck:
-            BLUELED_OFF(); Nop();Nop();Nop();
-            REDLED_ON(); Nop();Nop();Nop(); 
-            YELLOWLED_OFF();
+        case WaitingToAck:            
             if(waitingCounter>=0){
                 if(waitingCounter--<=0){
                     SendAck();                
@@ -358,10 +351,7 @@ void StepUART(){
                 }
             }
             break;
-        case WaitingToSendStatus:
-            BLUELED_ON(); Nop();Nop();Nop();
-            REDLED_OFF(); Nop();Nop();Nop(); 
-            YELLOWLED_OFF();
+        case WaitingToSendStatus:            
             if(waitingCounter>=0){
                 if(waitingCounter--<=0){
                     CurrentStatusPacketSetToUART2();  
@@ -370,10 +360,7 @@ void StepUART(){
                 }
             }
             break;
-        case ClearPacket:
-            BLUELED_OFF(); Nop();Nop();Nop();
-            REDLED_OFF(); Nop();Nop();Nop(); 
-            YELLOWLED_OFF();
+        case ClearPacket:          
             currentPacketState = None;  
             currentUARTState=UARTIdle;
             break;            
