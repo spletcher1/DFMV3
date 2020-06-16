@@ -31,18 +31,15 @@
 #define Si70211_Config_Heater_On                0x04
 
 
-#define SECONDS_IN_IDLE 57
-
-enum Si7021State currentState_Si;
-
-unsigned char waitingOnSIRequest;
+#define SECONDS_IN_IDLE 5
 
 unsigned int Si7021_Humidity;
 unsigned int Si7021_Temperature;
 unsigned int tmpHumidity, tmpTemperature;
-unsigned char isSi7021Configured = 0;
-int idleCounter_Si;
+
 extern errorFlags_t volatile currentError;
+
+extern unsigned char i2cData[4];   
 
 
 unsigned char IsSi7021Ready() {
@@ -57,42 +54,41 @@ unsigned char IsSi7021Ready() {
         return 0;
 }
 
-unsigned char ConfigureSi7021() {
+unsigned char ConfigureSi7021() {   
     Si7021_Humidity = Si7021_Temperature = tmpHumidity = tmpTemperature = 0;
     DelayMs(2);
     if (!IsSi7021Ready()) {
-        isSi7021Configured = 0;
         return 0;
-    }
-    isSi7021Configured = 1;
-    idleCounter_Si = SECONDS_IN_IDLE; // This will force a first measure right away.
-    currentState_Si = Si7021Idle;
+    }    
     return 1;
 }
 
-void CallForTempHumidityMeasure() {
-    unsigned char reg = Si7021_Measure_RH_No_Hold_Mode;
-    unsigned char data[1];
-    waitingOnSIRequest=1;
-    I2C2_WriteRead(Si7021_address,&reg,1,&data[0],1); 
-    //I2C2_Write(Si7021_address,&data[0],2);     
-    while(I2C2_IsBusy());
-    waitingOnSIRequest=0;
+void RequestTempHumidityMeasure() {
+    unsigned char reg = Si7021_Measure_RH_Hold_Mode; //Si7021_Measure_RH_No_Hold_Mode;    
+    I2C2_WriteRead(Si7021_address,&reg,1,&i2cData[0],2);      
+    Delay10us(4);
+    
+    //while(I2C2_IsBusy());
+    //reg=data[0];
+    //I2C2_Write(Si7021_address,&data[0],2);         
 }
 
-void GetHumidityData() {
-    unsigned char data[2];            
-    I2C2_Read(Si7021_address,&data[0],2);
-    while(I2C2_IsBusy()); 
-    tmpHumidity = (data[0]<<8)+data[1];        
+void UpdateHumidity(){    
+    tmpHumidity = (i2cData[0]<<8)+i2cData[1];      
 }
 
+// Not used with Hold mode request
+void GetHumidityData() {                 
+    I2C2_Read(Si7021_address,&i2cData[0],2);      
+}
+
+void UpdateTemperature(){
+    tmpTemperature = (i2cData[0]<<8)+i2cData[1];   
+}
 void GetTemperatureData() {
-    unsigned char reg = Si7021_Read_T_from_Last_RH_Value;
-    unsigned char data[2];        
-    I2C2_WriteRead(Si7021_address,&reg,1,&data[0],2); 
-    while(I2C2_IsBusy());  
-    tmpTemperature = (data[0]<<8)+data[1];
+    unsigned char reg = Si7021_Read_T_from_Last_RH_Value;        
+    I2C2_WriteRead(Si7021_address,&reg,1,&i2cData[0],2); 
+    Delay10us(4);
 }
 
 void UpdateTempAndHumidity() {
@@ -105,26 +101,23 @@ void UpdateTempAndHumidity() {
 }
 
 // This function is meant to be called once per second.
-
+/*
 void StepSi7021() {
     if (isSi7021Configured == 0) return;
     switch (currentState_Si) {
-        case Measuring:          
-            GetHumidityData();
-            currentState_Si = GettingTemperature;
-            break;
-        case GettingTemperature:
-            GetTemperatureData();
-            currentState_Si = Calculation;
+        case RequestMeasure:
+            RequestTempHumidityMeasure();            
+            break;      
+        case GetTemperature:
+            GetTemperatureData();        
             break;
         case Si7021Idle:
-            if (idleCounter_Si++ >= SECONDS_IN_IDLE) {
-                CallForTempHumidityMeasure();
-                currentState_Si = Measuring;
+            if (idleCounter_Si++ >= SECONDS_IN_IDLE) {                
+                currentState_Si = RequestMeasure;
                 idleCounter_Si = 0;
             }
             break;
-        case Calculation:
+        case Calculate:
             if(currentError.bits.I2C==1 || currentError.bits.Si7021==1){
                 Si7021_Temperature = 0;
                 Si7021_Humidity =0;
@@ -138,3 +131,4 @@ void StepSi7021() {
     }
 
 }
+ * */

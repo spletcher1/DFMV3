@@ -21,7 +21,7 @@
 #define TSL2591_FULLSPECTRUM      (0)       ///< channel 0
 
 
-#define SECONDS_IN_IDLE 58
+#define SECONDS_IN_IDLE 5
 
 /// TSL2591 Register map
 
@@ -45,8 +45,6 @@ enum {
     TSL2591_REGISTER_CHAN1_LOW = 0x16, // Channel 1 data, low byte
     TSL2591_REGISTER_CHAN1_HIGH = 0x17, // Channel 1 data, high byte
 } TSL2591Registers;
-
-enum TSL2591State currentState_TSL;
 
 enum TSL2591Gain {
     Low = 0x00,
@@ -84,13 +82,12 @@ unsigned int visibleLuminosity;
 unsigned int irLuminosity;
 int TSL2591_LUX;
 int tmpLUX;
-unsigned char isTSL2591Configured;
+
 unsigned char isAtMaxSensitivity;
 unsigned char isAtMinSensitivity;
-int idleCounter_tsl;
 extern errorFlags_t volatile currentError;
 
-unsigned char tslData[4];        
+extern unsigned char i2cData[4];              
 
 
 unsigned char IsTSL2591Ready() {
@@ -120,7 +117,7 @@ void RequestTimingAndGainChangeCall() {
     unsigned char data[2];
     data[0]=TSL2591_REGISTER_CONTROL | TSL2591_CMD;
     data[1]=(unsigned char) currentGain | (unsigned char) currentTiming;
-    I2C2_Write(TSL2591_ADDR,&data[0],2);        
+    I2C2_Write(TSL2591_ADDR,&data[0],2);    
 }
 
 void inline Enable() {
@@ -137,15 +134,13 @@ unsigned char ConfigureTSL2591() {
     Enable();
     DelayMs(10);
     if (!IsTSL2591Ready()) {
-        isTSL2591Configured = 0;
         return 0;
-    }
-    isTSL2591Configured = 1;
+    }  
     DelayMs(10);
     currentGain=Medium;
-    currentTiming=Int300ms;    
-    idleCounter_tsl = SECONDS_IN_IDLE; // This will force a first measure right away.
-    currentState_TSL = Idle;
+    currentTiming=Int300ms;  
+    RequestTimingAndGainChangeCall();
+    while(I2C2_IsBusy());
     return 1;
 }
 
@@ -179,35 +174,34 @@ unsigned char GetTSL2591Status() {
 
 }
 
-void CheckTimingAndGain(){
-    if (currentGain != (tslData[0] & 0xF0)) {
-        currentState_TSL =RequestTimingAndGainChange;
-        return;
+unsigned char CheckTimingAndGain(){
+    if (currentGain != (i2cData[0] & 0xF0)) {
+        return 0;
     }
-    if (currentTiming != (tslData[0] & 0x0F)) {
-        currentState_TSL =RequestTimingAndGainChange;
-        return;        
-    }          
-    currentState_TSL = RequestLuminosity;
+    if (currentTiming != (i2cData[0] & 0x0F)) {        
+        return 0;        
+    }           
+    return 1;
 }
 
 void RequestTimingAndGainCall() {
-    unsigned char regData = TSL2591_REGISTER_CONTROL | TSL2591_CMD;                 
-    I2C2_WriteRead(TSL2591_ADDR,&regData,1,&tslData[0],1);      
+    unsigned char regData = TSL2591_REGISTER_CONTROL | TSL2591_CMD;         
+    i2cData[0]=i2cData[1]=i2cData[2]=i2cData[3]=0;
+    I2C2_WriteRead(TSL2591_ADDR,&regData,1,&i2cData[0],1);    
 }
 
 void StoreFullLuminosity(){
     // Just to make sure...it shouldn't be busy    
-    fullLuminosity=(tslData[3]<<24) + (tslData[2]<<16) + (tslData[1]<<8) + tslData[0];
+    fullLuminosity=(i2cData[3]<<24) + (i2cData[2]<<16) + (i2cData[1]<<8) + i2cData[0];
     // Need to swap byte order to get luminosity.   
     irLuminosity = fullLuminosity >> 16;
-    visibleLuminosity = (fullLuminosity - irLuminosity);
-    currentState_TSL = LuxCalculation;
+    visibleLuminosity = (fullLuminosity - irLuminosity);    
 }
 
 void RequestFullLuminosity() {    
     unsigned char reg = TSL2591_CMD | TSL2591_REGISTER_CHAN0_LOW;    
-    I2C2_WriteRead(TSL2591_ADDR,&reg,1,&tslData[0],4);       
+    i2cData[0]=i2cData[1]=i2cData[2]=i2cData[3]=0;
+    I2C2_WriteRead(TSL2591_ADDR,&reg,1,&i2cData[0],4);       
 }
 
 void IncreaseSensitivity() {
@@ -305,10 +299,7 @@ void GetLux() {
     tmpLUX = (int) lux;
 }
 
-void TimingAndGainChangeComplete(){
-    currentState_TSL = RequestLuminosity;
-}
-
+/*
 void StepTSL2591() {
     if (isTSL2591Configured == 0) return;
     switch (currentState_TSL) {
@@ -330,9 +321,7 @@ void StepTSL2591() {
         case LuxCalculation:
             GetLux();         
             currentState_TSL = LuxReady;
-            break;
-            
-        
+            break;                    
         case LuxReady:
             if(currentError.bits.I2C==1 || currentError.bits.TSL2591==1)
                 TSL2591_LUX = 0;
@@ -344,7 +333,7 @@ void StepTSL2591() {
             break;
     }
 
-}
+}*/
 
 // This should probably step once every second.
 /*

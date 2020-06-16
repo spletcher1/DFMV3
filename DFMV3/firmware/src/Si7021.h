@@ -10,13 +10,12 @@
 
 unsigned char ConfigureSi7021();
 void StepSi7021();
+void UpdateHumidity(void);
+void UpdateTemperature(void);
+void RequestTempHumidityMeasure();
+void GetTemperatureData();
+void UpdateTempAndHumidity();
 
-enum Si7021State {
-    Measuring,
-    Calculation,
-    GettingTemperature,
-    Si7021Idle,
-};
 
 #endif	/* SI7021_H */
 

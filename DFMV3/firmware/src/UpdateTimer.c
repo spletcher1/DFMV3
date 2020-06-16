@@ -16,7 +16,7 @@ void TIMER1_EventHandler(uint32_t status, uintptr_t context) {
         HBCounter=0;
     }
     HBCounter++;
-    if(secondCounter++>=10) {
+    if(secondCounter++>=5) {
         secondCounter=0;
         timerFlag_1sec=1;         
     }    

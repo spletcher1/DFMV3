@@ -13,7 +13,18 @@ extern "C" {
 #endif
 
 void ConfigureI2C2(void);
-
+void StepI2C(void);
+enum I2CState {
+    RequestMeasure,    
+    Calculate,
+    GetTemperature,   
+    RequestLuminosity,    
+    LuxCalculation,
+    RequestTimingAndGain,
+    RequestTimingAndGainChange,
+    LuxReady,
+    Idle,
+};
 
 #ifdef	__cplusplus
 }
