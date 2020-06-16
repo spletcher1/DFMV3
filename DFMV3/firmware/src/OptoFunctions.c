@@ -22,6 +22,8 @@ unsigned char volatile timerFlag_1ms;
 unsigned char volatile timerFlag_200ms;
 unsigned char volatile timer200msCounter;
 
+extern errorFlags_t volatile currentError;
+
 // This parameter (UsingNewPortOnly) will be defined at startup and indicated by an LED, at the same time DFMID is determined.  
 // To change it, the user will need to reset after the change.
 extern unsigned char usingNewPortOnly;
@@ -141,13 +143,16 @@ void SetHertz(unsigned int hz) {
 }
 
 void TIMER2_EventHandler(uint32_t status, uintptr_t context) {   
-    if(timerFlag_1ms == 1)
-        YELLOWLED_ON();   
-    
+    if(timerFlag_1ms == 1){
+        YELLOWLED_ON(); 
+        currentError.bits.INTERRUPT=1;        
+    }
     timer200msCounter++;
     if(timer200msCounter>=200){       
-        if(timerFlag_200ms==1)
-            YELLOWLED_ON();            
+        if(timerFlag_200ms==1){
+            YELLOWLED_ON();    
+            currentError.bits.INTERRUPT=1;       
+        }
         timerFlag_200ms=1;
         timer200msCounter=0;
     }

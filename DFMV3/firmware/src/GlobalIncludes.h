@@ -28,7 +28,7 @@ typedef union {
         unsigned Si7021 : 1;
         unsigned TSL2591 : 1;
         unsigned FERR : 1;
-        unsigned STATUSBUFFER : 1;
+        unsigned INTERRUPT : 1;
         unsigned PERR : 1;
     } bits;
 } errorFlags_t;

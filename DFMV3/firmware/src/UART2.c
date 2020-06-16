@@ -2,6 +2,7 @@
 
 #define MAXPACKETS 60  
 #define STATUSREQUESTBYTE 0xFC
+#define LATESTSTATUSREQUESTBYTE 0xEA
 #define BUFFERRESETREQUESTBYTE 0xFE
 #define SENDINSTRUCTIONBYTE 0xFD
 #define SENDLINKAGEBYTE 0xFB
@@ -152,6 +153,26 @@ void EmptyPacketToUART2(){
     WriteCOBSBuffer();
 }
 
+void LatestStatusPacketToUART2(){
+    struct StatusPacket *cs1;
+    unsigned char *statusPointer;
+    int i,counter=0;
+    
+    cs1 = GetLastestStatus();
+    statusPointer= (unsigned char *)&cs1->ID;
+        
+    for(i=0;i<STATUSPACKETSIZE;i++){
+        preCodedBuffer[counter]=*(statusPointer+i);        
+        counter++;        
+    }    
+        
+    cobsBufferLength=encodeCOBS(preCodedBuffer,counter,cobsBuffer);
+    cobsBuffer[cobsBufferLength++]=0x00;
+    WriteCOBSBuffer();
+    // Setting this to 1 because we don't care whether it
+    // was received or not, so assume it was.
+    isAckReceived=1;
+}
 
 void CurrentStatusPacketSetToUART2(){
     struct StatusPacket *cs1;
@@ -286,6 +307,12 @@ void ProcessPacket() {
             currentUARTState = WaitingToSendStatus; 
         }
     }
+    else if(packetBuffer[2]==LATESTSTATUSREQUESTBYTE){
+        if(packetBuffer[1]==dfmID && packetBuffer[3]==dfmID){
+            waitingCounter=15;
+            currentUARTState = WaitingToSendLatestStatus; 
+        }
+    }
     else if(packetBuffer[2]==BUFFERRESETREQUESTBYTE){        
         if(packetBuffer[1]==dfmID && packetBuffer[3]==dfmID){            
             InitializeStatusPacketBuffer();
@@ -355,6 +382,15 @@ void StepUART(){
             if(waitingCounter>=0){
                 if(waitingCounter--<=0){
                     CurrentStatusPacketSetToUART2();  
+                    currentUARTState=ClearPacket;
+                    waitingCounter=-1;
+                }
+            }
+            break;
+        case WaitingToSendLatestStatus:            
+            if(waitingCounter>=0){
+                if(waitingCounter--<=0){
+                    LatestStatusPacketToUART2();  
                     currentUARTState=ClearPacket;
                     waitingCounter=-1;
                 }

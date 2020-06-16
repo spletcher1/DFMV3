@@ -7,6 +7,7 @@ unsigned int head = 0, tail = 0,tailPlaceHolder=0;
 unsigned int bufferSize=0;
  
 struct StatusPacket emptyPacket;
+struct StatusPacket *lastPacket;
 
 extern errorFlags_t volatile currentError;
 
@@ -119,23 +120,15 @@ struct StatusPacket *GetNextStatusInLine(){
     return tmp;
 }
 
-void AddCurrentStatus() {        
-    
-    // I moved this above the addition of head data
-    // in case somehow the tail entry is called during
-    // the addition of the new status point.
-    if(bufferSize>=RINGBUFFERSIZE) {          
-        currentError.bits.STATUSBUFFER=1;
-        bufferSize=RINGBUFFERSIZE;        
-        tail++;
-        if(tail>=RINGBUFFERSIZE){
-            tail=0;               
-        }
-    }
-    else {
-        bufferSize++;
-    }
-    
+struct StatusPacket *GetLastestStatus(){    
+ 
+    if(bufferSize==0)
+        return &emptyPacket;
+       
+    return lastPacket;
+}
+
+void AddCurrentStatus() {            
     
     statusBuffer[head].ID=dfmID;     
     statusBuffer[head].ErrorFlag = currentError.byte;    
@@ -164,12 +157,26 @@ void AddCurrentStatus() {
     statusBuffer[head].Index4 = (recordCounter & 0xFF);    
            
     // This is after in case the error flag is changed.
-    FillChecksum(&statusBuffer[head]);          
+    FillChecksum(&statusBuffer[head]);       
+    lastPacket = &statusBuffer[head];
     head++;
     if(head>=RINGBUFFERSIZE)
         head=0;       
     recordCounter++;
-    currentError.byte = 0x00;      
+    if(bufferSize>=RINGBUFFERSIZE) {                  
+        bufferSize=RINGBUFFERSIZE;        
+        tail++;
+        if(tail>=RINGBUFFERSIZE){
+            tail=0;               
+        }
+    }
+    else {
+        bufferSize++;
+    }
+    // Do not clear I2C or TSL or Si bits because
+    // if they fail once we want to avoid them
+    // so they don't mess everything up.
+    currentError.byte = currentError.byte & 0x19;      
 }
 
 // This function is meant to be called every 100ms

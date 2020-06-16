@@ -34,7 +34,8 @@ enum UARTState {
     ClearPacket,
     WaitingToAck,
     WaitingToNAck,
-    WaitingToSendStatus    
+    WaitingToSendStatus,
+    WaitingToSendLatestStatus     
 };
 
 

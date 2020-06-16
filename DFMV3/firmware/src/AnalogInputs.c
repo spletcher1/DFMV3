@@ -6,7 +6,7 @@ int CurrentValues[13];
 int volatile tmpValues[13];
 
 unsigned char volatile analogUpdateFlag;
-
+extern errorFlags_t volatile currentError;
 
 void FillCurrentStatus(struct StatusPacket *cS){
     int i,j;
@@ -35,8 +35,10 @@ void ClearAnalogValues(){
 // read.  It is cleared the second time through.  This needs to be changed manually 
 // after the code is created.
 void ADC_EventHandler(uint32_t status) {             
-    if (analogUpdateFlag==1)
+    if (analogUpdateFlag==1){
         BLUELED_ON();    
+        currentError.bits.INTERRUPT=1;    
+    }
     tmpValues[12]=ADC_ResultGet(ADC_RESULT_BUFFER_0); // Voltage
     tmpValues[0]=ADC_ResultGet(ADC_RESULT_BUFFER_1); //A1        
     tmpValues[2]=ADC_ResultGet(ADC_RESULT_BUFFER_2); //B1    
