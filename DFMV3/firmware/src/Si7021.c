@@ -39,7 +39,7 @@ unsigned int tmpHumidity, tmpTemperature;
 
 extern errorFlags_t volatile currentError;
 
-extern unsigned char i2cData[4];   
+extern unsigned char i2cData[10];   
 
 
 unsigned char IsSi7021Ready() {

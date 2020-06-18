@@ -10,7 +10,8 @@
 #define PACKETBUFFERSIZE 500
 #define COBSBUFFERSIZE (STATUSPACKETSIZE*(MAXPACKETS+2))+10
 
-unsigned char cobsInstructionBuffer[100];
+// This is set at PACKETBUFFERSIZE to avoid a crashing overflow
+unsigned char cobsInstructionBuffer[PACKETBUFFERSIZE];
 unsigned int cobsInstructionBufferLength;
 
 unsigned char cobsBuffer[COBSBUFFERSIZE];
@@ -147,7 +148,9 @@ void EmptyPacketToUART2(){
         preCodedBuffer[counter]=*(statusPointer+i);        
         counter++;        
     }    
-    
+    isAckReceived=1;
+    if(counter>=COBSBUFFERSIZE)
+        return; //Try to guard againt overflow.    
     cobsBufferLength=encodeCOBS(preCodedBuffer,counter,cobsBuffer);
     cobsBuffer[cobsBufferLength++]=0x00;
     WriteCOBSBuffer();
@@ -166,12 +169,16 @@ void LatestStatusPacketToUART2(){
         counter++;        
     }    
         
-    cobsBufferLength=encodeCOBS(preCodedBuffer,counter,cobsBuffer);
-    cobsBuffer[cobsBufferLength++]=0x00;
-    WriteCOBSBuffer();
+    
     // Setting this to 1 because we don't care whether it
     // was received or not, so assume it was.
     isAckReceived=1;
+    if(counter>=COBSBUFFERSIZE)
+        return; //Try to guard againt overflow.
+    cobsBufferLength=encodeCOBS(preCodedBuffer,counter,cobsBuffer);
+    cobsBuffer[cobsBufferLength++]=0x00;
+    WriteCOBSBuffer();
+    
 }
 
 void CurrentStatusPacketSetToUART2(){
@@ -199,23 +206,24 @@ void CurrentStatusPacketSetToUART2(){
     statusPointer= (unsigned char *)&cs1->ID;
         
     for(i=0;i<STATUSPACKETSIZE;i++){
-        preCodedBuffer[counter]=*(statusPointer+i);        
-        counter++;        
+        preCodedBuffer[counter++]=*(statusPointer+i);                
     }    
     
     for(j=1;j<numPacketsToSend;j++){
         cs1 = GetNextStatusInLine();
         statusPointer = (unsigned char *)&cs1->ID;
         for(i=0;i<STATUSPACKETSIZE;i++){
-            preCodedBuffer[counter]=*(statusPointer+i);        
-            counter++;    
+            preCodedBuffer[counter++]=*(statusPointer+i);                    
         }    
     }
    
+    isAckReceived=0;
+    
+    if(counter>=COBSBUFFERSIZE)
+        return; //Try to guard againt overflow.
     cobsBufferLength=encodeCOBS(preCodedBuffer,counter,cobsBuffer);
     cobsBuffer[cobsBufferLength++]=0x00;
-    WriteCOBSBuffer();
-    isAckReceived=0;
+    WriteCOBSBuffer();    
 }
 
 unsigned char ValidateChecksum(int length){    
@@ -324,7 +332,7 @@ void ProcessPacket() {
     }
     else if(packetBuffer[2]==SENDINSTRUCTIONBYTE){
         cobsInstructionBufferLength=decodeCOBS(packetBuffer,lastPacketSize,cobsInstructionBuffer);        
-        if(!ValidateChecksum(41)) {
+        if(!ValidateChecksum(41) || (cobsInstructionBufferLength<=0)) {
             waitingCounter=15;
             currentUARTState = WaitingToNAck; 
             return;
@@ -335,7 +343,7 @@ void ProcessPacket() {
     }   
     else if(packetBuffer[2]==SENDLINKAGEBYTE){
         cobsInstructionBufferLength=decodeCOBS(packetBuffer,lastPacketSize,cobsInstructionBuffer);        
-        if(!ValidateChecksum(18)) {
+        if(!ValidateChecksum(18) || (cobsInstructionBufferLength<=0)) {
             waitingCounter=15;
             currentUARTState = WaitingToNAck; 
             return;
@@ -346,9 +354,7 @@ void ProcessPacket() {
     }
      else if(packetBuffer[2]==ACKBYTE){    
         if(packetBuffer[1]==dfmID && packetBuffer[3]==dfmID){
-            isAckReceived=1;
-            currentUARTState=ClearPacket;
-            return;
+            isAckReceived=1;         
         }
         currentUARTState=ClearPacket;
     }

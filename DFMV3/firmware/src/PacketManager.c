@@ -103,6 +103,13 @@ void inline ResetTail(){
                
     tail = tailPlaceHolder;
     bufferSize+=diff;
+    if(bufferSize>RINGBUFFERSIZE) {                  
+        bufferSize=RINGBUFFERSIZE;        
+        tail++;
+        if(tail>=RINGBUFFERSIZE){
+            tail=0;               
+        }
+    }
 }
 
 struct StatusPacket *GetNextStatusInLine(){    

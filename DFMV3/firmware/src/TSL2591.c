@@ -87,7 +87,7 @@ unsigned char isAtMaxSensitivity;
 unsigned char isAtMinSensitivity;
 extern errorFlags_t volatile currentError;
 
-extern unsigned char i2cData[4];              
+extern unsigned char i2cData[10];              
 
 
 unsigned char IsTSL2591Ready() {
@@ -188,6 +188,7 @@ void RequestTimingAndGainCall() {
     unsigned char regData = TSL2591_REGISTER_CONTROL | TSL2591_CMD;         
     i2cData[0]=i2cData[1]=i2cData[2]=i2cData[3]=0;
     I2C2_WriteRead(TSL2591_ADDR,&regData,1,&i2cData[0],1);    
+    Delay10us(5);
 }
 
 void StoreFullLuminosity(){
@@ -201,7 +202,8 @@ void StoreFullLuminosity(){
 void RequestFullLuminosity() {    
     unsigned char reg = TSL2591_CMD | TSL2591_REGISTER_CHAN0_LOW;    
     i2cData[0]=i2cData[1]=i2cData[2]=i2cData[3]=0;
-    I2C2_WriteRead(TSL2591_ADDR,&reg,1,&i2cData[0],4);       
+    I2C2_WriteRead(TSL2591_ADDR,&reg,1,&i2cData[0],4); 
+    Delay10us(5);
 }
 
 void IncreaseSensitivity() {
@@ -335,42 +337,3 @@ void StepTSL2591() {
 
 }*/
 
-// This should probably step once every second.
-/*
-void StepTSL2591() {
-    if (isTSL2591Configured == 0) return;
-    switch (currentState_TSL) {
-        case Reading:            
-            GetFullLuminosity();            
-            Disable();
-            currentState_TSL = LuxCalculation;
-            break;
-        case Idle:
-            if (idleCounter_tsl++ >= SECONDS_IN_IDLE) {                
-                Enable();                
-                currentState_TSL = Reading;
-                idleCounter_tsl = 0;
-            }
-            break;
-        case LuxCalculation:
-            GetLux();
-            if (didSensitivityChange) {                
-                Enable();                
-                currentState_TSL = Reading;
-                didSensitivityChange = 0;
-            } else
-                currentState_TSL = LuxReady;
-            break;
-        case LuxReady:
-            if(currentError.bits.I2C==1 || currentError.bits.TSL2591==1)
-                TSL2591_LUX = 0;
-            else
-                TSL2591_LUX = tmpLUX;
-            currentState_TSL = Idle;
-            break;
-        default:
-            break;
-    }
-
-}
- * */

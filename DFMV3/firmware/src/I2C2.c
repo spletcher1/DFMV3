@@ -2,7 +2,7 @@
 
 extern errorFlags_t volatile currentError;
 enum I2CState currentState_I2C;
-unsigned char i2cData[4];        
+unsigned char i2cData[10];        
 int idleCounter;
 unsigned char isSi7021Configured = 0;
 unsigned char isTSL2591Configured;
@@ -17,7 +17,7 @@ extern unsigned int Si7021_Temperature;
 
 void I2C2_Callback(uint32_t status){ 
     I2C_ERROR tmp = I2C2_ErrorGet();       
-        
+    FLIP_EXTRALED2();    
     if(I2C_ERROR_NONE != tmp)
     {
         currentError.bits.I2C=1;   
