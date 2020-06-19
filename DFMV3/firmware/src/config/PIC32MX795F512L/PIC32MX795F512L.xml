@@ -230,7 +230,7 @@
         </Hex>
         <Hex dnOrder="30" id="ADC_AD1CSSL">
           <Values dnOrder="0">
-            <Dynamic dnOrder="0" id="adc" value="391720"/>
+            <Dynamic dnOrder="0" id="adc" value="456997"/>
           </Values>
         </Hex>
         <Boolean dnOrder="31" id="ADC_INTERRUPT">
@@ -1085,12 +1085,12 @@
         </String>
         <Combo dnOrder="167" id="EVIC_33_PRIORITY">
           <Values dnOrder="0">
-            <User dnOrder="0" value="5"/>
+            <User dnOrder="0" value="3"/>
           </Values>
         </Combo>
         <Hex dnOrder="168" id="EVIC_33_PRIVALUE">
           <Values dnOrder="0">
-            <Dynamic dnOrder="0" id="core" value="5120"/>
+            <Dynamic dnOrder="0" id="core" value="3072"/>
           </Values>
         </Hex>
         <Boolean dnOrder="169" id="EVIC_36_ENABLE">
@@ -1659,7 +1659,8 @@
     </UniqueComponent>
   </Components>
   <UserData>
-    <ComponentGraph dnOrder="0" id="__ROOTVIEW">
+    <GraphSettings canvasHeight="400" canvasWidth="400" dnOrder="0"/>
+    <ComponentGraph dnOrder="1" id="__ROOTVIEW">
       <ElementPositions dnOrder="0">
         <ElementPosition dnOrder="0" id="adc" x="319" y="12"/>
         <ElementPosition dnOrder="1" id="core" x="239" y="15"/>
@@ -1670,6 +1671,5 @@
         <ElementPosition dnOrder="6" id="uart2" x="810" y="320"/>
       </ElementPositions>
     </ComponentGraph>
-    <GraphSettings canvasHeight="400" canvasWidth="400" dnOrder="1"/>
   </UserData>
 </Configuration>

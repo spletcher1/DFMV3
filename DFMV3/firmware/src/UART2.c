@@ -7,9 +7,10 @@
 #define SENDINSTRUCTIONBYTE 0xFD
 #define SENDLINKAGEBYTE 0xFB
 #define ACKBYTE 0xFA
-#define PACKETBUFFERSIZE 500
 #define COBSBUFFERSIZE (STATUSPACKETSIZE*(MAXPACKETS+2))+10
-
+// This is here to avoid issues when other DFM send massive status
+// packets that can be as big as COBSBUFFERSIZE
+#define PACKETBUFFERSIZE COBSBUFFERSIZE
 // This is set at PACKETBUFFERSIZE to avoid a crashing overflow
 unsigned char cobsInstructionBuffer[PACKETBUFFERSIZE];
 unsigned int cobsInstructionBufferLength;
@@ -105,7 +106,7 @@ void UART2_ReadCallback(uint32_t status){
         }
         if(packetIndex>=PACKETBUFFERSIZE){            
             currentError.bits.PACKET=1;   
-            currentPacketState=None;
+            currentPacketState=Ignoring;
             packetIndex=0;
         }     
     }    
@@ -152,6 +153,7 @@ void EmptyPacketToUART2(){
     if(counter>=COBSBUFFERSIZE)
         return; //Try to guard againt overflow.    
     cobsBufferLength=encodeCOBS(preCodedBuffer,counter,cobsBuffer);
+    if(cobsBufferLength<=0) return;
     cobsBuffer[cobsBufferLength++]=0x00;
     WriteCOBSBuffer();
 }
@@ -176,7 +178,8 @@ void LatestStatusPacketToUART2(){
     if(counter>=COBSBUFFERSIZE)
         return; //Try to guard againt overflow.
     cobsBufferLength=encodeCOBS(preCodedBuffer,counter,cobsBuffer);
-    cobsBuffer[cobsBufferLength++]=0x00;
+    if(cobsBufferLength<=0) return;
+    cobsBuffer[cobsBufferLength++]=0x00;    
     WriteCOBSBuffer();
     
 }
@@ -222,7 +225,8 @@ void CurrentStatusPacketSetToUART2(){
     if(counter>=COBSBUFFERSIZE)
         return; //Try to guard againt overflow.
     cobsBufferLength=encodeCOBS(preCodedBuffer,counter,cobsBuffer);
-    cobsBuffer[cobsBufferLength++]=0x00;
+    if(cobsBufferLength<=0) return;
+    cobsBuffer[cobsBufferLength++]=0x00;    
     WriteCOBSBuffer();    
 }
 
@@ -357,6 +361,10 @@ void ProcessPacket() {
             isAckReceived=1;         
         }
         currentUARTState=ClearPacket;
+    }
+     else {
+         // Wonder how many times we get here, suggesting weird packet
+        currentError.bits.PACKET=1;
     }
 }
 

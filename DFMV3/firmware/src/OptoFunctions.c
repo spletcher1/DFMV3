@@ -173,7 +173,7 @@ void TIMER2_EventHandler(uint32_t status, uintptr_t context) {
     } else if (currentOptoTimerState == COL1_OLDPORT_AND_ALL_NEWPORT) { //Column 1 lights attended to
         optoOnCounter++;
         if (optoOnCounter >= pulseWidth_ms) {
-            Opto_Off();
+            Opto_Off(); 
             optoOffCounter=0;
             if(!usingNewPortOnly) {
                 Col2_Opto_On();

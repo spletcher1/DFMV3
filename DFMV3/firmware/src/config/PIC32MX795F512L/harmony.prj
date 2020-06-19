@@ -31,8 +31,8 @@
           <Security dnOrder="2">NON_SECURE</Security>
           <LogicalPath dnOrder="3">config/PIC32MX795F512L/</LogicalPath>
           <PhysicalPath dnOrder="4">/</PhysicalPath>
-          <GeneratedChecksum dnOrder="5">CF3D15B55DD15075BD699A581338E620</GeneratedChecksum>
-          <UserChecksum dnOrder="6">CF3D15B55DD15075BD699A581338E620</UserChecksum>
+          <GeneratedChecksum dnOrder="5">CCF73C91A3CE2362C735AC611854D41B</GeneratedChecksum>
+          <UserChecksum dnOrder="6">CCF73C91A3CE2362C735AC611854D41B</UserChecksum>
         </File>
         <File dnOrder="3">
           <Type dnOrder="0">SOURCE</Type>
@@ -49,7 +49,7 @@
           <Security dnOrder="2">NON_SECURE</Security>
           <LogicalPath dnOrder="3">config/PIC32MX795F512L/peripheral/adc/</LogicalPath>
           <PhysicalPath dnOrder="4">/peripheral/adc/</PhysicalPath>
-          <GeneratedChecksum dnOrder="5">2C1337C4D40834EA1DB33C8CAF708D33</GeneratedChecksum>
+          <GeneratedChecksum dnOrder="5">27DF7B71AB341359A316B2FED4829010</GeneratedChecksum>
           <UserChecksum dnOrder="6">B16EF5086E0EB66FDE0C507554ED2DAB</UserChecksum>
         </File>
         <File dnOrder="5">
@@ -67,8 +67,8 @@
           <Security dnOrder="2">NON_SECURE</Security>
           <LogicalPath dnOrder="3">config/PIC32MX795F512L/peripheral/evic/</LogicalPath>
           <PhysicalPath dnOrder="4">/peripheral/evic/</PhysicalPath>
-          <GeneratedChecksum dnOrder="5">8998668CABADBE0394BCAE0DC0B8B152</GeneratedChecksum>
-          <UserChecksum dnOrder="6">8998668CABADBE0394BCAE0DC0B8B152</UserChecksum>
+          <GeneratedChecksum dnOrder="5">46D70143A15C2E3FBEDED7E57135DBA6</GeneratedChecksum>
+          <UserChecksum dnOrder="6">46D70143A15C2E3FBEDED7E57135DBA6</UserChecksum>
         </File>
         <File dnOrder="7">
           <Type dnOrder="0">SOURCE</Type>

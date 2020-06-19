@@ -58,7 +58,7 @@ void EVIC_Initialize( void )
     IPC2SET = 0x1c | 0x0;  /* TIMER_2:  Priority 7 / Subpriority 0 */
     IPC6SET = 0x10000000 | 0x0;  /* ADC:  Priority 4 / Subpriority 0 */
     IPC8SET = 0x18 | 0x0;  /* UART_2:  Priority 6 / Subpriority 0 */
-    IPC8SET = 0x1400 | 0x0;  /* I2C_2:  Priority 5 / Subpriority 0 */
+    IPC8SET = 0xc00 | 0x0;  /* I2C_2:  Priority 3 / Subpriority 0 */
 }
 
 void EVIC_SourceEnable( INT_SOURCE source )

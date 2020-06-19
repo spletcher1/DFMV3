@@ -87,7 +87,7 @@ void __ISR(_UART_2_VECTOR, ipl6AUTO) UART_2_Handler (void)
     UART_2_InterruptHandler();
 }
 
-void __ISR(_I2C_2_VECTOR, ipl5AUTO) I2C_2_Handler (void)
+void __ISR(_I2C_2_VECTOR, ipl3AUTO) I2C_2_Handler (void)
 {
     I2C_2_InterruptHandler();
 }
