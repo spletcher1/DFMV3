@@ -69,9 +69,8 @@ int main ( void )
     YELLOWLED_OFF();
     BLUELED_OFF();    
     while ( true )
-    {        
-        if (timerFlag_1ms) { 
-            FLIP_EXTRALED4();
+    {         
+        if (timerFlag_1ms) {             
             ProcessButtonStep();
             StepLEDControl();           
             StepUART();
@@ -82,7 +81,7 @@ int main ( void )
              timerFlag_200ms = 0;  
         }
         if(timerFlag_1sec){  
-            //StepI2C();            
+            StepI2C();            
             timerFlag_1sec=0;
         }      
         if(analogUpdateFlag){            

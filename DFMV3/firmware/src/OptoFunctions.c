@@ -142,8 +142,7 @@ void SetHertz(unsigned int hz) {
     SetOptoParameters(hz, pulseWidth_ms);
 }
 
-void TIMER2_EventHandler(uint32_t status, uintptr_t context) {   
-    FLIP_EXTRALED3();
+void TIMER2_EventHandler(uint32_t status, uintptr_t context) {      
     if(timerFlag_1ms == 1){
         YELLOWLED_ON(); 
         currentError.bits.INTERRUPT=1;        
@@ -158,7 +157,7 @@ void TIMER2_EventHandler(uint32_t status, uintptr_t context) {
         timer200msCounter=0;
     }
     timerFlag_1ms = 1;    
-    return;
+    
     if (currentOptoTimerState == OFF) {// All lights off
         optoOffCounter++;
         if (optoOffCounter >= opto_msOFF) {

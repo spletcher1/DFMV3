@@ -38,8 +38,7 @@ void ADC_EventHandler(uint32_t status) {
     if (analogUpdateFlag==1){
         BLUELED_ON();    
         currentError.bits.INTERRUPT=1;    
-    }
-    FLIP_EXTRALED1();
+    }    
     tmpValues[12]=ADC_ResultGet(ADC_RESULT_BUFFER_0); // Voltage
     tmpValues[0]=ADC_ResultGet(ADC_RESULT_BUFFER_1); //A1        
     tmpValues[2]=ADC_ResultGet(ADC_RESULT_BUFFER_2); //B1    

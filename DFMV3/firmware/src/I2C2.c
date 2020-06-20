@@ -16,8 +16,7 @@ extern unsigned int Si7021_Temperature;
 
 
 void I2C2_Callback(uint32_t status){ 
-    I2C_ERROR tmp = I2C2_ErrorGet();       
-    FLIP_EXTRALED2();    
+    I2C_ERROR tmp = I2C2_ErrorGet();             
     if(I2C_ERROR_NONE != tmp)
     {
         currentError.bits.I2C=1;   
