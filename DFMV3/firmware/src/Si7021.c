@@ -66,11 +66,7 @@ unsigned char ConfigureSi7021() {
 void RequestTempHumidityMeasure() {
     unsigned char reg = Si7021_Measure_RH_Hold_Mode; //Si7021_Measure_RH_No_Hold_Mode;    
     I2C2_WriteRead(Si7021_address,&reg,1,&i2cData[0],2);      
-    Delay10us(4);
-    
-    //while(I2C2_IsBusy());
-    //reg=data[0];
-    //I2C2_Write(Si7021_address,&data[0],2);         
+    Delay10us(4);     
 }
 
 void UpdateHumidity(){    

@@ -44,6 +44,7 @@ extern struct StatusPacket emptyPacket;
 
 char volatile waitingToDisable=-1;
 char volatile waitingAfterEnable=-1;
+void UART2_ErrorClear( void );
 
 /////////////////////////////////////////////////////////////////
 // Select one to specify configuration.
@@ -109,7 +110,12 @@ void UART2_ReadCallback(uint32_t status){
             currentPacketState=Ignoring;
             packetIndex=0;
         }     
-    }    
+    }  
+    // This is a test to recover a UART issue where there are no official
+    // errors but the error interrupt is set.
+    if(IFS1bits.U2EIF==1){
+        UART2_ErrorClear();
+    }
     UART2_Read(readBuffer,1);      
 }
 

@@ -49,7 +49,7 @@
           <Security dnOrder="2">NON_SECURE</Security>
           <LogicalPath dnOrder="3">config/PIC32MX795F512L/peripheral/adc/</LogicalPath>
           <PhysicalPath dnOrder="4">/peripheral/adc/</PhysicalPath>
-          <GeneratedChecksum dnOrder="5">27DF7B71AB341359A316B2FED4829010</GeneratedChecksum>
+          <GeneratedChecksum dnOrder="5">498410055E47817803BD05D09326563F</GeneratedChecksum>
           <UserChecksum dnOrder="6">B16EF5086E0EB66FDE0C507554ED2DAB</UserChecksum>
         </File>
         <File dnOrder="5">
@@ -77,7 +77,7 @@
           <LogicalPath dnOrder="3">config/PIC32MX795F512L/peripheral/gpio/</LogicalPath>
           <PhysicalPath dnOrder="4">/peripheral/gpio/</PhysicalPath>
           <GeneratedChecksum dnOrder="5">7CA027D423A7E49B06B116C350005FA1</GeneratedChecksum>
-          <UserChecksum dnOrder="6">7CA027D423A7E49B06B116C350005FA1</UserChecksum>
+          <UserChecksum dnOrder="6">7E1E443ECC3C9808B409EAED76B746D1</UserChecksum>
         </File>
         <File dnOrder="8">
           <Type dnOrder="0">SOURCE</Type>
@@ -85,8 +85,8 @@
           <Security dnOrder="2">NON_SECURE</Security>
           <LogicalPath dnOrder="3">config/PIC32MX795F512L/peripheral/i2c/</LogicalPath>
           <PhysicalPath dnOrder="4">/peripheral/i2c/</PhysicalPath>
-          <GeneratedChecksum dnOrder="5">FF285F012EE6F1ED20038D7F48062ADB</GeneratedChecksum>
-          <UserChecksum dnOrder="6">FF285F012EE6F1ED20038D7F48062ADB</UserChecksum>
+          <GeneratedChecksum dnOrder="5">4D42D7EE54446691AD7625C5C35D4601</GeneratedChecksum>
+          <UserChecksum dnOrder="6">4D42D7EE54446691AD7625C5C35D4601</UserChecksum>
         </File>
         <File dnOrder="9">
           <Type dnOrder="0">SOURCE</Type>

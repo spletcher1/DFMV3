@@ -49,7 +49,7 @@
 
 UART_OBJECT uart2Obj;
 
-void static UART2_ErrorClear( void )
+void UART2_ErrorClear( void )
 {
     /* rxBufferLen = (FIFO level + RX register) */
     uint8_t rxBufferLen = UART_RXFIFO_DEPTH;

@@ -15,6 +15,8 @@ extern "C" {
 void ConfigureI2C2(void);
 void StepI2C(void);
 enum I2CState {
+    StartReset,
+    EndReset,
     RequestMeasure,    
     Calculate,
     GetTemperature,   
