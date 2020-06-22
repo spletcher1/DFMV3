@@ -17,6 +17,19 @@ unsigned char isI2CAliveCounter;
 #define SECONDS_IN_IDLE 5
 
 
+void FreeI2C(){
+    int i;
+    I2C2CONbits.ON=0;    
+    TRISAbits.TRISA2=0;
+    TRISAbits.TRISA3=1;
+    
+    for(i=0;i<10;i++){
+        PORTAINV = 0x0004;
+        Delay10us(1);        
+    }                         
+}
+
+
 void I2C2_Callback(uint32_t status){ 
     I2C_ERROR tmp = I2C2_ErrorGet();  
     isI2CAliveCounter=0;
@@ -96,7 +109,7 @@ void StepI2C() {
     }
     switch (currentState_I2C) {
         case StartReset:
-            I2C2_Initialize();
+            FreeI2C();
             currentState_I2C=EndReset;
             break;
         case EndReset:
