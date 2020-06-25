@@ -157,7 +157,7 @@ void TIMER2_EventHandler(uint32_t status, uintptr_t context) {
         timer200msCounter=0;
     }
     timerFlag_1ms = 1;    
-    return;
+     
     if (currentOptoTimerState == OFF) {// All lights off
         optoOffCounter++;
         if (optoOffCounter >= opto_msOFF) {

@@ -12,7 +12,7 @@ extern int tmpLUX;
 extern unsigned int Si7021_Humidity;
 extern unsigned int Si7021_Temperature;
 
-unsigned char isI2CAliveCounter;
+unsigned char volatile isI2CAliveCounter;
 
 #define SECONDS_IN_IDLE 5
 
@@ -46,12 +46,10 @@ void I2C2_Callback(uint32_t status){
                 currentState_I2C = LuxCalculation;
                 break;
             case RequestTimingAndGain:               
-                if(CheckTimingAndGain()){
-                     EXTRALED2ON();
+                if(CheckTimingAndGain()){                   
                     currentState_I2C = RequestLuminosity;
                 }
-                else{
-                    EXTRALED3ON();
+                else{                    
                      currentState_I2C =RequestTimingAndGainChange;
                 }
                 break;
@@ -103,7 +101,7 @@ void ConfigureI2C2(void) {
 void StepI2C() {
     if (isTSL2591Configured == 0 || isSi7021Configured == 0) return;
     if (currentError.bits.I2C==1) return;
-    if(isI2CAliveCounter>10){
+    if(isI2CAliveCounter++>=10){
         currentState_I2C=StartReset;
         isI2CAliveCounter=0;
     }
@@ -116,8 +114,7 @@ void StepI2C() {
             I2C2_Initialize();
             idleCounter=0;
             currentState_I2C=Idle;
-        case RequestLuminosity:   
-            EXTRALED4ON();            
+        case RequestLuminosity:                        
             RequestFullLuminosity();                                    
             break;
         case Idle:
@@ -130,8 +127,7 @@ void StepI2C() {
         case RequestTimingAndGainChange:            
             RequestTimingAndGainChangeCall();
             break;
-        case RequestTimingAndGain:
-            EXTRALED1ON();
+        case RequestTimingAndGain:            
             RequestTimingAndGainCall();
             break;
         case LuxCalculation:           

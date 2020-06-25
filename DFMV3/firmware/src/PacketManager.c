@@ -86,6 +86,8 @@ void InitializeStatusPacketBuffer(){
     bufferSize=0;
     head=tail=tailPlaceHolder=0;
     FillEmptyPacket();
+    // Clear any packet error
+    currentError.byte = currentError.byte & 0xFB;
     // We set this to avoid error on first use.       
 }
 

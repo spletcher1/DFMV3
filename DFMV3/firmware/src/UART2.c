@@ -428,7 +428,7 @@ void StepUART(){
         }
     }
     if(waitingAfterEnable>=0){
-        if(waitingAfterEnable--<=0) {
+        if(waitingAfterEnable--<=0) {            
             UART2_Write(cobsBuffer,cobsBufferLength);
             waitingAfterEnable=-1;
         }

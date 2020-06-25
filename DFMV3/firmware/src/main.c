@@ -39,7 +39,6 @@ extern unsigned char volatile timerFlag_1ms;
 extern unsigned char volatile timerFlag_1sec;
 extern unsigned char volatile analogUpdateFlag;
 extern unsigned char volatile timerFlag_200ms;
-extern unsigned char volatile isI2CAliveCounter;
 
 void InitializeRun(){ 
     InitializeBoard(); 
@@ -80,8 +79,7 @@ int main ( void )
              StepPacketManager();
              timerFlag_200ms = 0;  
         }
-        if(timerFlag_1sec){ 
-            isI2CAliveCounter++;
+        if(timerFlag_1sec){           
             StepI2C();            
             timerFlag_1sec=0;
         }      
