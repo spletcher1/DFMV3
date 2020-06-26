@@ -95,8 +95,7 @@ void inline SetTailPlaceHolder(){
     tailPlaceHolder=tail;
 }
 
-void inline ResetTail(){   
-    return;
+void inline ResetTail(){       
     int diff;
     if(tail>=tailPlaceHolder) // didn't go around ring buffer since last ack
         diff = tail - tailPlaceHolder;
