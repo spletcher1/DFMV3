@@ -116,6 +116,41 @@ void UpdateLEDWithDecay(unsigned char led) {
     } 
 }
 
+
+void UpdateLEDFixedInterval(unsigned char led) {
+    if (LEDThresholdValues[led] == -1) {    
+        return;
+    }
+    if (LEDThresholdValues[led] == 0) {
+        SetLEDOn(led);
+        return;
+    }   
+    
+    // This first defines what happens outside T
+    if (LEDDelayCounter[led] <= 0) {
+        if (CurrentValues[led] > LEDThresholdValues[led]) {  // Should be first lick outside T. Turn on light and start both timers.
+            SetLEDOn(led);
+            LEDDecayCounter[led] = LEDDecayValues[led];
+            LEDDelayCounter[led] = LEDDelayValues[led]; 
+            if(led==0) BLUELED_ON();
+        }
+        else {
+            LEDDelayCounter[led]=-1; // Here if outside T and no lick...just hang out. Keep LED Off.
+        }
+    }    
+    else { // This part defines what happens inside T.
+        LEDDelayCounter[led]--;
+        if (LEDDecayCounter[led] > 0) { // Inside T but also inside decay, set LED on.
+            LEDDecayCounter[led]--;
+            SetLEDOn(led);
+        } 
+        else {
+            LEDDecayCounter[led]=-1; // If inside T but outside the decay...stay off
+            if(led==0) BLUELED_OFF();
+        }
+    }
+}
+
 void UpdateLEDWithDecayAndMaxTime(unsigned char led) {
     if (LEDThresholdValues[led] == -1) {    
         return;
@@ -218,7 +253,10 @@ void SetLEDParams(unsigned int decayval, unsigned int delayval, unsigned int max
         LEDUpdateFunction = &UpdateLEDWithDecay;
     } else if (delayval == 0) {
         LEDUpdateFunction = &UpdateLEDWithDecayAndMaxTime;
-    } else {
+    } else if(maxtimeonval==0){
+        LEDUpdateFunction = &UpdateLEDFixedInterval;
+    }
+    else {
         LEDUpdateFunction = &UpdateLEDWithDelay;
     }
     currentDelay = delayval;
