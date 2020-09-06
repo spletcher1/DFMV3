@@ -64,9 +64,7 @@ int main ( void )
 {
     /* Initialize all modules */
     SYS_Initialize ( NULL );         
-    InitializeRun();  
-    YELLOWLED_OFF();
-    BLUELED_OFF();    
+    InitializeRun();    
     while ( true )
     {         
         if (timerFlag_1ms) {             

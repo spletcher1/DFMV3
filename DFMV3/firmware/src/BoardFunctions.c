@@ -5,9 +5,34 @@ unsigned char isInDarkMode;
 unsigned char ledStatusBits;
 unsigned char usingNewPortOnly;
 
+
+unsigned char GetDFMID(void){    
+#ifdef PLETCHERBOARD
+    return GETIDSELECTOR_VALUE();      
+#endif
+    
+#ifdef CVBOARD
+    unsigned int tmp, tmp2;
+    tmp = GETIDSELECTOR_VALUE();
+    tmp2 = GETID2SELECTOR_VALUE();    
+    return tmp2*10+tmp;
+#endif
+    
+}
+
+void SetPortsStatus(void){
+#ifdef PLETCHERBOARD
+     usingNewPortOnly = !SWITCH_PORT;      
+#endif
+    
+#ifdef CVBOARD
+     usingNewPortOnly=1;
+#endif    
+    
+}
+
 void InitializeBoard(){
     // Set All ID Selectors  
-
     //RX485_DISABLE_SEND();
     BLUELED_OFF();
     Nop();Nop();Nop();
@@ -18,14 +43,17 @@ void InitializeBoard(){
     YELLOWLED_OFF();
     Nop();Nop();Nop();
     //DelayMs(1000);
-    dfmID = GETIDSELECTOR_VALUE();      
-    usingNewPortOnly = !SWITCH_PORT; 
+    dfmID=GetDFMID(); 
+    SetPortsStatus();   
     if(usingNewPortOnly)
         YELLOWLED_ON();
     else
         YELLOWLED_OFF();
     RX485_DISABLE_SEND();
 }
+
+
+
 
 void SetDarkMode(unsigned char mode){    
     if(mode){
