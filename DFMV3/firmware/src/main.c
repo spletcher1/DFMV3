@@ -1,21 +1,3 @@
-/*******************************************************************************
-  Main Source File
-
-  Company:
-    Microchip Technology Inc.
-
-  File Name:
-    main.c
-
-  Summary:
-    This file contains the "main" function for a project.
-
-  Description:
-    This file contains the "main" function for a project.  The
-    "main" function calls the "SYS_Initialize" function to initialize the state
-    machines of all modules in the system
- *******************************************************************************/
-
 // *****************************************************************************
 // *****************************************************************************
 // Section: Included Files
@@ -45,12 +27,9 @@ void InitializeRun(){
     currentError.byte=0x00;  
     ConfigureUpdateTimer();
     ConfigureAnalogInputs();
-    ConfigureUART2();    
-    
-    //FreeI2C();
+    ConfigureUART2();        
     ConfigureI2C2();
-    ConfigureButtons();
-      
+    ConfigureButtons();      
     InitializeLEDControl(0,0,0);    
     InitializeStatusPacketBuffer();     
     ConfigureOpto();
@@ -77,8 +56,10 @@ int main ( void )
              StepPacketManager();
              timerFlag_200ms = 0;  
         }
-        if(timerFlag_1sec){           
-            StepI2C();            
+        if(timerFlag_1sec){         
+#ifdef ENABLEI2C            
+            StepI2C();           
+#endif
             timerFlag_1sec=0;
         }      
         if(analogUpdateFlag){            
@@ -90,7 +71,6 @@ int main ( void )
     }
 
     /* Execution should not come here during normal operation */
-
     return ( EXIT_FAILURE );
 }
 

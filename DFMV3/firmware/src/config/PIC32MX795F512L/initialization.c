@@ -45,7 +45,7 @@
 // *****************************************************************************
 #include "definitions.h"
 #include "device.h"
-
+#include "HardwareProfile.h"
 
 
 // ****************************************************************************
@@ -163,8 +163,9 @@ void SYS_Initialize ( void* data )
 
 
 	GPIO_Initialize();
-
+#ifdef ENABLEI2C
     I2C2_Initialize();
+#endif
 	UART2_Initialize();
 
     TMR2_Initialize();
@@ -172,10 +173,6 @@ void SYS_Initialize ( void* data )
     TMR1_Initialize();
 
     ADC_Initialize();
-
-
-
-
 
     EVIC_Initialize();
 

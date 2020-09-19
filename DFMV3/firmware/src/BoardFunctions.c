@@ -12,9 +12,13 @@ unsigned char GetDFMID(void){
 #endif
     
 #ifdef CVBOARD
-    unsigned int tmp, tmp2;
+    unsigned int tmp,tmp2;
     tmp = GETIDSELECTOR_VALUE();
-    tmp2 = GETID2SELECTOR_VALUE();    
+    tmp2 = GETID2SELECTOR_VALUE(); 
+    // These are needed to account for the pins being pulled up by default.
+    // Otherwise the switches would return 10 when set to zero.
+    if(tmp==10) tmp=0;
+    if(tmp2==10) tmp2=0;    
     return tmp2*10+tmp;
 #endif
     
@@ -23,8 +27,7 @@ unsigned char GetDFMID(void){
 void SetPortsStatus(void){
 #ifdef PLETCHERBOARD
      usingNewPortOnly = !SWITCH_PORT;      
-#endif
-    
+#endif    
 #ifdef CVBOARD
      usingNewPortOnly=1;
 #endif    
@@ -46,9 +49,9 @@ void InitializeBoard(){
     dfmID=GetDFMID(); 
     SetPortsStatus();   
     if(usingNewPortOnly)
-        YELLOWLED_ON();
-    else
         YELLOWLED_OFF();
+    else
+        YELLOWLED_ON();
     RX485_DISABLE_SEND();
 }
 

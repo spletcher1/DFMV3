@@ -1,9 +1,7 @@
 #ifndef __HARDWARE_PROFILE_H
 #define __HARDWARE_PROFILE_H
 
-//#define PLETCHERBOARD 
-//#define CVBOARD 
-
+// define ENABLEI2C
 
 #define HEARTBEAT_LAT  _RE3
 #define HEARTBEAT_TRIS  _TRISE3
