@@ -131,8 +131,7 @@ void UpdateLEDFixedInterval(unsigned char led) {
         if (CurrentValues[led] > LEDThresholdValues[led]) {  // Should be first lick outside T. Turn on light and start both timers.
             SetLEDOn(led);
             LEDDecayCounter[led] = LEDDecayValues[led];
-            LEDDelayCounter[led] = LEDDelayValues[led]; 
-            if(led==0) BLUELED_ON();
+            LEDDelayCounter[led] = LEDDelayValues[led];            
         }
         else {
             LEDDelayCounter[led]=-1; // Here if outside T and no lick...just hang out. Keep LED Off.
@@ -145,8 +144,7 @@ void UpdateLEDFixedInterval(unsigned char led) {
             SetLEDOn(led);
         } 
         else {
-            LEDDecayCounter[led]=-1; // If inside T but outside the decay...stay off
-            if(led==0) BLUELED_OFF();
+            LEDDecayCounter[led]=-1; // If inside T but outside the decay...stay off            
         }
     }
 }

@@ -43,6 +43,7 @@
 #include "device.h"
 #include "plib_evic.h"
 
+
 // *****************************************************************************
 // *****************************************************************************
 // Section: IRQ Implementation
@@ -53,12 +54,14 @@ void EVIC_Initialize( void )
 {
     INTCONSET = _INTCON_MVEC_MASK;
 
-    /* Set up priority / subpriority of enabled interrupts */
+    /* Set up priority and subpriority of enabled interrupts */
     IPC1SET = 0x8 | 0x0;  /* TIMER_1:  Priority 2 / Subpriority 0 */
     IPC2SET = 0x1c | 0x0;  /* TIMER_2:  Priority 7 / Subpriority 0 */
     IPC6SET = 0x10000000 | 0x0;  /* ADC:  Priority 4 / Subpriority 0 */
     IPC8SET = 0x18 | 0x0;  /* UART_2:  Priority 6 / Subpriority 0 */
     IPC8SET = 0xc00 | 0x0;  /* I2C_2:  Priority 3 / Subpriority 0 */
+
+
 }
 
 void EVIC_SourceEnable( INT_SOURCE source )
@@ -107,3 +110,4 @@ void EVIC_SourceStatusClear( INT_SOURCE source )
     *IFSxCLR = 1 << (source & 0x1f);
 }
 
+/* End of file */

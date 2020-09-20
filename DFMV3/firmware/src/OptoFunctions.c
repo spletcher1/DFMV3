@@ -5,28 +5,27 @@
 #define OPTOTOGGLES_PER_SEC        1000
 #define OPTO_TICK               (GetPeripheralClock()/OPTOPRESCALE/OPTOTOGGLES_PER_SEC)
 
-enum OptoTimerState {
-    COL1_OLDPORT_AND_ALL_NEWPORT,
-    COL2_OLDPORT,
-    OFF,
-} currentOptoTimerState;
 
 unsigned char volatile OptoState1;
 unsigned char volatile OptoState2;
 int opto_msOFF;
-int volatile optoOnCounter;
-int volatile optoOffCounter;
+int volatile firstDCCounter;
+int volatile secondDCCounter;
+
 unsigned int volatile pulseWidth_ms;
 unsigned int volatile hertz;
 unsigned char volatile timerFlag_1ms;
 unsigned char volatile timerFlag_200ms;
 unsigned char volatile timer200msCounter;
 
+unsigned int volatile optoPeriodCounter;
+unsigned int volatile optoPeriod;
+
 extern errorFlags_t volatile currentError;
 
 // This parameter (UsingNewPortOnly) will be defined at startup and indicated by an LED, at the same time DFMID is determined.  
 // To change it, the user will need to reset after the change.
-extern unsigned char usingNewPortOnly;
+extern unsigned char usingNewPort;
 
 void ConfigureOptoTimer(void);
 
@@ -90,8 +89,8 @@ void Col2_Opto_On() {
         ROW6ON();
 }
 
-void NewPort_Opto_On() {   
-    LATDSET = ((OptoState2 & 0x3F) << 6)+ (OptoState1 & 0x3F); // The and here is to avoid undefined Optostate bits.    
+void NewPort_Opto_Set() {   
+    LATD = ((OptoState2 & 0x3F) << 6) + (OptoState1 & 0x3F); // The and here is to avoid undefined Optostate bits.    
 }
 
 void inline Opto_Off() {   
@@ -109,24 +108,25 @@ void SetOptoParameters(unsigned int hz, unsigned int pw) {
     if (hertz < 1) {
         hertz = 1;
     }
-    if(usingNewPortOnly){
+    if(usingNewPort){
         if(hertz>500) 
             hertz = 500;
+        if(pw > 1000/hertz)
+            pulseWidth_ms = (1000/hertz)-1;     
+        else 
+            pulseWidth_ms = pw;    
     }
     else { 
         if(hertz>250) 
             hertz=250;
-    }
-    pulseWidth_ms = pw;
-    opto_msOFF = (unsigned int) (1000 / hertz) - (pulseWidth_ms);
-    // If the parameters don't work, then accept the hertz and
-    // adjust the pulse width to 50% duty cycle given that hertz.
-    if (opto_msOFF < 0) {
-        pulseWidth_ms = 1000 / (hertz * 2);
-        opto_msOFF = (unsigned int) (1000 / hertz) - (pulseWidth_ms);
-    }
-    optoOnCounter = optoOffCounter = 0;   
-    currentOptoTimerState = OFF;
+        if(pw > 1000/(hertz*2))
+            pulseWidth_ms = (1000/(hertz*2));     
+        else 
+            pulseWidth_ms = pw;    
+    }        
+    firstDCCounter = 0;
+    secondDCCounter = 0;  
+    optoPeriod = 1000/hertz;
 }
 
 void SetPulseWidth_ms(unsigned int pw) {
@@ -142,63 +142,81 @@ void SetHertz(unsigned int hz) {
     SetOptoParameters(hz, pulseWidth_ms);
 }
 
-void TIMER2_EventHandler(uint32_t status, uintptr_t context) {      
-    if(timerFlag_1ms == 1){
-        YELLOWLED_ON(); 
-        currentError.bits.INTERRUPT=1;        
+// This interrupt is used when the new port is active
+void TIMER2_EventHandlerNewPort(uint32_t status, uintptr_t context) {          
+    // First set flags, checking for errors
+    if(timerFlag_1ms==1){
+        BLUELED_ON();    
+        currentError.bits.INTERRUPT=1;       
     }
-    timer200msCounter++;
-    if(timer200msCounter>=200){       
+    timerFlag_1ms = 1; 
+    
+    if(timer200msCounter++>=200){       
         if(timerFlag_200ms==1){
-            YELLOWLED_ON();    
+            BLUELED_ON();    
             currentError.bits.INTERRUPT=1;       
         }
         timerFlag_200ms=1;
-        timer200msCounter=0;
+        timer200msCounter=0;        
     }
-    timerFlag_1ms = 1;    
-     
-    if (currentOptoTimerState == OFF) {// All lights off
-        optoOffCounter++;
-        if (optoOffCounter >= opto_msOFF) {
-            currentOptoTimerState = COL1_OLDPORT_AND_ALL_NEWPORT;
-            optoOnCounter = 0;
-            if (usingNewPortOnly) {
-                NewPort_Opto_On();
-            } else {
-                Col1_Opto_On();                
-            }
-        }
-    } else if (currentOptoTimerState == COL1_OLDPORT_AND_ALL_NEWPORT) { //Column 1 lights attended to
-        optoOnCounter++;
-        if (optoOnCounter >= pulseWidth_ms) {
-            Opto_Off(); 
-            optoOffCounter=0;
-            if(!usingNewPortOnly) {
-                Col2_Opto_On();
-                currentOptoTimerState = COL2_OLDPORT;
-                optoOnCounter = 0;
-            }
-        }
-    } else if (currentOptoTimerState == COL2_OLDPORT) { //Column 2 lights being attended to
-        optoOnCounter++;
-        optoOffCounter++; // This is here because column 2 is not being flashed during the off time for the new port and column 1.
-        if (optoOnCounter >= pulseWidth_ms) {
-            Opto_Off();       
-            currentOptoTimerState = OFF;
-        }
+    
+    // Not reset period counter if neeeded
+    if(++optoPeriodCounter>=optoPeriod){
+        firstDCCounter=0;
+        optoPeriodCounter=0;        
     }
-   
+    
+    if(firstDCCounter++<pulseWidth_ms)
+        NewPort_Opto_Set();           
 }
+
+// This interrupt is used when the old port is active
+void TIMER2_EventHandlerOldPort(uint32_t status, uintptr_t context) {          
+    // First set flags, checking for errors
+    if(timerFlag_1ms==1){
+        BLUELED_ON();    
+        currentError.bits.INTERRUPT=1;       
+    }
+    timerFlag_1ms = 1; 
+    
+    if(timer200msCounter++>=200){       
+        if(timerFlag_200ms==1){
+            BLUELED_ON();    
+            currentError.bits.INTERRUPT=1;       
+        }
+        timerFlag_200ms=1;
+        timer200msCounter=0;        
+    }
+    
+    // Not reset period counter if neeeded
+    if(++optoPeriodCounter>=optoPeriod){
+        firstDCCounter=0;
+        secondDCCounter=0;
+        optoPeriodCounter=0;        
+    }
+    
+    Opto_Off();    
+    if(firstDCCounter++<pulseWidth_ms)
+        Col1_Opto_On();   
+    else if(secondDCCounter++<pulseWidth_ms)
+        Col2_Opto_On();        
+}
+
+
 void ConfigureOptoTimer(void) {
     // This timer is set to go off every 1ms.    
     //SetHertz(40);
     //SetHertz(100);
     //Set101();
-    SetOptoParameters(40, 8);   
-    currentOptoTimerState = OFF;
+    SetOptoParameters(40, 8);           
     OptoState1=OptoState2=0x00;
+    firstDCCounter = secondDCCounter=0;
     timerFlag_1ms = 0;
-    TMR2_CallbackRegister(TIMER2_EventHandler,(uintptr_t)NULL);
+    optoPeriodCounter=0;
+    timerFlag_200ms=timer200msCounter=0;
+    if(usingNewPort)
+        TMR2_CallbackRegister(TIMER2_EventHandlerNewPort,(uintptr_t)NULL);
+    else
+        TMR2_CallbackRegister(TIMER2_EventHandlerOldPort,(uintptr_t)NULL);
     TMR2_Start();
 }

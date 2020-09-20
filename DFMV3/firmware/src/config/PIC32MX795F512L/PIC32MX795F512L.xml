@@ -230,7 +230,7 @@
         </Hex>
         <Hex dnOrder="30" id="ADC_AD1CSSL">
           <Values dnOrder="0">
-            <Dynamic dnOrder="0" id="adc" value="522272"/>
+            <Dynamic dnOrder="0" id="adc" value="587549"/>
           </Values>
         </Hex>
         <Boolean dnOrder="31" id="ADC_INTERRUPT">
@@ -1509,17 +1509,27 @@
             <Dynamic dnOrder="0" id="i2c2" value="196"/>
           </Values>
         </Integer>
-        <Integer dnOrder="1" id="I2C_CLOCK_FREQ">
+        <Integer dnOrder="1" id="I2CS_RISE_TIME_CORE_TIMER_CNTS">
+          <Values dnOrder="0">
+            <Dynamic dnOrder="0" id="i2c2" value="12"/>
+          </Values>
+        </Integer>
+        <Integer dnOrder="2" id="I2CS_SETUP_TIME_CORE_TIMER_CNTS">
+          <Values dnOrder="0">
+            <Dynamic dnOrder="0" id="i2c2" value="4"/>
+          </Values>
+        </Integer>
+        <Integer dnOrder="3" id="I2C_CLOCK_FREQ">
           <Values dnOrder="0">
             <Dynamic dnOrder="0" id="i2c2" value="40000000"/>
           </Values>
         </Integer>
-        <Long dnOrder="2" id="I2C_CLOCK_SPEED">
+        <Long dnOrder="4" id="I2C_CLOCK_SPEED">
           <Values dnOrder="0">
             <User dnOrder="0" value="100000"/>
           </Values>
         </Long>
-        <Boolean dnOrder="3" id="I2C_INCLUDE_FORCED_WRITE_API">
+        <Boolean dnOrder="5" id="I2C_INCLUDE_FORCED_WRITE_API">
           <Values dnOrder="0">
             <User dnOrder="0" value="true"/>
           </Values>
@@ -1659,7 +1669,8 @@
     </UniqueComponent>
   </Components>
   <UserData>
-    <ComponentGraph dnOrder="0" id="__ROOTVIEW">
+    <GraphSettings canvasHeight="400" canvasWidth="400" dnOrder="0"/>
+    <ComponentGraph dnOrder="1" id="__ROOTVIEW">
       <ElementPositions dnOrder="0">
         <ElementPosition dnOrder="0" id="adc" x="319" y="12"/>
         <ElementPosition dnOrder="1" id="core" x="239" y="15"/>
@@ -1670,6 +1681,5 @@
         <ElementPosition dnOrder="6" id="uart2" x="810" y="320"/>
       </ElementPositions>
     </ComponentGraph>
-    <GraphSettings canvasHeight="400" canvasWidth="400" dnOrder="1"/>
   </UserData>
 </Configuration>

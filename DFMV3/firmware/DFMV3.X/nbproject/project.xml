@@ -17,7 +17,7 @@
             </sourceRootList>
             <confList>
                 <confElem>
-                    <name>CVBoard</name>
+                    <name>PIC32MX795F512L</name>
                     <type>2</type>
                 </confElem>
                 <confElem>

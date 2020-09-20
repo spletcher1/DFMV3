@@ -3,7 +3,7 @@
 unsigned char dfmID;
 unsigned char isInDarkMode;
 unsigned char ledStatusBits;
-unsigned char usingNewPortOnly;
+unsigned char usingNewPort;
 
 
 unsigned char GetDFMID(void){    
@@ -26,10 +26,10 @@ unsigned char GetDFMID(void){
 
 void SetPortsStatus(void){
 #ifdef PLETCHERBOARD
-     usingNewPortOnly = !SWITCH_PORT;      
+     usingNewPort = 0;      
 #endif    
 #ifdef CVBOARD
-     usingNewPortOnly=1;
+     usingNewPort=1;
 #endif    
     
 }
@@ -48,7 +48,7 @@ void InitializeBoard(){
     //DelayMs(1000);
     dfmID=GetDFMID(); 
     SetPortsStatus();   
-    if(usingNewPortOnly)
+    if(usingNewPort)
         YELLOWLED_OFF();
     else
         YELLOWLED_ON();

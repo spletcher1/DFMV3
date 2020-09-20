@@ -32,8 +32,7 @@ void InitializeRun(){
     ConfigureButtons();      
     InitializeLEDControl(0,0,0);    
     InitializeStatusPacketBuffer();     
-    ConfigureOpto();
-    
+    ConfigureOpto();    
 }
 
 
