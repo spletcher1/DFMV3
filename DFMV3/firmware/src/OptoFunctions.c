@@ -219,7 +219,7 @@ void ConfigureOptoTimer(void) {
     //SetHertz(100);
     //Set101();
     SetOptoParameters(40, 8);           
-    OptoState1=OptoState2=0x3F;
+    OptoState1=OptoState2=0x00;
     firstDCCounter = secondDCCounter=0;
     timerFlag_1ms = 0;
     optoPeriodCounter=0;
