@@ -20,10 +20,6 @@
                     <name>PIC32MX795F512L</name>
                     <type>2</type>
                 </confElem>
-                <confElem>
-                    <name>PletcherBoard</name>
-                    <type>2</type>
-                </confElem>
             </confList>
             <formatting>
                 <project-formatting-style>false</project-formatting-style>
