@@ -3,7 +3,7 @@
 
 
 void ConfigureOpto();
-void SetOptoState(unsigned char os1, unsigned char os2);
+void SetOptoState(unsigned int os);
 void SetOptoParameters(unsigned int hz, unsigned int pw);
 void SetPulseWidth_ms(unsigned int pw);
 void SetHertz(unsigned int hz);

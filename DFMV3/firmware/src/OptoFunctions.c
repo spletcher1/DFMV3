@@ -6,9 +6,7 @@
 #define OPTO_TICK               (GetPeripheralClock()/OPTOPRESCALE/OPTOTOGGLES_PER_SEC)
 
 
-unsigned char volatile OptoState1;
-unsigned char volatile OptoState2;
-int opto_msOFF;
+unsigned int volatile OptoState;
 int volatile firstDCCounter;
 int volatile secondDCCounter;
 
@@ -26,7 +24,6 @@ extern errorFlags_t volatile currentError;
 // This parameter (UsingNewPortOnly) will be defined at startup and indicated by an LED, at the same time DFMID is determined.  
 // To change it, the user will need to reset after the change.
 extern unsigned char usingNewPort;
-
 void ConfigureOptoTimer(void);
 
 void ConfigureOpto() {
@@ -53,39 +50,39 @@ void ConfigureOpto() {
     ODCDSET = 0xFFF;
     LATDCLR = 0xFFF;
     */
-    OptoState1 = OptoState2 = 0;    
+    OptoState= 0;    
     ConfigureOptoTimer();
 }
 
 void Col1_Opto_On() {    
     COL1ON();
-    if (OptoState1 & 0x01)
+    if (OptoState & 0x01)
         ROW1ON();
-    if (OptoState1 & 0x02)
+    if (OptoState & 0x04)
         ROW2ON();
-    if (OptoState1 & 0x04)
+    if (OptoState & 0x10)
         ROW3ON();
-    if (OptoState1 & 0x08)
+    if (OptoState & 0x40)
         ROW4ON();
-    if (OptoState1 & 0x10) // need to change this back to 0x40 when new board is implemented.
+    if (OptoState & 0x100) // need to change this back to 0x40 when new board is implemented.
         ROW5ON();
-    if (OptoState1 & 0x20)
+    if (OptoState & 0x400)
         ROW6ON();
 }
 
 void Col2_Opto_On() {    
     COL2ON();
-    if (OptoState2 & 0x01)
+    if (OptoState & 0x02)
         ROW1ON();
-    if (OptoState2 & 0x02)
+    if (OptoState & 0x08)
         ROW2ON();
-    if (OptoState2 & 0x04)
+    if (OptoState & 0x20)
         ROW3ON();
-    if (OptoState2 & 0x08)
+    if (OptoState & 0x80)
         ROW4ON();
-    if (OptoState2 & 0x10) // need to change this back to 0x40 when new board is implemented.
+    if (OptoState & 0x200) // need to change this back to 0x40 when new board is implemented.
         ROW5ON();
-    if (OptoState2 & 0x20)
+    if (OptoState & 0x800)
         ROW6ON();
 }
 
@@ -129,9 +126,8 @@ void SetPulseWidth_ms(unsigned int pw) {
     SetOptoParameters(hertz, pw);
 }
 
-void SetOptoState(unsigned char os1, unsigned char os2) {
-    OptoState1 = os1;
-    OptoState2 = os2;
+void inline SetOptoState(unsigned int os) {
+    OptoState = os;    
 }
 
 void SetHertz(unsigned int hz) {
@@ -163,7 +159,7 @@ void TIMER2_EventHandlerNewPort(uint32_t status, uintptr_t context) {
     }
     
     if(firstDCCounter++<pulseWidth_ms)
-        LATD = ((OptoState2 & 0x3F) << 6) + (OptoState1 & 0x3F); 
+        LATD = OptoState;
     else
         LATDCLR = 0xFFF;
 }
@@ -211,7 +207,7 @@ void TogglePortUse(){
         YELLOWLED_OFF();
         TMR2_CallbackRegister(TIMER2_EventHandlerNewPort,(uintptr_t)NULL);
     }
-    
+    SetOptoParameters(hertz, pulseWidth_ms);    
 }
 void ConfigureOptoTimer(void) {
     // This timer is set to go off every 1ms.    
@@ -219,7 +215,7 @@ void ConfigureOptoTimer(void) {
     //SetHertz(100);
     //Set101();
     SetOptoParameters(40, 8);           
-    OptoState1=OptoState2=0x00;
+    OptoState=0x00;
     firstDCCounter = secondDCCounter=0;
     timerFlag_1ms = 0;
     optoPeriodCounter=0;
