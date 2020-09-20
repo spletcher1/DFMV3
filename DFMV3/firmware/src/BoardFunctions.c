@@ -67,6 +67,10 @@ void SetDarkMode(unsigned char mode){
     }
     else {
         LATECLR =  ledStatusBits;
+        if(usingNewPort)
+            YELLOWLED_OFF();
+        else
+            YELLOWLED_ON();
         isInDarkMode=0;                 
     }
 }
