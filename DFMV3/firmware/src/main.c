@@ -47,7 +47,7 @@ int main ( void )
     {         
         if (timerFlag_1ms) {             
             ProcessButtonStep();
-            StepLEDControl();           
+            //StepLEDControl();           
             StepUART();
             timerFlag_1ms = 0;          
         }

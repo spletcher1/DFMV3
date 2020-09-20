@@ -6,6 +6,7 @@ unsigned char signalButton1Pressed;
 unsigned char signalButton2Pressed;
 
 extern unsigned long volatile halfSecondCounter;
+extern unsigned char usingNewPort;
 
 void ConfigureButtons() {  
     button1Counter = button2Counter = 0;
@@ -43,9 +44,7 @@ void ProcessButtonStep() {
 }
 
 void ProcessButton1Press() {
-    int i;
-    for (i = 0; i < 12; i++);
-        
+    TogglePortUse();
 }
 
 void ProcessButton2Press() {

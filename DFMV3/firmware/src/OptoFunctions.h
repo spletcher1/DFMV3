@@ -7,6 +7,7 @@ void SetOptoState(unsigned char os1, unsigned char os2);
 void SetOptoParameters(unsigned int hz, unsigned int pw);
 void SetPulseWidth_ms(unsigned int pw);
 void SetHertz(unsigned int hz);
+void TogglePortUse(void);
 
 // Definitions for legacy port
 #define COL1ON() LATGSET=0x100

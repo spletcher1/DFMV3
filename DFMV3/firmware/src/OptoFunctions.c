@@ -89,16 +89,12 @@ void Col2_Opto_On() {
         ROW6ON();
 }
 
-void NewPort_Opto_Set() {   
-    LATD = ((OptoState2 & 0x3F) << 6) + (OptoState1 & 0x3F); // The and here is to avoid undefined Optostate bits.    
-}
-
 void inline Opto_Off() {   
     // Legacy port definitions are combined with new port
     // here to avoid the cost of writing to the D port twice.
     LATFCLR = 0x40;
     LATGCLR = 0x1C0;
-    LATDCLR = 0xFFF;
+    LATDCLR = 0x3D0;            
 }
 
 void SetOptoParameters(unsigned int hz, unsigned int pw) {
@@ -167,7 +163,9 @@ void TIMER2_EventHandlerNewPort(uint32_t status, uintptr_t context) {
     }
     
     if(firstDCCounter++<pulseWidth_ms)
-        NewPort_Opto_Set();           
+        LATD = ((OptoState2 & 0x3F) << 6) + (OptoState1 & 0x3F); 
+    else
+        LATDCLR = 0xFFF;
 }
 
 // This interrupt is used when the old port is active
@@ -202,14 +200,26 @@ void TIMER2_EventHandlerOldPort(uint32_t status, uintptr_t context) {
         Col2_Opto_On();        
 }
 
-
+void TogglePortUse(){
+     if(usingNewPort==1){
+        usingNewPort=0;
+        YELLOWLED_ON();
+        TMR2_CallbackRegister(TIMER2_EventHandlerOldPort,(uintptr_t)NULL);
+    }
+    else {
+        usingNewPort=1;
+        YELLOWLED_OFF();
+        TMR2_CallbackRegister(TIMER2_EventHandlerNewPort,(uintptr_t)NULL);
+    }
+    
+}
 void ConfigureOptoTimer(void) {
     // This timer is set to go off every 1ms.    
     //SetHertz(40);
     //SetHertz(100);
     //Set101();
     SetOptoParameters(40, 8);           
-    OptoState1=OptoState2=0x00;
+    OptoState1=OptoState2=0x3F;
     firstDCCounter = secondDCCounter=0;
     timerFlag_1ms = 0;
     optoPeriodCounter=0;
