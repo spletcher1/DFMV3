@@ -152,7 +152,7 @@ void TIMER2_EventHandlerNewPort(uint32_t status, uintptr_t context) {
         timer200msCounter=0;        
     }
     
-    // Not reset period counter if neeeded
+    // Now reset period counter if neeeded
     if(++optoPeriodCounter>=optoPeriod){
         firstDCCounter=0;
         optoPeriodCounter=0;        
@@ -182,7 +182,7 @@ void TIMER2_EventHandlerOldPort(uint32_t status, uintptr_t context) {
         timer200msCounter=0;        
     }
     
-    // Not reset period counter if neeeded
+    // Now reset period counter if neeeded
     if(++optoPeriodCounter>=optoPeriod){
         firstDCCounter=0;
         secondDCCounter=0;
