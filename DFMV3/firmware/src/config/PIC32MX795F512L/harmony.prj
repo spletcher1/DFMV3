@@ -13,8 +13,8 @@
           <Security dnOrder="2">NON_SECURE</Security>
           <LogicalPath dnOrder="3">config/PIC32MX795F512L/</LogicalPath>
           <PhysicalPath dnOrder="4">/</PhysicalPath>
-          <GeneratedChecksum dnOrder="5">3477C6F788508451FADB8F17D7E78273</GeneratedChecksum>
-          <UserChecksum dnOrder="6">3477C6F788508451FADB8F17D7E78273</UserChecksum>
+          <GeneratedChecksum dnOrder="5">C2B88D9215301ECE3DC36E4B82F2791C</GeneratedChecksum>
+          <UserChecksum dnOrder="6">C2B88D9215301ECE3DC36E4B82F2791C</UserChecksum>
         </File>
         <File dnOrder="1">
           <Type dnOrder="0">SOURCE</Type>
@@ -23,7 +23,7 @@
           <LogicalPath dnOrder="3">config/PIC32MX795F512L/</LogicalPath>
           <PhysicalPath dnOrder="4">/</PhysicalPath>
           <GeneratedChecksum dnOrder="5">AA211652CD2CF2FDA09485B2982BF4F6</GeneratedChecksum>
-          <UserChecksum dnOrder="6">AA211652CD2CF2FDA09485B2982BF4F6</UserChecksum>
+          <UserChecksum dnOrder="6">67AE8D3245D58C4E9EDF8476C7C43899</UserChecksum>
         </File>
         <File dnOrder="2">
           <Type dnOrder="0">SOURCE</Type>
@@ -31,8 +31,8 @@
           <Security dnOrder="2">NON_SECURE</Security>
           <LogicalPath dnOrder="3">config/PIC32MX795F512L/</LogicalPath>
           <PhysicalPath dnOrder="4">/</PhysicalPath>
-          <GeneratedChecksum dnOrder="5">CCF73C91A3CE2362C735AC611854D41B</GeneratedChecksum>
-          <UserChecksum dnOrder="6">CCF73C91A3CE2362C735AC611854D41B</UserChecksum>
+          <GeneratedChecksum dnOrder="5">850EC8836617AC81FFBD8A0292673EC7</GeneratedChecksum>
+          <UserChecksum dnOrder="6">850EC8836617AC81FFBD8A0292673EC7</UserChecksum>
         </File>
         <File dnOrder="3">
           <Type dnOrder="0">SOURCE</Type>
@@ -49,7 +49,7 @@
           <Security dnOrder="2">NON_SECURE</Security>
           <LogicalPath dnOrder="3">config/PIC32MX795F512L/peripheral/adc/</LogicalPath>
           <PhysicalPath dnOrder="4">/peripheral/adc/</PhysicalPath>
-          <GeneratedChecksum dnOrder="5">498410055E47817803BD05D09326563F</GeneratedChecksum>
+          <GeneratedChecksum dnOrder="5">B567443BD4B46C19A6252A9B021FFDCB</GeneratedChecksum>
           <UserChecksum dnOrder="6">B16EF5086E0EB66FDE0C507554ED2DAB</UserChecksum>
         </File>
         <File dnOrder="5">
@@ -67,8 +67,8 @@
           <Security dnOrder="2">NON_SECURE</Security>
           <LogicalPath dnOrder="3">config/PIC32MX795F512L/peripheral/evic/</LogicalPath>
           <PhysicalPath dnOrder="4">/peripheral/evic/</PhysicalPath>
-          <GeneratedChecksum dnOrder="5">46D70143A15C2E3FBEDED7E57135DBA6</GeneratedChecksum>
-          <UserChecksum dnOrder="6">46D70143A15C2E3FBEDED7E57135DBA6</UserChecksum>
+          <GeneratedChecksum dnOrder="5">79C8618CF4A853B95A01E038DCD99801</GeneratedChecksum>
+          <UserChecksum dnOrder="6">79C8618CF4A853B95A01E038DCD99801</UserChecksum>
         </File>
         <File dnOrder="7">
           <Type dnOrder="0">SOURCE</Type>
@@ -77,16 +77,16 @@
           <LogicalPath dnOrder="3">config/PIC32MX795F512L/peripheral/gpio/</LogicalPath>
           <PhysicalPath dnOrder="4">/peripheral/gpio/</PhysicalPath>
           <GeneratedChecksum dnOrder="5">7CA027D423A7E49B06B116C350005FA1</GeneratedChecksum>
-          <UserChecksum dnOrder="6">7E1E443ECC3C9808B409EAED76B746D1</UserChecksum>
+          <UserChecksum dnOrder="6">7CA027D423A7E49B06B116C350005FA1</UserChecksum>
         </File>
         <File dnOrder="8">
           <Type dnOrder="0">SOURCE</Type>
-          <Name dnOrder="1">plib_i2c2.c</Name>
+          <Name dnOrder="1">plib_i2c2_master.c</Name>
           <Security dnOrder="2">NON_SECURE</Security>
-          <LogicalPath dnOrder="3">config/PIC32MX795F512L/peripheral/i2c/</LogicalPath>
-          <PhysicalPath dnOrder="4">/peripheral/i2c/</PhysicalPath>
-          <GeneratedChecksum dnOrder="5">4D42D7EE54446691AD7625C5C35D4601</GeneratedChecksum>
-          <UserChecksum dnOrder="6">4D42D7EE54446691AD7625C5C35D4601</UserChecksum>
+          <LogicalPath dnOrder="3">config/PIC32MX795F512L/peripheral/i2c/master</LogicalPath>
+          <PhysicalPath dnOrder="4">/peripheral/i2c/master/</PhysicalPath>
+          <GeneratedChecksum dnOrder="5">D5EBECC7B88C2322097297F636F85746</GeneratedChecksum>
+          <UserChecksum dnOrder="6">D5EBECC7B88C2322097297F636F85746</UserChecksum>
         </File>
         <File dnOrder="9">
           <Type dnOrder="0">SOURCE</Type>
@@ -112,8 +112,8 @@
           <Security dnOrder="2">NON_SECURE</Security>
           <LogicalPath dnOrder="3">config/PIC32MX795F512L/peripheral/uart/</LogicalPath>
           <PhysicalPath dnOrder="4">/peripheral/uart/</PhysicalPath>
-          <GeneratedChecksum dnOrder="5">4CDFD2602AEE93847FB1B0827DEB71D9</GeneratedChecksum>
-          <UserChecksum dnOrder="6">4CDFD2602AEE93847FB1B0827DEB71D9</UserChecksum>
+          <GeneratedChecksum dnOrder="5">34B21F7FC4ED8582F6BDE8B7E913D8BA</GeneratedChecksum>
+          <UserChecksum dnOrder="6">2537E1F0A3998E80A88CF3A1F6BD1F57</UserChecksum>
         </File>
         <File dnOrder="12">
           <Type dnOrder="0">SOURCE</Type>
@@ -121,8 +121,8 @@
           <Security dnOrder="2">NON_SECURE</Security>
           <LogicalPath dnOrder="3">config/PIC32MX795F512L/stdio/</LogicalPath>
           <PhysicalPath dnOrder="4">/stdio/</PhysicalPath>
-          <GeneratedChecksum dnOrder="5">A9F55E7CB78F22D9000CA03DC635973C</GeneratedChecksum>
-          <UserChecksum dnOrder="6">A9F55E7CB78F22D9000CA03DC635973C</UserChecksum>
+          <GeneratedChecksum dnOrder="5">16BE5CCEE5F9AF5909BF3F69B51C7D93</GeneratedChecksum>
+          <UserChecksum dnOrder="6">16BE5CCEE5F9AF5909BF3F69B51C7D93</UserChecksum>
         </File>
         <File dnOrder="13">
           <Type dnOrder="0">HEADER</Type>
@@ -130,15 +130,15 @@
           <Security dnOrder="2">NON_SECURE</Security>
           <LogicalPath dnOrder="3">config/PIC32MX795F512L/</LogicalPath>
           <PhysicalPath dnOrder="4">/</PhysicalPath>
-          <GeneratedChecksum dnOrder="5">8A29BC7A6F0736D29B00516BE7377708</GeneratedChecksum>
-          <UserChecksum dnOrder="6">8A29BC7A6F0736D29B00516BE7377708</UserChecksum>
+          <GeneratedChecksum dnOrder="5">E35D5C7A41F3D374A8CD180165120A3C</GeneratedChecksum>
+          <UserChecksum dnOrder="6">E35D5C7A41F3D374A8CD180165120A3C</UserChecksum>
         </File>
         <File dnOrder="14">
           <Type dnOrder="0">HEADER</Type>
           <Name dnOrder="1">device.h</Name>
           <Security dnOrder="2">NON_SECURE</Security>
-          <LogicalPath dnOrder="3">packs/PIC32MX795F512L_DFP/</LogicalPath>
-          <PhysicalPath dnOrder="4">/../../packs/PIC32MX795F512L_DFP/</PhysicalPath>
+          <LogicalPath dnOrder="3">config/PIC32MX795F512L/</LogicalPath>
+          <PhysicalPath dnOrder="4">/</PhysicalPath>
           <GeneratedChecksum dnOrder="5">5D5C52527AB1435153DB9B50ADE6B79D</GeneratedChecksum>
           <UserChecksum dnOrder="6">5D5C52527AB1435153DB9B50ADE6B79D</UserChecksum>
         </File>
@@ -148,8 +148,8 @@
           <Security dnOrder="2">NON_SECURE</Security>
           <LogicalPath dnOrder="3">config/PIC32MX795F512L/peripheral/adc/</LogicalPath>
           <PhysicalPath dnOrder="4">/peripheral/adc/</PhysicalPath>
-          <GeneratedChecksum dnOrder="5">B4C512EECC540EB89169F9BE2BE56E21</GeneratedChecksum>
-          <UserChecksum dnOrder="6">B4C512EECC540EB89169F9BE2BE56E21</UserChecksum>
+          <GeneratedChecksum dnOrder="5">E8917BB734DC71DCEBD331F58F060D11</GeneratedChecksum>
+          <UserChecksum dnOrder="6">E8917BB734DC71DCEBD331F58F060D11</UserChecksum>
         </File>
         <File dnOrder="16">
           <Type dnOrder="0">HEADER</Type>
@@ -175,26 +175,26 @@
           <Security dnOrder="2">NON_SECURE</Security>
           <LogicalPath dnOrder="3">config/PIC32MX795F512L/peripheral/gpio/</LogicalPath>
           <PhysicalPath dnOrder="4">/peripheral/gpio/</PhysicalPath>
-          <GeneratedChecksum dnOrder="5">40696F127C7862A4B13FDB59E4BF1999</GeneratedChecksum>
-          <UserChecksum dnOrder="6">40696F127C7862A4B13FDB59E4BF1999</UserChecksum>
+          <GeneratedChecksum dnOrder="5">5530268A90550F6317461D486FDAE73F</GeneratedChecksum>
+          <UserChecksum dnOrder="6">5530268A90550F6317461D486FDAE73F</UserChecksum>
         </File>
         <File dnOrder="19">
           <Type dnOrder="0">HEADER</Type>
-          <Name dnOrder="1">plib_i2c2.h</Name>
+          <Name dnOrder="1">plib_i2c2_master.h</Name>
           <Security dnOrder="2">NON_SECURE</Security>
-          <LogicalPath dnOrder="3">config/PIC32MX795F512L/peripheral/i2c/</LogicalPath>
-          <PhysicalPath dnOrder="4">/peripheral/i2c/</PhysicalPath>
-          <GeneratedChecksum dnOrder="5">4C0CE17BA0ADEDCDF7967B4C9C4A7A58</GeneratedChecksum>
-          <UserChecksum dnOrder="6">4C0CE17BA0ADEDCDF7967B4C9C4A7A58</UserChecksum>
+          <LogicalPath dnOrder="3">config/PIC32MX795F512L/peripheral/i2c/master</LogicalPath>
+          <PhysicalPath dnOrder="4">/peripheral/i2c/master/</PhysicalPath>
+          <GeneratedChecksum dnOrder="5">E845D309D2BB0E88D676F1C5587D3A73</GeneratedChecksum>
+          <UserChecksum dnOrder="6">E845D309D2BB0E88D676F1C5587D3A73</UserChecksum>
         </File>
         <File dnOrder="20">
           <Type dnOrder="0">HEADER</Type>
-          <Name dnOrder="1">plib_i2c_master.h</Name>
+          <Name dnOrder="1">plib_i2c_master_common.h</Name>
           <Security dnOrder="2">NON_SECURE</Security>
-          <LogicalPath dnOrder="3">config/PIC32MX795F512L/peripheral/i2c/</LogicalPath>
-          <PhysicalPath dnOrder="4">/peripheral/i2c/</PhysicalPath>
-          <GeneratedChecksum dnOrder="5">0CE7018D4B951DF14C45D3AC2E8F9B19</GeneratedChecksum>
-          <UserChecksum dnOrder="6">0CE7018D4B951DF14C45D3AC2E8F9B19</UserChecksum>
+          <LogicalPath dnOrder="3">config/PIC32MX795F512L/peripheral/i2c/master</LogicalPath>
+          <PhysicalPath dnOrder="4">/peripheral/i2c/master/</PhysicalPath>
+          <GeneratedChecksum dnOrder="5">B963C6FE44292A1C4A14C3BA5BE95AEE</GeneratedChecksum>
+          <UserChecksum dnOrder="6">B963C6FE44292A1C4A14C3BA5BE95AEE</UserChecksum>
         </File>
         <File dnOrder="21">
           <Type dnOrder="0">HEADER</Type>
@@ -238,8 +238,8 @@
           <Security dnOrder="2">NON_SECURE</Security>
           <LogicalPath dnOrder="3">config/PIC32MX795F512L/peripheral/uart/</LogicalPath>
           <PhysicalPath dnOrder="4">/peripheral/uart/</PhysicalPath>
-          <GeneratedChecksum dnOrder="5">1F66618C900E627B628D706B78FCCDF3</GeneratedChecksum>
-          <UserChecksum dnOrder="6">1F66618C900E627B628D706B78FCCDF3</UserChecksum>
+          <GeneratedChecksum dnOrder="5">53452ED8A95496907DF58F215C01E9C2</GeneratedChecksum>
+          <UserChecksum dnOrder="6">53452ED8A95496907DF58F215C01E9C2</UserChecksum>
         </File>
         <File dnOrder="26">
           <Type dnOrder="0">HEADER</Type>
@@ -256,20 +256,32 @@
           <Security dnOrder="2">NON_SECURE</Security>
           <LogicalPath dnOrder="3">config/PIC32MX795F512L/</LogicalPath>
           <PhysicalPath dnOrder="4">/</PhysicalPath>
-          <GeneratedChecksum dnOrder="5">9A7344615980CB9443B6436E41E2155A</GeneratedChecksum>
-          <UserChecksum dnOrder="6">9A7344615980CB9443B6436E41E2155A</UserChecksum>
+          <GeneratedChecksum dnOrder="5">2C8543317B3F067432097AB9BD3E8672</GeneratedChecksum>
+          <UserChecksum dnOrder="6">2C8543317B3F067432097AB9BD3E8672</UserChecksum>
+        </File>
+        <File dnOrder="28">
+          <Type dnOrder="0">LINKER</Type>
+          <Name dnOrder="1">p32MX795F512L.ld</Name>
+          <Security dnOrder="2">NON_SECURE</Security>
+          <LogicalPath dnOrder="3">config/PIC32MX795F512L/</LogicalPath>
+          <PhysicalPath dnOrder="4">/</PhysicalPath>
+          <GeneratedChecksum dnOrder="5">728A8885FAEA561A5BFCFC61F1F19DB0</GeneratedChecksum>
+          <UserChecksum dnOrder="6">728A8885FAEA561A5BFCFC61F1F19DB0</UserChecksum>
         </File>
       </Files>
       <Settings dnOrder="1">
         <Setting append="true" category="C32" delimiter=";" dnOrder="0" key="extra-include-directories" security="NON_SECURE" value="../src;../src/config/PIC32MX795F512L;../src/packs/PIC32MX795F512L_DFP;"/>
-        <Setting category="C32-LD" dnOrder="1" key="heap-size" security="NON_SECURE" value="512"/>
-        <Setting category="C32-LD" dnOrder="2" key="no-device-startup-code" security="NON_SECURE" value="true"/>
-        <Setting append="true" category="C32-LD" delimiter=";" dnOrder="3" key="preprocessor-macros" security="NON_SECURE" value=""/>
+        <Setting category="C32" dnOrder="1" key="generate-16-bit-code" security="NON_SECURE" value="false"/>
+        <Setting category="C32-LD" dnOrder="2" key="heap-size" security="NON_SECURE" value="512"/>
+        <Setting category="C32-LD" dnOrder="3" key="no-device-startup-code" security="NON_SECURE" value="true"/>
+        <Setting append="true" category="C32-LD" delimiter=";=" dnOrder="4" key="preprocessor-macros" security="NON_SECURE" value=""/>
+        <Setting append="true" category="C32CPP" delimiter=";" dnOrder="5" key="extra-include-directories" security="NON_SECURE" value="../src;../src/config/PIC32MX795F512L;../src/packs/PIC32MX795F512L_DFP;"/>
+        <Setting category="C32CPP" dnOrder="6" key="generate-16-bit-code" security="NON_SECURE" value="false"/>
       </Settings>
     </Manifest>
     <Settings dnOrder="5">
-      <Setting dnOrder="0" key="CMSISPath" value=".\dev_packs\arm\CMSIS\5.6.0"/>
-      <Setting dnOrder="1" key="DFPPath" value=".\dev_packs\Microchip\PIC32MX_DFP\1.3.231\atdf\PIC32MX795F512L.atdf"/>
+      <Setting dnOrder="0" key="CMSISPath" value=".\dev_packs\arm\CMSIS\5.7.0"/>
+      <Setting dnOrder="1" key="DFPPath" value=".\dev_packs\Microchip\PIC32MX_DFP\1.4.241\atdf\PIC32MX795F512L.atdf"/>
       <Setting dnOrder="2" key="FORCE_OPTIMIZATION" value="false"/>
       <Setting dnOrder="3" key="GENERATE_BACKUP" value="true"/>
       <Setting dnOrder="4" key="MERGE_STRATEGY" value="USER_ALL"/>

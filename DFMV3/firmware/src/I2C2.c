@@ -5,7 +5,7 @@ enum I2CState currentState_I2C;
 unsigned char i2cData[10];        
 int idleCounter;
 unsigned char isSi7021Configured = 0;
-unsigned char isTSL2591Configured;
+unsigned char isTSL2591Configured=0;
 
 extern int TSL2591_LUX;
 extern int tmpLUX;
@@ -87,14 +87,22 @@ void ConfigureI2C2(void) {
     I2C2_CallbackRegister(I2C2_Callback,(uintptr_t)NULL);   
     idleCounter=0;
     currentState_I2C=Idle;    
+#ifdef PLETCHERBOARD
     if((isTSL2591Configured=ConfigureTSL2591())==0){
         currentError.bits.TSL2591=1;      
     }
-    DelayMs(100);
+    DelayMs(300);
     if((isSi7021Configured=ConfigureSi7021())==0){
         currentError.bits.Si7021=1;        
     }
-    
+    DelayMs(300);
+#endif
+#ifdef CVBOARD
+    isTSL2591Configured=ConfigureTSL2591();        
+    DelayMs(300);
+    isSi7021Configured=ConfigureSi7021();        
+    DelayMs(300);
+#endif
 }
 
 

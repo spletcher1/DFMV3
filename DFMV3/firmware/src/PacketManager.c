@@ -13,8 +13,7 @@ extern errorFlags_t volatile currentError;
 
 extern unsigned char dfmID;
 extern unsigned char isInDarkMode;
-extern unsigned char volatile OptoState1;
-extern unsigned char volatile OptoState2;
+extern unsigned int volatile OptoState;
 extern unsigned int volatile pulseWidth_ms;
 extern unsigned int volatile hertz;
 
@@ -141,8 +140,8 @@ void AddCurrentStatus() {
     statusBuffer[head].ID=dfmID;     
     statusBuffer[head].ErrorFlag = currentError.byte;    
     FillCurrentStatus(&statusBuffer[head]);
-    statusBuffer[head].Optostate1 = OptoState1;
-    statusBuffer[head].Optostate2 = OptoState2;
+    statusBuffer[head].Optostate2 = OptoState & 0xFF;
+    statusBuffer[head].Optostate1 = (OptoState >> 8) & 0xFF;
     statusBuffer[head].OptoFreq1 = hertz >> 8;
     statusBuffer[head].OptoFreq2 = hertz & 0xFF; 
     statusBuffer[head].OptoPW1 = pulseWidth_ms >> 8;

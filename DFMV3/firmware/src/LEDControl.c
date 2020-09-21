@@ -131,8 +131,7 @@ void UpdateLEDFixedInterval(unsigned char led) {
         if (CurrentValues[led] > LEDThresholdValues[led]) {  // Should be first lick outside T. Turn on light and start both timers.
             SetLEDOn(led);
             LEDDecayCounter[led] = LEDDecayValues[led];
-            LEDDelayCounter[led] = LEDDelayValues[led]; 
-            if(led==0) BLUELED_ON();
+            LEDDelayCounter[led] = LEDDelayValues[led];            
         }
         else {
             LEDDelayCounter[led]=-1; // Here if outside T and no lick...just hang out. Keep LED Off.
@@ -145,8 +144,7 @@ void UpdateLEDFixedInterval(unsigned char led) {
             SetLEDOn(led);
         } 
         else {
-            LEDDecayCounter[led]=-1; // If inside T but outside the decay...stay off
-            if(led==0) BLUELED_OFF();
+            LEDDecayCounter[led]=-1; // If inside T but outside the decay...stay off            
         }
     }
 }
@@ -276,39 +274,6 @@ void SetMaxTimeOn(unsigned int maxTime){
     SetLEDParams(currentDecay,currentDelay,maxTime);
 }
 
-
-void SetCurrentOptoState() {
-    int OptoState1, OptoState2;
-    OptoState1 = OptoState2 = 0;
-    if (IsLEDOn.bits.LED1)
-        OptoState1 = 0x01;
-    if (IsLEDOn.bits.LED2)
-        OptoState2 = 0x01;
-    if (IsLEDOn.bits.LED3)
-        OptoState1 |= 0x02;
-    if (IsLEDOn.bits.LED4)
-        OptoState2 |= 0x02;
-    if (IsLEDOn.bits.LED5)
-        OptoState1 |= 0x04;
-    if (IsLEDOn.bits.LED6)
-        OptoState2 |= 0x04;
-    if (IsLEDOn.bits.LED7)
-        OptoState1 |= 0x08;
-    if (IsLEDOn.bits.LED8)
-        OptoState2 |= 0x08;
-    if (IsLEDOn.bits.LED9)
-        OptoState1 |= 0x10;
-    if (IsLEDOn.bits.LED10)
-        OptoState2 |= 0x10;
-    if (IsLEDOn.bits.LED11)
-        OptoState1 |= 0x20;
-    if (IsLEDOn.bits.LED12)
-        OptoState2 |= 0x20;
-    SetOptoState(OptoState1, OptoState2);
-}
-
-
-
 void StepLEDControl() {
     unsigned char i;
     // We now start by assuming everyone is off.
@@ -316,6 +281,6 @@ void StepLEDControl() {
     for (i = 0; i < 12; i++){               
         // LED Update only sets those as on.
         LEDUpdateFunction(i);        
-    }
-    SetCurrentOptoState();
+    }    
+    SetOptoState(IsLEDOn.ledField);
 }

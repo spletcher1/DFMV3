@@ -15,6 +15,7 @@ extern "C" {
 void InitializeBoard();
 void SetDarkMode(unsigned char mode);
 unsigned char GetUsingNewPortOnly();
+void ToggleDarkMode(void);
 
 
 #ifdef	__cplusplus
