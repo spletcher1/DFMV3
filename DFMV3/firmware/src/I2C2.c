@@ -5,7 +5,7 @@ enum I2CState currentState_I2C;
 unsigned char i2cData[10];        
 int idleCounter;
 unsigned char isSi7021Configured = 0;
-unsigned char isTSL2591Configured;
+unsigned char isTSL2591Configured=0;
 
 extern int TSL2591_LUX;
 extern int tmpLUX;
@@ -84,7 +84,6 @@ void I2C2_Callback(uint32_t status){
 void ConfigureI2C2(void) {
     // Note: As of now, the baud rate set for the parallax RFID reader is 2400.
     // Data bits = 8; no parity; stop bits = 1;
-#ifdef ENABLEI2C
     I2C2_CallbackRegister(I2C2_Callback,(uintptr_t)NULL);   
     idleCounter=0;
     currentState_I2C=Idle;    
@@ -103,9 +102,6 @@ void ConfigureI2C2(void) {
     DelayMs(300);
     isSi7021Configured=ConfigureSi7021();        
     DelayMs(300);
-#endif
-#else
-    isTSL2591Configured=isSi7021Configured=0;
 #endif
 }
 

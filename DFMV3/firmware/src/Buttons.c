@@ -48,7 +48,5 @@ void ProcessButton1Press() {
 }
 
 void ProcessButton2Press() {
-    int i;
-    for (i = 0; i < 12; i++);
-        
+    ToggleDarkMode();        
 }

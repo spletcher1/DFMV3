@@ -20,7 +20,7 @@ unsigned int volatile optoPeriodCounter;
 unsigned int volatile optoPeriod;
 
 extern errorFlags_t volatile currentError;
-
+extern unsigned char isInDarkMode;
 // This parameter (UsingNewPortOnly) will be defined at startup and indicated by an LED, at the same time DFMID is determined.  
 // To change it, the user will need to reset after the change.
 extern unsigned char usingNewPort;
@@ -137,15 +137,13 @@ void SetHertz(unsigned int hz) {
 // This interrupt is used when the new port is active
 void TIMER2_EventHandlerNewPort(uint32_t status, uintptr_t context) {          
     // First set flags, checking for errors
-    if(timerFlag_1ms==1){
-        BLUELED_ON();    
+    if(timerFlag_1ms==1){        
         currentError.bits.INTERRUPT=1;       
     }
     timerFlag_1ms = 1; 
     
     if(timer200msCounter++>=200){       
-        if(timerFlag_200ms==1){
-            BLUELED_ON();    
+        if(timerFlag_200ms==1){            
             currentError.bits.INTERRUPT=1;       
         }
         timerFlag_200ms=1;
@@ -167,15 +165,13 @@ void TIMER2_EventHandlerNewPort(uint32_t status, uintptr_t context) {
 // This interrupt is used when the old port is active
 void TIMER2_EventHandlerOldPort(uint32_t status, uintptr_t context) {          
     // First set flags, checking for errors
-    if(timerFlag_1ms==1){
-        BLUELED_ON();    
+    if(timerFlag_1ms==1){        
         currentError.bits.INTERRUPT=1;       
     }
     timerFlag_1ms = 1; 
     
     if(timer200msCounter++>=200){       
-        if(timerFlag_200ms==1){
-            BLUELED_ON();    
+        if(timerFlag_200ms==1){                
             currentError.bits.INTERRUPT=1;       
         }
         timerFlag_200ms=1;
@@ -199,7 +195,8 @@ void TIMER2_EventHandlerOldPort(uint32_t status, uintptr_t context) {
 void TogglePortUse(){
      if(usingNewPort==1){
         usingNewPort=0;
-        YELLOWLED_ON();
+        if(isInDarkMode==0)
+            YELLOWLED_ON();
         TMR2_CallbackRegister(TIMER2_EventHandlerOldPort,(uintptr_t)NULL);
     }
     else {

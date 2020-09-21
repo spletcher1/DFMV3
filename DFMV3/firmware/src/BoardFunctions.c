@@ -74,3 +74,10 @@ void SetDarkMode(unsigned char mode){
         isInDarkMode=0;                 
     }
 }
+
+void ToggleDarkMode(){
+    if(isInDarkMode)
+        SetDarkMode(0);
+    else
+        SetDarkMode(1);
+}

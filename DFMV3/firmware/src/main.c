@@ -28,7 +28,9 @@ void InitializeRun(){
     ConfigureUpdateTimer();
     ConfigureAnalogInputs();
     ConfigureUART2();        
+#ifdef ENABLEI2C
     ConfigureI2C2();
+#endif
     ConfigureButtons();      
     InitializeLEDControl(0,0,0);    
     InitializeStatusPacketBuffer();     
