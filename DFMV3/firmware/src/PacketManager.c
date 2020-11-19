@@ -183,7 +183,7 @@ void AddCurrentStatus() {
     // Do not clear I2C or TSL or Si bits because
     // if they fail once we want to avoid them
     // so they don't mess everything up.
-    currentError.byte = currentError.byte & 0x19;      
+    currentError.byte = currentError.byte & 0x19;       
 }
 
 // This function is meant to be called every 100ms

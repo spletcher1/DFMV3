@@ -141,8 +141,8 @@ void TIMER2_EventHandlerNewPort(uint32_t status, uintptr_t context) {
         currentError.bits.INTERRUPT=1;       
     }
     timerFlag_1ms = 1; 
-    
-    if(timer200msCounter++>=200){       
+    // I set this at 199 to see if it gets closer to saving a packet every 200ms in real time.
+    if(timer200msCounter++>=199){       
         if(timerFlag_200ms==1){            
             currentError.bits.INTERRUPT=1;       
         }
@@ -168,9 +168,8 @@ void TIMER2_EventHandlerOldPort(uint32_t status, uintptr_t context) {
     if(timerFlag_1ms==1){        
         currentError.bits.INTERRUPT=1;       
     }
-    timerFlag_1ms = 1; 
-    
-    if(timer200msCounter++>=200){       
+    timerFlag_1ms = 1;     
+    if(timer200msCounter++>=199){       
         if(timerFlag_200ms==1){                
             currentError.bits.INTERRUPT=1;       
         }
@@ -183,8 +182,7 @@ void TIMER2_EventHandlerOldPort(uint32_t status, uintptr_t context) {
         firstDCCounter=0;
         secondDCCounter=0;
         optoPeriodCounter=0;        
-    }
-    
+    }    
     Opto_Off();    
     if(firstDCCounter++<pulseWidth_ms)
         Col1_Opto_On();   

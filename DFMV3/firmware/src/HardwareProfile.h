@@ -2,7 +2,7 @@
 #define __HARDWARE_PROFILE_H
 
 // define ENABLEI2C
-// define PLETCHERBOARD
+//#define PLETCHERBOARD
 #define CVBOARD
 
 #define HEARTBEAT_LAT  _RE3

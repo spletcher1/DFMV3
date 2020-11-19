@@ -58,7 +58,7 @@ void UART2_ErrorClear( void );
 
 void UART2_ReadCallback(uint32_t status){
     unsigned char data;
-    UART_ERROR tmp=UART2_ErrorGet();    
+    UART_ERROR tmp=UART2_ErrorGet();        
     if(tmp != UART_ERROR_NONE)
     {       
         if(tmp & UART_ERROR_OVERRUN)
@@ -138,7 +138,7 @@ void ConfigureUART2(void) {
     waitingCounter=0;    
   
     // Start Listening
-    UART2_Read(readBuffer,1);
+    UART2_Read(readBuffer,1);   
        
 }
 
