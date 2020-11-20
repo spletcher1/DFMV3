@@ -53,6 +53,17 @@ void InitializeBoard(){
     else
         YELLOWLED_ON();
     RX485_DISABLE_SEND();
+    
+    /* LED TESTING
+    YELLOWLED_ON();
+    Nop();Nop();Nop();
+    BLUELED_ON();
+    Nop();Nop();Nop();
+    GREENLED_ON();
+    Nop();Nop();Nop();
+    REDLED_OFF();
+    while(1);
+    */
 }
 
 
