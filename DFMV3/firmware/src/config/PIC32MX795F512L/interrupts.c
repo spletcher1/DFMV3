@@ -63,6 +63,7 @@ void TIMER_2_InterruptHandler( void );
 void ADC_InterruptHandler( void );
 void UART_2_InterruptHandler( void );
 void I2C_2_InterruptHandler( void );
+void DMA_0_InterruptHandler( void );
 
 
 
@@ -90,6 +91,11 @@ void __ISR(_UART_2_VECTOR, ipl6SOFT) UART_2_Handler (void)
 void __ISR(_I2C_2_VECTOR, ipl3SOFT) I2C_2_Handler (void)
 {
     I2C_2_InterruptHandler();
+}
+
+void __ISR(_DMA_0_VECTOR, ipl1SOFT) DMA_0_Handler (void)
+{
+    DMA_0_InterruptHandler();
 }
 
 

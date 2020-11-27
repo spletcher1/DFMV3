@@ -60,6 +60,7 @@ void EVIC_Initialize( void )
     IPC6SET = 0x10000000 | 0x0;  /* ADC:  Priority 4 / Subpriority 0 */
     IPC8SET = 0x18 | 0x0;  /* UART_2:  Priority 6 / Subpriority 0 */
     IPC8SET = 0xc00 | 0x0;  /* I2C_2:  Priority 3 / Subpriority 0 */
+    IPC9SET = 0x4 | 0x0;  /* DMA_0:  Priority 1 / Subpriority 0 */
 
 
 }

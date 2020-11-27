@@ -123,14 +123,26 @@ void UART2_WriteCallback(uint32_t status){
     waitingToDisable=2;    
 }
 
+static void UARTDmaChannelHandler(DMAC_TRANSFER_EVENT event, uintptr_t contextHandle)
+{
+    if (event == DMAC_TRANSFER_EVENT_COMPLETE)
+    {
+         waitingToDisable=2;    
+    }
+}
+
+void SendCOBSDMA(void){
+    DMAC_ChannelTransfer(DMAC_CHANNEL_0, (const void *)cobsBuffer, cobsBufferLength, 
+                (const void *)&U2TXREG, 1, 1);
+}
 
 void ConfigureUART2(void) {
     // Note: As of now, the baud rate set for the parallax RFID reader is 2400.
     // Data bits = 8; no parity; stop bits = 1;
 
     UART2_ReadCallbackRegister(UART2_ReadCallback,(uintptr_t)NULL);
-    UART2_WriteCallbackRegister(UART2_WriteCallback,(uintptr_t)NULL);   
-   
+    //UART2_WriteCallbackRegister(UART2_WriteCallback,(uintptr_t)NULL);   
+    DMAC_ChannelCallbackRegister(DMAC_CHANNEL_0, UARTDmaChannelHandler, 0);
     packetIndex=0;
     currentPacketState = None;
     currentUARTState = UARTIdle;
@@ -429,7 +441,8 @@ void StepUART(){
     }
     if(waitingAfterEnable>=0){
         if(waitingAfterEnable--<=0) {            
-            UART2_Write(cobsBuffer,cobsBufferLength);
+            SendCOBSDMA();
+            //UART2_Write(cobsBuffer,cobsBufferLength);
             waitingAfterEnable=-1;
         }
     }
