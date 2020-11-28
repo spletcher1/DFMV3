@@ -199,7 +199,6 @@ void LatestStatusPacketToUART2(){
     if(cobsBufferLength<=0) return;
     cobsBuffer[cobsBufferLength++]=0x00;    
     WriteCOBSBuffer();
-    
 }
 
 void CurrentStatusPacketSetToUART2(){
