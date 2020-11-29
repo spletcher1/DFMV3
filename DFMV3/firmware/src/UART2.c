@@ -15,7 +15,11 @@
 unsigned char cobsInstructionBuffer[PACKETBUFFERSIZE];
 unsigned int cobsInstructionBufferLength;
 
-unsigned char cobsBuffer[COBSBUFFERSIZE];
+//unsigned char cobsBuffer[COBSBUFFERSIZE];
+// Adjust for DMA coherent memory as per : https://www.aidanmocke.com/blog/2019/01/08/DMA-Intro/
+// Although this may only be required for PIC32MZ devices with an L1 Cache.
+unsigned char __attribute__ ((coherent, aligned(8))) cobsBuffer[COBSBUFFERSIZE];
+
 unsigned char readBuffer[10];
 unsigned char preCodedBuffer[COBSBUFFERSIZE];
 unsigned int cobsBufferLength;
