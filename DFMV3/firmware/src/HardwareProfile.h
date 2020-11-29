@@ -1,7 +1,6 @@
 #ifndef __HARDWARE_PROFILE_H
 #define __HARDWARE_PROFILE_H
 
-// define ENABLEI2C
 //#define PLETCHERBOARD
 #define CVBOARD
 

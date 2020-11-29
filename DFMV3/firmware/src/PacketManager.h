@@ -61,16 +61,6 @@ struct StatusPacket {
   unsigned char OptoPW1;
   unsigned char OptoPW2;
   unsigned char DarkMode;
-  unsigned char Temperature1;
-  unsigned char Temperature2;
-  unsigned char Temperature3;
-  unsigned char Temperature4;
-  unsigned char Humidity1;
-  unsigned char Humidity2;
-  unsigned char Humidity3;
-  unsigned char Humidity4;
-  unsigned char LightHigh;
-  unsigned char LightLow;
   unsigned char Index1;
   unsigned char Index2;
   unsigned char Index3;
@@ -88,7 +78,7 @@ void inline ResetTail(void);
 void inline SetTailPlaceHolder(void);
 struct StatusPacket *GetLastestStatus();    
 
-#define STATUSPACKETSIZE 66
+#define STATUSPACKETSIZE 56
 
 
 #ifdef	__cplusplus

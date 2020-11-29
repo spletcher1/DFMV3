@@ -17,10 +17,6 @@ extern unsigned int volatile OptoState;
 extern unsigned int volatile pulseWidth_ms;
 extern unsigned int volatile hertz;
 
-extern unsigned int TSL2591_LUX;
-extern unsigned int Si7021_Humidity;
-extern unsigned int Si7021_Temperature;
-
 unsigned int recordCounter;
 
 unsigned char tempError;
@@ -62,16 +58,6 @@ void FillEmptyPacket(){
     emptyPacket.OptoPW1 = 0;
     emptyPacket.OptoPW2 = 0;
     emptyPacket.DarkMode = 0;
-    emptyPacket.Temperature1 = 0;
-    emptyPacket.Temperature2 = 0;
-    emptyPacket.Temperature3 = 0;
-    emptyPacket.Temperature4 = 0;   
-    emptyPacket.Humidity1 = 0;
-    emptyPacket.Humidity2 = 0;
-    emptyPacket.Humidity3 = 0;
-    emptyPacket.Humidity4 = 0;
-    emptyPacket.LightHigh = 0;
-    emptyPacket.LightLow = 0;      
     emptyPacket.Index1 = 0;
     emptyPacket.Index2 = 0;
     emptyPacket.Index3 = 0;
@@ -148,16 +134,6 @@ void AddCurrentStatus() {
     statusBuffer[head].OptoPW2 = pulseWidth_ms & 0xFF;
     statusBuffer[head].DarkMode = isInDarkMode;
     //statusBuffer[head].DarkMode = tempError;
-    statusBuffer[head].Temperature1 = (Si7021_Temperature >> 24);
-    statusBuffer[head].Temperature2 = ((Si7021_Temperature >> 16) & 0xFF);
-    statusBuffer[head].Temperature3 = ((Si7021_Temperature >> 8) & 0xFF);
-    statusBuffer[head].Temperature4 = (Si7021_Temperature & 0xFF);
-    statusBuffer[head].Humidity1 = (Si7021_Humidity >> 24);
-    statusBuffer[head].Humidity2 = ((Si7021_Humidity >> 16) & 0xFF);
-    statusBuffer[head].Humidity3 = ((Si7021_Humidity >> 8) & 0xFF);
-    statusBuffer[head].Humidity4 = (Si7021_Humidity & 0xFF);   
-    statusBuffer[head].LightHigh = TSL2591_LUX >> 8;
-    statusBuffer[head].LightLow = TSL2591_LUX & 0xFF;   
     statusBuffer[head].Index1 = (recordCounter >> 24);
     statusBuffer[head].Index2 = ((recordCounter >> 16) & 0xFF);
     statusBuffer[head].Index3 = ((recordCounter >> 8) & 0xFF);

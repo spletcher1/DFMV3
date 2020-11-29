@@ -28,9 +28,6 @@ void InitializeRun(){
     ConfigureUpdateTimer();
     ConfigureAnalogInputs();
     ConfigureUART2();        
-#ifdef ENABLEI2C
-    ConfigureI2C2();
-#endif
     ConfigureButtons();      
     InitializeLEDControl(0,0,0);    
     InitializeStatusPacketBuffer();     
@@ -57,10 +54,7 @@ int main ( void )
              StepPacketManager();
              timerFlag_200ms = 0;  
         }
-        if(timerFlag_1sec){         
-#ifdef ENABLEI2C            
-            StepI2C();           
-#endif
+        if(timerFlag_1sec){        
             timerFlag_1sec=0;
         }      
         if(analogUpdateFlag){            

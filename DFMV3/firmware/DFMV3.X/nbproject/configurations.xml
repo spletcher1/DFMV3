@@ -125,9 +125,6 @@
       <itemPath>../src/LEDControl.c</itemPath>
       <itemPath>../src/OptoFunctions.c</itemPath>
       <itemPath>../src/Buttons.c</itemPath>
-      <itemPath>../src/Si7021.c</itemPath>
-      <itemPath>../src/TSL2591.c</itemPath>
-      <itemPath>../src/I2C2.c</itemPath>
       <itemPath>../src/main.c</itemPath>
     </logicalFolder>
     <logicalFolder name="ExternalFiles"
@@ -162,7 +159,7 @@
         <targetPluginBoard></targetPluginBoard>
         <platformTool>RealICEPlatformTool</platformTool>
         <languageToolchain>XC32</languageToolchain>
-        <languageToolchainVersion>2.30</languageToolchainVersion>
+        <languageToolchainVersion>2.15</languageToolchainVersion>
         <platform>3</platform>
       </toolsSet>
       <packs>

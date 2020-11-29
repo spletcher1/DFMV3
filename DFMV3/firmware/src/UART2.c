@@ -123,15 +123,29 @@ void UART2_ReadCallback(uint32_t status){
     UART2_Read(readBuffer,1);      
 }
 
-void UART2_WriteCallback(uint32_t status){      
-    waitingToDisable=2;    
-}
-
-static void UARTDmaChannelHandler(DMAC_TRANSFER_EVENT event, uintptr_t contextHandle)
+static void UARTTxDmaChannelHandler(DMAC_TRANSFER_EVENT event, uintptr_t contextHandle)
 {
     if (event == DMAC_TRANSFER_EVENT_COMPLETE)
     {
          waitingToDisable=2;    
+    }
+    else if (event == DMAC_TRANSFER_EVENT_ERROR){
+        currentError.bits.DMA_TX=1;
+        waitingToDisable=2; 
+    }
+}
+
+static void UARTRxDmaChannelHandler(DMAC_TRANSFER_EVENT event, uintptr_t contextHandle)
+{
+    if (event == DMAC_TRANSFER_EVENT_COMPLETE)
+    {
+        if(packetBuffer[1]==dfmID){
+            
+        }
+    }
+    else if (event == DMAC_TRANSFER_EVENT_ERROR){
+        currentError.bits.DMA_RX=1;
+        waitingToDisable=2; 
     }
 }
 
@@ -145,8 +159,7 @@ void ConfigureUART2(void) {
     // Data bits = 8; no parity; stop bits = 1;
 
     UART2_ReadCallbackRegister(UART2_ReadCallback,(uintptr_t)NULL);
-    //UART2_WriteCallbackRegister(UART2_WriteCallback,(uintptr_t)NULL);   
-    DMAC_ChannelCallbackRegister(DMAC_CHANNEL_0, UARTDmaChannelHandler, 0);
+    DMAC_ChannelCallbackRegister(DMAC_CHANNEL_0, UARTTxDmaChannelHandler, 0);
     packetIndex=0;
     currentPacketState = None;
     currentUARTState = UARTIdle;

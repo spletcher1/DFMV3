@@ -13,9 +13,6 @@
 #include "OptoFunctions.h"
 #include "LEDControl.h"
 #include "Buttons.h"
-#include "I2C2.h"
-#include "TSL2591.h"
-#include "Si7021.h"
 
 
 
@@ -25,8 +22,8 @@ typedef union {
         unsigned I2C : 1;
         unsigned OERR : 1;
         unsigned PACKET : 1;
-        unsigned Si7021 : 1;
-        unsigned TSL2591 : 1;
+        unsigned DMA_TX : 1;
+        unsigned DMA_RX : 1;
         unsigned FERR : 1;
         unsigned INTERRUPT : 1;
         unsigned PERR : 1;
