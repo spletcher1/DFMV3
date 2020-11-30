@@ -5,7 +5,7 @@ frameworkPath: ../../../HarmonyFramework
 processor: PIC32MX795F512L
 projectName: ''
 settings:
-  PackageFilter: audio;bootloader;bootloader_apps_uart;bsp;bt;core;core_apps_pic32cm_mc00;core_apps_pic32mx;core_apps_pic32mz_da;core_apps_pic32mz_ef;core_apps_pic32mz_w1;crypto;csp;csp_apps_pic32mx;csp_apps_pic32mz_da;csp_apps_pic32mz_ef;csp_apps_pic32mz_w1;gfx;reference_apps;net;quick_docs;touch;usb;wireless;
+  PackageFilter: bsp;core;core_apps_pic32mx;core_apps_pic32mz_da;core_apps_pic32mz_ef;core_apps_pic32mz_w1;crypto;csp;csp_apps_pic32mx;csp_apps_pic32mz_da;csp_apps_pic32mz_ef;csp_apps_pic32mz_w1;net;quick_docs;usb;wireless;
   FORCE_OPTIMIZATION: 'false'
   GENERATE_BACKUP: 'true'
   CMSISPath: .\dev_packs\arm\CMSIS\5.7.0

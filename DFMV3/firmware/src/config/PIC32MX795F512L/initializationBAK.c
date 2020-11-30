@@ -45,7 +45,7 @@
 // *****************************************************************************
 #include "definitions.h"
 #include "device.h"
-
+#include "HardwareProfile.h"
 
 
 // ****************************************************************************
@@ -141,7 +141,6 @@
 
 void SYS_Initialize ( void* data )
 {
-
     /* Start out with interrupts disabled before configuring any modules */
     __builtin_disable_interrupts();
 
@@ -164,19 +163,16 @@ void SYS_Initialize ( void* data )
 
 
 	GPIO_Initialize();
-
-	UART2_Initialize();
+    
+    I2C2_Initialize();
+	
+    UART2_Initialize();
 
     TMR2_Initialize();
 
-    DMAC_Initialize();
     TMR1_Initialize();
 
     ADC_Initialize();
-
-
-
-
 
     EVIC_Initialize();
 

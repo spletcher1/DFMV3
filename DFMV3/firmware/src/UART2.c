@@ -135,6 +135,7 @@ static void UARTTxDmaChannelHandler(DMAC_TRANSFER_EVENT event, uintptr_t context
     }
 }
 
+/*
 static void UARTRxDmaChannelHandler(DMAC_TRANSFER_EVENT event, uintptr_t contextHandle)
 {
     if (event == DMAC_TRANSFER_EVENT_COMPLETE)
@@ -147,7 +148,7 @@ static void UARTRxDmaChannelHandler(DMAC_TRANSFER_EVENT event, uintptr_t context
         currentError.bits.DMA_RX=1;
         waitingToDisable=2; 
     }
-}
+}*/
 
 void SendCOBSDMA(void){
     DMAC_ChannelTransfer(DMAC_CHANNEL_0, (const void *)cobsBuffer, cobsBufferLength, 

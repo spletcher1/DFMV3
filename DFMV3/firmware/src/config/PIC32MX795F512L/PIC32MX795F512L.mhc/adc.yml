@@ -308,7 +308,7 @@ children:
     - type: Values
       children:
       - type: Dynamic
-        attributes: {id: adc, value: '652824'}
+        attributes: {id: adc, value: '718101'}
   - type: Boolean
     attributes: {id: ADC_INTERRUPT}
     children:

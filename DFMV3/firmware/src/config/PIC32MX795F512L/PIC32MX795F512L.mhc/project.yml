@@ -6,20 +6,20 @@ files:
   security: NON_SECURE
   type: SOURCE
   userChecksum: C2B88D9215301ECE3DC36E4B82F2791C
-- generatedChecksum: FBEC42C553D81DA4D37B43D2FBDD4016
+- generatedChecksum: 884DFDE10A995711401ADB05F6E96115
   logicalPath: config\PIC32MX795F512L
   name: initialization.c
   physicalPath: ''
   security: NON_SECURE
   type: SOURCE
-  userChecksum: 67AE8D3245D58C4E9EDF8476C7C43899
-- generatedChecksum: 6922AEB99774B93365A20934F8562E62
+  userChecksum: 884DFDE10A995711401ADB05F6E96115
+- generatedChecksum: 178D59F57B521F5CFEA97A05D8ADB761
   logicalPath: config\PIC32MX795F512L
   name: interrupts.c
   physicalPath: ''
   security: NON_SECURE
   type: SOURCE
-  userChecksum: 6922AEB99774B93365A20934F8562E62
+  userChecksum: 178D59F57B521F5CFEA97A05D8ADB761
 - generatedChecksum: null
   logicalPath: ''
   name: main.c
@@ -27,7 +27,7 @@ files:
   security: NON_SECURE
   type: SOURCE
   userChecksum: null
-- generatedChecksum: 652260DCDCCE4DC9B916FC87E4479BC2
+- generatedChecksum: 0A50F5214C74AFE7CD12FC6AEE9ACC04
   logicalPath: config\PIC32MX795F512L\peripheral\adc
   name: plib_adc.c
   physicalPath: peripheral\adc
@@ -48,13 +48,13 @@ files:
   security: NON_SECURE
   type: SOURCE
   userChecksum: B8C5B65EF693A3EA4566E395D2AE1BE4
-- generatedChecksum: FCB09D7BE1B6A721446EAA5F18463398
+- generatedChecksum: 0FECCE5A46459986566308F982095847
   logicalPath: config\PIC32MX795F512L\peripheral\evic
   name: plib_evic.c
   physicalPath: peripheral\evic
   security: NON_SECURE
   type: SOURCE
-  userChecksum: FCB09D7BE1B6A721446EAA5F18463398
+  userChecksum: 0FECCE5A46459986566308F982095847
 - generatedChecksum: 7CA027D423A7E49B06B116C350005FA1
   logicalPath: config\PIC32MX795F512L\peripheral\gpio
   name: plib_gpio.c
@@ -62,13 +62,6 @@ files:
   security: NON_SECURE
   type: SOURCE
   userChecksum: 7CA027D423A7E49B06B116C350005FA1
-- generatedChecksum: D5EBECC7B88C2322097297F636F85746
-  logicalPath: config\PIC32MX795F512L\peripheral\i2c\master
-  name: plib_i2c2_master.c
-  physicalPath: peripheral\i2c\master
-  security: NON_SECURE
-  type: SOURCE
-  userChecksum: D5EBECC7B88C2322097297F636F85746
 - generatedChecksum: EEBEE814C5713B282725EF327FD884FD
   logicalPath: config\PIC32MX795F512L\peripheral\tmr1
   name: plib_tmr1.c
@@ -97,13 +90,13 @@ files:
   security: NON_SECURE
   type: SOURCE
   userChecksum: 16BE5CCEE5F9AF5909BF3F69B51C7D93
-- generatedChecksum: 6CD78EB1B8225D6AE86DF73CE24DED08
+- generatedChecksum: B8DA01DABCA10E924E6958BBFFA541B3
   logicalPath: config\PIC32MX795F512L
   name: definitions.h
   physicalPath: ''
   security: NON_SECURE
   type: HEADER
-  userChecksum: 6CD78EB1B8225D6AE86DF73CE24DED08
+  userChecksum: B8DA01DABCA10E924E6958BBFFA541B3
 - generatedChecksum: 5D5C52527AB1435153DB9B50ADE6B79D
   logicalPath: config\PIC32MX795F512L
   name: device.h
@@ -146,20 +139,6 @@ files:
   security: NON_SECURE
   type: HEADER
   userChecksum: 5530268A90550F6317461D486FDAE73F
-- generatedChecksum: E845D309D2BB0E88D676F1C5587D3A73
-  logicalPath: config\PIC32MX795F512L\peripheral\i2c\master
-  name: plib_i2c2_master.h
-  physicalPath: peripheral\i2c\master
-  security: NON_SECURE
-  type: HEADER
-  userChecksum: E845D309D2BB0E88D676F1C5587D3A73
-- generatedChecksum: B963C6FE44292A1C4A14C3BA5BE95AEE
-  logicalPath: config\PIC32MX795F512L\peripheral\i2c\master
-  name: plib_i2c_master_common.h
-  physicalPath: peripheral\i2c\master
-  security: NON_SECURE
-  type: HEADER
-  userChecksum: B963C6FE44292A1C4A14C3BA5BE95AEE
 - generatedChecksum: 32D7539D9231F3C159ABECE91A0281EA
   logicalPath: config\PIC32MX795F512L\peripheral\tmr1
   name: plib_tmr1.h
