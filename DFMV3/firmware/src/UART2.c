@@ -67,8 +67,7 @@ static void UARTRxDmaChannelHandler(DMAC_TRANSFER_EVENT event, uintptr_t context
         }
     }
     else if (event == DMAC_TRANSFER_EVENT_ERROR){
-        currentError.bits.DMA_RX=1;
-        waitingToDisable=2; 
+        currentError.bits.DMA_RX=1;        
     }
     
     // Keep listening.
