@@ -13,13 +13,13 @@ files:
   security: NON_SECURE
   type: SOURCE
   userChecksum: 884DFDE10A995711401ADB05F6E96115
-- generatedChecksum: 178D59F57B521F5CFEA97A05D8ADB761
+- generatedChecksum: D8C78EB4AF0DAF7C0DB28ED7B04624CD
   logicalPath: config\PIC32MX795F512L
   name: interrupts.c
   physicalPath: ''
   security: NON_SECURE
   type: SOURCE
-  userChecksum: 178D59F57B521F5CFEA97A05D8ADB761
+  userChecksum: D8C78EB4AF0DAF7C0DB28ED7B04624CD
 - generatedChecksum: null
   logicalPath: ''
   name: main.c
@@ -41,20 +41,20 @@ files:
   security: NON_SECURE
   type: SOURCE
   userChecksum: 9854678C3A3E4E9544EC7450ACBAE52A
-- generatedChecksum: B8C5B65EF693A3EA4566E395D2AE1BE4
+- generatedChecksum: A8F300D11FE7DF56876D5A5A59EEA498
   logicalPath: config\PIC32MX795F512L\peripheral\dmac
   name: plib_dmac.c
   physicalPath: peripheral\dmac
   security: NON_SECURE
   type: SOURCE
-  userChecksum: B8C5B65EF693A3EA4566E395D2AE1BE4
-- generatedChecksum: 0FECCE5A46459986566308F982095847
+  userChecksum: A8F300D11FE7DF56876D5A5A59EEA498
+- generatedChecksum: 92EF80CE487B8E716C16779C03DC5A0B
   logicalPath: config\PIC32MX795F512L\peripheral\evic
   name: plib_evic.c
   physicalPath: peripheral\evic
   security: NON_SECURE
   type: SOURCE
-  userChecksum: 0FECCE5A46459986566308F982095847
+  userChecksum: 92EF80CE487B8E716C16779C03DC5A0B
 - generatedChecksum: 7CA027D423A7E49B06B116C350005FA1
   logicalPath: config\PIC32MX795F512L\peripheral\gpio
   name: plib_gpio.c
@@ -76,7 +76,7 @@ files:
   security: NON_SECURE
   type: SOURCE
   userChecksum: B67676CC0C0AA6C76103FFB2969A2E35
-- generatedChecksum: 34B21F7FC4ED8582F6BDE8B7E913D8BA
+- generatedChecksum: 57EF05ADB799DA5F66D269EF4EFEFF7B
   logicalPath: config\PIC32MX795F512L\peripheral\uart
   name: plib_uart2.c
   physicalPath: peripheral\uart
@@ -167,13 +167,13 @@ files:
   security: NON_SECURE
   type: HEADER
   userChecksum: D948F2CE092CAB556EF299D3CCD83A55
-- generatedChecksum: 53452ED8A95496907DF58F215C01E9C2
+- generatedChecksum: C57271B930D8F151C50DB4E9B39B41B5
   logicalPath: config\PIC32MX795F512L\peripheral\uart
   name: plib_uart2.h
   physicalPath: peripheral\uart
   security: NON_SECURE
   type: HEADER
-  userChecksum: 53452ED8A95496907DF58F215C01E9C2
+  userChecksum: C57271B930D8F151C50DB4E9B39B41B5
 - generatedChecksum: 903175300C64256E267D1DB8F91D7861
   logicalPath: config\PIC32MX795F512L\peripheral\uart
   name: plib_uart_common.h

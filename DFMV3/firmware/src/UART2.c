@@ -20,7 +20,6 @@ unsigned int cobsInstructionBufferLength;
 // Although this may only be required for PIC32MZ devices with an L1 Cache.
 unsigned char __attribute__ ((coherent, aligned(8))) cobsBuffer[COBSBUFFERSIZE];
 
-unsigned char readBuffer[10];
 unsigned char preCodedBuffer[COBSBUFFERSIZE];
 unsigned int cobsBufferLength;
 extern int bufferSize;
@@ -28,7 +27,6 @@ extern int bufferSize;
 char isAckReceived;
 char waitingCounter=0;
 
-enum PacketState volatile currentPacketState;
 enum UARTState volatile currentUARTState;
 
 // Note that the packet buffer has to be big enough to
@@ -36,9 +34,7 @@ enum UARTState volatile currentUARTState;
 // Otherwise things will get out of whack and may lead
 // to other DFM status returns being interpreted as 
 // request calls.
-unsigned char volatile packetBuffer[PACKETBUFFERSIZE];
-unsigned int volatile packetIndex;
-unsigned int volatile lastPacketSize;
+unsigned char __attribute__ ((coherent, aligned(8))) packetBuffer[PACKETBUFFERSIZE];
 
 extern unsigned char dfmID;
 extern unsigned char isInDarkMode;
@@ -48,80 +44,6 @@ extern struct StatusPacket emptyPacket;
 
 char volatile waitingToDisable=-1;
 char volatile waitingAfterEnable=-1;
-void UART2_ErrorClear( void );
-
-/////////////////////////////////////////////////////////////////
-// Select one to specify configuration.
-// Baud Rate 19200
-// Baud rate 38400
-// Baud rate 115200
-// #define TARGET_BAUD_RATE  921600
-//#define TARGET_BAUD_RATE  115200
-#define TARGET_BAUD_RATE  250000
-
-
-void UART2_ReadCallback(uint32_t status){
-    unsigned char data;
-    UART_ERROR tmp=UART2_ErrorGet();        
-    if(tmp != UART_ERROR_NONE)
-    {       
-        if(tmp & UART_ERROR_OVERRUN)
-             currentError.bits.OERR=1;
-        if(tmp & UART_ERROR_PARITY)
-             currentError.bits.PERR=1;
-        if(tmp & UART_ERROR_FRAMING)
-             currentError.bits.FERR=1;    
-        packetIndex=0;        
-        currentPacketState=None;        
-    }
-    else
-    {                       
-        data=readBuffer[0];
-        switch(currentPacketState){
-            case None:              
-                packetBuffer[packetIndex++]=data;     
-                currentPacketState = GettingID;
-                break;
-            case GettingID:
-                if(data==dfmID){
-                    packetBuffer[packetIndex++]=data;  
-                    currentPacketState =InPacket;
-                }              
-                else {
-                    currentPacketState = Ignoring;
-                }
-                break;
-            case InPacket:                 
-                if(data==0x00){                   
-                    currentPacketState = None;
-                    currentUARTState = WaitingToProcess; 
-                    lastPacketSize=packetIndex;
-                    packetIndex=0;
-                }
-                else {
-                   packetBuffer[packetIndex++]=data;                 
-                }
-                break;           
-            case Ignoring:              
-                if(data==0x00){
-                    currentPacketState = None;
-                    packetIndex=0;
-                }
-                break;            
-        }
-        if(packetIndex>=PACKETBUFFERSIZE){            
-            currentError.bits.PACKET=1;   
-            currentPacketState=Ignoring;
-            packetIndex=0;
-        }     
-    }  
-    // This is a test to recover a UART issue where there are no official
-    // errors but the error interrupt is set.
-    if(IFS1bits.U2EIF==1){
-        UART2_ErrorClear();
-    }
-    UART2_Read(readBuffer,1);      
-}
 
 static void UARTTxDmaChannelHandler(DMAC_TRANSFER_EVENT event, uintptr_t contextHandle)
 {
@@ -135,41 +57,39 @@ static void UARTTxDmaChannelHandler(DMAC_TRANSFER_EVENT event, uintptr_t context
     }
 }
 
-/*
+
 static void UARTRxDmaChannelHandler(DMAC_TRANSFER_EVENT event, uintptr_t contextHandle)
 {
     if (event == DMAC_TRANSFER_EVENT_COMPLETE)
     {
         if(packetBuffer[1]==dfmID){
-            
+            currentUARTState = WaitingToProcess;           
         }
     }
     else if (event == DMAC_TRANSFER_EVENT_ERROR){
         currentError.bits.DMA_RX=1;
         waitingToDisable=2; 
     }
-}*/
-
-void SendCOBSDMA(void){
-    DMAC_ChannelTransfer(DMAC_CHANNEL_0, (const void *)cobsBuffer, cobsBufferLength, 
-                (const void *)&U2TXREG, 1, 1);
+    
+    // Keep listening.
+    DMAC_ChannelTransfer(DMAC_CHANNEL_1, (const void *)(const void *)&U2RXREG, 1, 
+                (const void *)packetBuffer, PACKETBUFFERSIZE, 1);
 }
 
 void ConfigureUART2(void) {
     // Note: As of now, the baud rate set for the parallax RFID reader is 2400.
     // Data bits = 8; no parity; stop bits = 1;
 
-    UART2_ReadCallbackRegister(UART2_ReadCallback,(uintptr_t)NULL);
+    //UART2_ReadCallbackRegister(UART2_ReadCallback,(uintptr_t)NULL);
     DMAC_ChannelCallbackRegister(DMAC_CHANNEL_0, UARTTxDmaChannelHandler, 0);
-    packetIndex=0;
-    currentPacketState = None;
+    DMAC_ChannelCallbackRegister(DMAC_CHANNEL_1, UARTRxDmaChannelHandler, 0);    
     currentUARTState = UARTIdle;
     isAckReceived=1;
     waitingCounter=0;    
   
     // Start Listening
-    UART2_Read(readBuffer,1);   
-       
+    DMAC_ChannelTransfer(DMAC_CHANNEL_1, (const void *)(const void *)&U2RXREG, 1, 
+                (const void *)packetBuffer, PACKETBUFFERSIZE, 1);           
 }
 
 void WriteCOBSBuffer(void){
@@ -187,7 +107,7 @@ void EmptyPacketToUART2(){
     }    
     isAckReceived=1;
     if(counter>=COBSBUFFERSIZE)
-        return; //Try to guard againt overflow.    
+        return; //Try to guard against overflow.    
     cobsBufferLength=encodeCOBS(preCodedBuffer,counter,cobsBuffer);
     if(cobsBufferLength<=0) return;
     cobsBuffer[cobsBufferLength++]=0x00;
@@ -334,7 +254,8 @@ void ExecuteLinkagePacket(){
     SetLEDLinkFlags(linkage);
 }
 
-void ProcessPacket() {             
+void ProcessPacket() {    
+    unsigned int packetSize;
     // With COBS encoding, packetBuffer[0] is the COBS encoder.]
     // because the first two byte of the actual packet will never be zero
     // we can query these before decoding to determine whether we have to do 
@@ -370,7 +291,11 @@ void ProcessPacket() {
         }
     }
     else if(packetBuffer[2]==SENDINSTRUCTIONBYTE){
-        cobsInstructionBufferLength=decodeCOBS(packetBuffer,lastPacketSize,cobsInstructionBuffer);        
+        packetSize=0;
+        while(packetBuffer[packetSize]!=0){
+            packetSize++;;
+        };        
+        cobsInstructionBufferLength=decodeCOBS(packetBuffer,packetSize,cobsInstructionBuffer);        
         if(!ValidateChecksum(41) || (cobsInstructionBufferLength<=0)) {
             waitingCounter=15;
             currentUARTState = WaitingToNAck; 
@@ -381,7 +306,11 @@ void ProcessPacket() {
         ExecuteInstructionPacket();
     }   
     else if(packetBuffer[2]==SENDLINKAGEBYTE){
-        cobsInstructionBufferLength=decodeCOBS(packetBuffer,lastPacketSize,cobsInstructionBuffer);        
+        packetSize=0;
+        while(packetBuffer[packetSize]!=0){
+            packetSize++;;
+        };        
+        cobsInstructionBufferLength=decodeCOBS(packetBuffer,packetSize,cobsInstructionBuffer);        
         if(!ValidateChecksum(18) || (cobsInstructionBufferLength<=0)) {
             waitingCounter=15;
             currentUARTState = WaitingToNAck; 
@@ -445,8 +374,7 @@ void StepUART(){
                 }
             }
             break;
-        case ClearPacket:          
-            currentPacketState = None;  
+        case ClearPacket:                      
             currentUARTState=UARTIdle;
             break;            
     }
@@ -458,8 +386,8 @@ void StepUART(){
     }
     if(waitingAfterEnable>=0){
         if(waitingAfterEnable--<=0) {            
-            SendCOBSDMA();
-            //UART2_Write(cobsBuffer,cobsBufferLength);
+            DMAC_ChannelTransfer(DMAC_CHANNEL_0, (const void *)cobsBuffer, cobsBufferLength, 
+                (const void *)&U2TXREG, 1, 1);            
             waitingAfterEnable=-1;
         }
     }

@@ -40,7 +40,17 @@ void InitializeRun(){
 int main ( void )
 {
     /* Initialize all modules */
-    SYS_Initialize ( NULL );         
+    SYS_Initialize ( NULL );  
+    /***************************************/
+    // SP Pattern Match Code.
+    // This is here to signal ends of cobs packet
+    // for receiving DMA channel.
+    // It must be modified after the DMAC initialization
+    // routing from Harmony.
+    DCH1ECONbits.PATEN=1;
+    DCH1DAT=0x00;
+    /***************************************/
+    
     InitializeRun();    
     while ( true )
     {         
