@@ -236,6 +236,10 @@ void ExecuteInstructionPacket(){
     index+=2;
     maxTime = (unsigned int)(cobsInstructionBuffer[index]<<8)+(unsigned int)(cobsInstructionBuffer[index+1]);
     index+=2;   
+    
+    // Note that currently (12/11/20) a -1 is transmitted and received as a two byte integer == 0xFFFF = 65535.
+    // So thresh[i] will never be negative 1 currently.  That is okay, because the -1 turns into a threshold so high
+    // that it can never turn on the LEDs.  Nevertheless, the -1 conditions in the LEDControl.c code is uneeded.]
     for(i=0;i<12;i++){
         thresh[i]=(unsigned int)(cobsInstructionBuffer[index]<<8)+(unsigned int)(cobsInstructionBuffer[index+1]);
         index+=2;

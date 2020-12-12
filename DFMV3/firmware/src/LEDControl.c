@@ -70,10 +70,18 @@ void TestLEDThresholds(){
         LEDThresholdValues[i]=100*128;
 }
 
+ // Note that currently (12/11/20) a -1 is transmitted and received as a two byte integer == 0xFFFF = 65535.
+ // So thresh[i] will never be -1 as received from the MCU.  That is okay, because the -1 turns into a threshold so high
+ // that it can never turn on the LEDs.  Nevertheless, the -1 conditions in the LEDControl.c code is unneeded.
+// I will change the condition to search > 2000.
 void SetLEDThresholds(int *thresh){
     int i;
-    for(i=0;i<12;i++)
-        LEDThresholdValues[i]=thresh[i]*128;
+    for(i=0;i<12;i++){
+        if(thresh[i]>2000) 
+            LEDThresholdValues[i]=-1;
+        else
+            LEDThresholdValues[i]=thresh[i]*128;
+    }
 }
 
 void inline SetLEDOn(unsigned char led){    
