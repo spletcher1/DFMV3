@@ -334,8 +334,7 @@ void ProcessPacket() {
     }
      else {
          // Wonder how many times we get here, suggesting weird packet
-        //currentError.bits.PACKET=1;
-        currentError.byte = packetBuffer[2];
+        currentError.bits.PACKET=1;        
         currentUARTState =UARTIdle;
     }
 }
