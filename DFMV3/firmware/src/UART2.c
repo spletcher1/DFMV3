@@ -62,12 +62,14 @@ static void UARTRxDmaChannelHandler(DMAC_TRANSFER_EVENT event, uintptr_t context
 {
     if (event == DMAC_TRANSFER_EVENT_COMPLETE)
     {
-        if(packetBuffer[1]==dfmID){
-            currentUARTState = WaitingToProcess;           
-        }
+        if(packetBuffer[1]==dfmID)
+            currentUARTState = WaitingToProcess;                   
+        else
+            currentUARTState = UARTIdle;           
     }
     else if (event == DMAC_TRANSFER_EVENT_ERROR){
-        currentError.bits.DMA_RX=1;        
+        currentError.bits.DMA_RX=1;     
+        currentUARTState = UARTIdle;  
     }
     
     // Keep listening.
@@ -269,6 +271,7 @@ void ProcessPacket() {
     if(packetBuffer[1]!=dfmID) {
         // Should never be here with new packet handling code    
         currentError.bits.PACKET=1;
+        currentUARTState =UARTIdle;
         return; // Packet not for me    
     }
     if (isInDarkMode == 0 && packetBuffer[2]!=ACKBYTE) FLIP_GREEN_LED();
@@ -331,7 +334,9 @@ void ProcessPacket() {
     }
      else {
          // Wonder how many times we get here, suggesting weird packet
-        currentError.bits.PACKET=1;
+        //currentError.bits.PACKET=1;
+        currentError.byte = packetBuffer[2];
+        currentUARTState =UARTIdle;
     }
 }
 
