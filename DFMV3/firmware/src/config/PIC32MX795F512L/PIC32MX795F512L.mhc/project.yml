@@ -27,7 +27,7 @@ files:
   security: NON_SECURE
   type: SOURCE
   userChecksum: null
-- generatedChecksum: 0A50F5214C74AFE7CD12FC6AEE9ACC04
+- generatedChecksum: C9934611EE985FD35B73D6953FED7E08
   logicalPath: config\PIC32MX795F512L\peripheral\adc
   name: plib_adc.c
   physicalPath: peripheral\adc
