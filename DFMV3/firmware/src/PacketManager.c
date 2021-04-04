@@ -85,7 +85,7 @@ void inline ResetTail(){
     if(tail>=tailPlaceHolder) // didn't go around ring buffer since last ack
         diff = tail - tailPlaceHolder;
     else
-        diff = tail + (RINGBUFFERSIZE-tailPlaceHolder) +1;
+        diff = tail + (RINGBUFFERSIZE-tailPlaceHolder);
                
     tail = tailPlaceHolder;
     bufferSize+=diff;
