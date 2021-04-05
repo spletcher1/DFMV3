@@ -150,7 +150,7 @@ void CurrentStatusPacketSetToUART2(){
         SetTailPlaceHolder();
     else {               
         ResetTail();
-        //currentError.bits.IDERR=1;
+        currentError.bits.IDERR=1;
     }
     
     if(bufferSize>MAXPACKETS)
