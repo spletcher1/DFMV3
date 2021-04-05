@@ -86,16 +86,18 @@ void inline ResetTail(){
         diff = tail - tailPlaceHolder;
     else
         diff = tail + (RINGBUFFERSIZE-tailPlaceHolder);
-               
-    tail = tailPlaceHolder;
-    bufferSize+=diff;
-    if(bufferSize>RINGBUFFERSIZE) {                  
-        bufferSize=RINGBUFFERSIZE;        
-        tail++;
-        if(tail>=RINGBUFFERSIZE){
-            tail=0;               
-        }
+
+    // CHeck to see if resetting the tail would result in a buffer overflow
+    // If so, then we will need to drop the missed data
+    if(bufferSize+diff>=RINGBUFFERSIZE){
+        // Drop the missed data
+        tailPlaceHolder=tail;
     }
+    else {
+        // Reset the missed data
+        tail = tailPlaceHolder;
+        bufferSize+=diff;        
+    }    
 }
 
 struct StatusPacket *GetNextStatusInLine(){    

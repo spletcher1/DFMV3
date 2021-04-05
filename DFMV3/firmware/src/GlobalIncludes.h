@@ -20,13 +20,13 @@ typedef union {
     unsigned char byte;
     struct ErrorBits {
         unsigned I2C : 1;
-        unsigned OERR : 1;
-        unsigned PACKET : 1;
+        unsigned IDERR : 1;
+        unsigned PACKETTYPEERR : 1;
         unsigned DMA_TX : 1;
         unsigned DMA_RX : 1;
-        unsigned FERR : 1;
-        unsigned INTERRUPT : 1;
-        unsigned PERR : 1;
+        unsigned PACKETSIZEERR : 1;
+        unsigned AIINTERRUPT : 1;
+        unsigned OINTERRUPT : 1;
     } bits;
 } errorFlags_t;
 

@@ -138,13 +138,13 @@ void SetHertz(unsigned int hz) {
 void TIMER2_EventHandlerNewPort(uint32_t status, uintptr_t context) {          
     // First set flags, checking for errors
     if(timerFlag_1ms==1){        
-        currentError.bits.INTERRUPT=1;       
+        currentError.bits.OINTERRUPT=1;       
     }
     timerFlag_1ms = 1; 
     // I set this at 199 to see if it gets closer to saving a packet every 200ms in real time.
     if(timer200msCounter++>=199){       
         if(timerFlag_200ms==1){            
-            currentError.bits.INTERRUPT=1;       
+            currentError.bits.OINTERRUPT=1;       
         }
         timerFlag_200ms=1;
         timer200msCounter=0;        
@@ -166,12 +166,12 @@ void TIMER2_EventHandlerNewPort(uint32_t status, uintptr_t context) {
 void TIMER2_EventHandlerOldPort(uint32_t status, uintptr_t context) {          
     // First set flags, checking for errors
     if(timerFlag_1ms==1){        
-        currentError.bits.INTERRUPT=1;       
+        currentError.bits.OINTERRUPT=1;       
     }
     timerFlag_1ms = 1;     
     if(timer200msCounter++>=199){       
         if(timerFlag_200ms==1){                
-            currentError.bits.INTERRUPT=1;       
+            currentError.bits.OINTERRUPT=1;       
         }
         timerFlag_200ms=1;
         timer200msCounter=0;        

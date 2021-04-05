@@ -133,7 +133,7 @@ void LatestStatusPacketToUART2(){
     // was received or not, so assume it was.
     isAckReceived=1;
     if(counter>=COBSBUFFERSIZE)
-        return; //Try to guard againt overflow.
+        return; //Try to guard against overflow.
     cobsBufferLength=encodeCOBS(preCodedBuffer,counter,cobsBuffer);
     if(cobsBufferLength<=0) return;
     cobsBuffer[cobsBufferLength++]=0x00;    
@@ -148,8 +148,10 @@ void CurrentStatusPacketSetToUART2(){
     
     if(isAckReceived)
         SetTailPlaceHolder();
-    else        
+    else {               
         ResetTail();
+        //currentError.bits.IDERR=1;
+    }
     
     if(bufferSize>MAXPACKETS)
         numPacketsToSend=MAXPACKETS;                        
@@ -182,7 +184,7 @@ void CurrentStatusPacketSetToUART2(){
         return; //Try to guard againt overflow.
     cobsBufferLength=encodeCOBS(preCodedBuffer,counter,cobsBuffer);
     if(cobsBufferLength<=0) return;
-    cobsBuffer[cobsBufferLength++]=0x00;    
+    cobsBuffer[cobsBufferLength++]=0x00;        
     WriteCOBSBuffer();    
 }
 
@@ -270,37 +272,54 @@ void ProcessPacket() {
     // is accounted for.
     if(packetBuffer[1]!=dfmID) {
         // Should never be here with new packet handling code    
-        currentError.bits.PACKET=1;
+        currentError.bits.IDERR=1;
         currentUARTState =UARTIdle;
         return; // Packet not for me    
     }
-    if (isInDarkMode == 0 && packetBuffer[2]!=ACKBYTE) FLIP_GREEN_LED();
+    
+    // Get the packetsize size to allow extra checks on communication integrity.
+    packetSize=0;
+    while(packetBuffer[packetSize]!=0){
+            packetSize++;;
+    };     
+    
+    if (isInDarkMode == 0 && packetBuffer[2]!=ACKBYTE) FLIP_GREEN_LED(); 
+    
+
     if(packetBuffer[2]==STATUSREQUESTBYTE){
+        if(packetSize!=4) {
+            currentError.bits.PACKETSIZEERR=1;
+            return;
+        }
         if(packetBuffer[1]==dfmID && packetBuffer[3]==dfmID){
             waitingCounter=15;
             currentUARTState = WaitingToSendStatus; 
         }
     }
     else if(packetBuffer[2]==LATESTSTATUSREQUESTBYTE){
+        if(packetSize!=4) {
+            currentError.bits.PACKETSIZEERR=1;
+            return;
+        }
         if(packetBuffer[1]==dfmID && packetBuffer[3]==dfmID){
             waitingCounter=15;
             currentUARTState = WaitingToSendLatestStatus; 
         }
     }
-    else if(packetBuffer[2]==BUFFERRESETREQUESTBYTE){        
+    else if(packetBuffer[2]==BUFFERRESETREQUESTBYTE){   
+        if(packetSize!=4) {
+            currentError.bits.PACKETSIZEERR=1;
+            return;
+        }
         if(packetBuffer[1]==dfmID && packetBuffer[3]==dfmID){            
-            InitializeStatusPacketBuffer();
+            InitializeStatusPacketBuffer( );
             isAckReceived=1;
             waitingCounter=15;
             currentUARTState = WaitingToAck;       
             return;
         }
     }
-    else if(packetBuffer[2]==SENDINSTRUCTIONBYTE){
-        packetSize=0;
-        while(packetBuffer[packetSize]!=0){
-            packetSize++;;
-        };        
+    else if(packetBuffer[2]==SENDINSTRUCTIONBYTE){           
         cobsInstructionBufferLength=decodeCOBS(packetBuffer,packetSize,cobsInstructionBuffer);        
         if(!ValidateChecksum(41) || (cobsInstructionBufferLength<=0)) {
             waitingCounter=15;
@@ -311,11 +330,7 @@ void ProcessPacket() {
         currentUARTState = WaitingToAck;  
         ExecuteInstructionPacket();
     }   
-    else if(packetBuffer[2]==SENDLINKAGEBYTE){
-        packetSize=0;
-        while(packetBuffer[packetSize]!=0){
-            packetSize++;;
-        };        
+    else if(packetBuffer[2]==SENDLINKAGEBYTE){       
         cobsInstructionBufferLength=decodeCOBS(packetBuffer,packetSize,cobsInstructionBuffer);        
         if(!ValidateChecksum(18) || (cobsInstructionBufferLength<=0)) {
             waitingCounter=15;
@@ -326,15 +341,19 @@ void ProcessPacket() {
         currentUARTState = WaitingToAck;  
         ExecuteLinkagePacket();
     }
-     else if(packetBuffer[2]==ACKBYTE){    
-        if(packetBuffer[1]==dfmID && packetBuffer[3]==dfmID){
-            isAckReceived=1;         
+     else if(packetBuffer[2]==ACKBYTE){          
+        if(packetSize!=4) {
+            currentError.bits.PACKETSIZEERR=1;
+            return;
+        }
+        if(packetBuffer[1]==dfmID && packetBuffer[3]==dfmID){            
+            isAckReceived=1;                     
         }
         currentUARTState=ClearPacket;
     }
      else {
          // Wonder how many times we get here, suggesting weird packet
-        currentError.bits.PACKET=1;        
+        currentError.bits.PACKETTYPEERR=1;        
         currentUARTState =UARTIdle;
     }
 }
